@@ -59,6 +59,10 @@ The first demo should prove a narrow vertical slice:
 11. The generated build carries an agent orchestration trace showing the
     LangGraph catalog, optimizer, compatibility, performance, explainer, and
     validator steps.
+12. Engineers can replay generated build traces by session/build version and
+    copy a redacted support trace export.
+13. Product owners can run canonical local quality evals before changing build
+    logic.
 
 Current first-slice implementation reaches step 10 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, and mock
@@ -80,6 +84,11 @@ survive an Agent API process restart without requiring Postgres credentials.
 `US-011` routes build generation through a bounded LangGraph state graph and
 surfaces a schema-valid orchestration trace while preserving deterministic SKU,
 price, compatibility, workload fit, approval, and handoff behavior.
+`US-012` adds local trace replay endpoints and a web replay panel derived from
+persisted build artifacts. It is a hackathon observability bridge before
+Langfuse/OpenTelemetry integration, not production telemetry.
+`US-013` adds 30 local canonical evaluation scenarios and a `pnpm eval:run`
+release gate before Langfuse datasets or hosted CI are available.
 
 Out of first-slice scope unless a later story selects it:
 

@@ -274,3 +274,41 @@ This is a foundation slice, not the full Phase 5 optimizer loop. LangGraph
 checkpointing, PostgreSQL/Redis checkpointers, OR-Tools, Pydantic AI build
 agents, parallel Pareto variants, and external provider calls remain future
 story work.
+
+## Current Trace Replay Slice
+
+`US-012` exposes local agent trace replay without adding external observability
+credentials:
+
+- `services/agent-api/src/pc_build_copilot/trace_replay.py`
+- `GET /builds/{build_id}/trace`
+- `GET /sessions/{build_session_id}/trace`
+- `apps/web/components/build-copilot-client.tsx`
+
+Replay is derived from persisted `BuildArtifact.orchestration_trace` payloads
+and grouped by `build_session_id` plus build version. Each event includes agent
+name, status, redacted inputs, tool-call labels, redacted outputs, local
+latency, and deterministic model/runtime version metadata. The session response
+also returns a support-export text block.
+
+No new trace table is added yet. Langfuse, OpenTelemetry, Sentry, ClickHouse,
+and cross-service production telemetry remain future Phase 11 work.
+
+## Current Quality Evaluation Slice
+
+`US-013` adds a local quality evaluation foundation:
+
+- `evals/canonical_build_scenarios.json`
+- `services/agent-api/src/pc_build_copilot/evaluation.py`
+- `services/agent-api/src/pc_build_copilot/evaluation_cli.py`
+- `pnpm eval:run`
+
+The runner loads canonical scenarios, parses intent, generates a build through
+the LangGraph-wrapped deterministic path, and checks expected use case, budget
+status, build status, approval gate, compatibility expectation, required slots,
+catalog SKU grounding, absence of numeric FPS claims, and explanation rubric
+score.
+
+This is the local release gate before Langfuse Datasets/Experiments, GitHub
+Actions, or LLM-as-judge review. The rubric score is a deterministic proxy
+until a human review workflow exists.

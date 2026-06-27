@@ -14,6 +14,8 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0010` | Local catalog mirror before private API |
 | `0011` | Local SQLite product state before Postgres |
 | `0012` | LangGraph build orchestration before autonomous optimization |
+| `0013` | Local trace replay before Langfuse |
+| `0014` | Local quality evals before Langfuse experiments |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:

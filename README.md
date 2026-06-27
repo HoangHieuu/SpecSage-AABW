@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-011` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-013` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -30,7 +30,12 @@ Sessions, intent revisions, build artifacts, applied build versions, and mock
 cart handoffs persist in a local SQLite store for restart-safe demos.
 Build generation now runs through a bounded LangGraph orchestration layer with
 catalog, optimizer, compatibility, performance, explainer, and validator steps
-recorded on each build artifact.
+recorded on each build artifact. Agent trace replay is now exposed through
+build/session trace endpoints and a web `Trace replay` panel with redacted
+event payloads and support-export text. A local quality eval suite now runs 30
+canonical scenarios as a release gate for catalog-grounding, budget,
+compatibility, required slots, SKU hallucination, and explanation-rubric
+regressions.
 
 Accepted product direction:
 
@@ -81,6 +86,8 @@ The initial implementation backlog is intentionally small:
 9. `US-009` - apply alternative as active build. Implemented.
 10. `US-010` - persistent session and build store. Implemented.
 11. `US-011` - LangGraph build orchestration foundation. Implemented.
+12. `US-012` - agent trace session replay foundation. Implemented.
+13. `US-013` - quality evaluation suite foundation. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -143,6 +150,9 @@ scripts/bin/harness-cli story verify US-008
 scripts/bin/harness-cli story verify US-009
 scripts/bin/harness-cli story verify US-010
 scripts/bin/harness-cli story verify US-011
+scripts/bin/harness-cli story verify US-012
+scripts/bin/harness-cli story verify US-013
+pnpm eval:run
 ```
 
 Catalog endpoints after `pnpm catalog:sync`:
@@ -153,7 +163,10 @@ Catalog endpoints after `pnpm catalog:sync`:
 - API build generation: `POST http://127.0.0.1:8000/sessions/{build_session_id}/generate`
 - API build alternatives: `GET http://127.0.0.1:8000/builds/{build_id}/alternatives`
 - API apply alternative: `POST http://127.0.0.1:8000/builds/{build_id}/alternatives/{variant_id}/apply`
+- API build trace replay: `GET http://127.0.0.1:8000/builds/{build_id}/trace`
+- API session trace replay: `GET http://127.0.0.1:8000/sessions/{build_session_id}/trace`
 - API mock cart handoff: `POST http://127.0.0.1:8000/builds/{build_id}/approve`
+- Local quality evals: `pnpm eval:run`
 
 ## Tool Setup
 

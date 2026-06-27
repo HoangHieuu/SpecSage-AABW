@@ -19,6 +19,8 @@ Initial PC Build Copilot story packets:
 | `US-009` | Apply alternative as active build | implemented | normal |
 | `US-010` | Persistent session and build store | implemented | normal |
 | `US-011` | LangGraph build orchestration foundation | implemented | normal |
+| `US-012` | Agent trace session replay foundation | implemented | normal |
+| `US-013` | Quality evaluation suite foundation | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

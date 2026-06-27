@@ -17,4 +17,5 @@ the work is selected or when a product decision needs a durable place to land.
 | E06 Explanation and Education | LLM-assisted summaries and customer-facing rationale grounded in validated facts | story created: `US-006` |
 | E07 Performance Fit | Deterministic qualitative workload fit profile, benchmark tables later | story created: `US-007` |
 | E08 Commerce Handoff | Mock cart first, real Teko cart/promos after API access | story created: `US-005` |
+| E11 Observability Quality | Replay agent decisions and run local quality gates before production observability | stories created: `US-012`, `US-013` |
 | Later Staff/Admin | Staff console, admin rules, auth/RBAC, analytics | unsliced high-risk |

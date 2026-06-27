@@ -7,6 +7,7 @@
     "dev:web": "pnpm --filter @pc-build-copilot/web dev",
     "dev:api": "PYTHONPATH=services/agent-api/src .venv/bin/python -m uvicorn pc_build_copilot.api:app --reload --port 8000",
     "catalog:sync": ".venv/bin/python -m pc_build_copilot.catalog_cli --input services/agent-api/fixtures/phongvu-category-components.html --overrides services/agent-api/catalog/sku_specs_overrides.json --output services/agent-api/catalog/catalog_snapshot.json --snapshot-at 2026-06-27T00:00:00Z --snapshot-version catalog_v2026_06_27_fixture",
+    "eval:run": ".venv/bin/python -m pc_build_copilot.evaluation_cli --scenarios evals/canonical_build_scenarios.json",
     "test:api": ".venv/bin/python -m pytest services/agent-api/tests",
     "check:web": "pnpm --filter @pc-build-copilot/web check",
     "check": "pnpm check:web && pnpm test:api"

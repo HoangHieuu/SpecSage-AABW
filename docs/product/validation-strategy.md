@@ -97,6 +97,20 @@ generate endpoint returns `orchestration_trace` and existing alternatives,
 apply, approval, and SQLite persistence paths remain compatible. Browser proof
 must show the generated build view renders the `Agent orchestration` panel.
 
+`US-012` is verified by `pnpm check` plus Browser E2E against local dev servers.
+Unit proof covers trace replay conversion and PII-sensitive payload redaction.
+Integration proof checks build/session trace endpoints, build-version grouping,
+support-export text, and SQLite restart survival. Browser proof must show the
+generated build view renders `Trace replay` with six events and a support-export
+copy action.
+
+`US-013` is verified by `pnpm check`, `pnpm eval:run`, and Harness story
+verification. Unit proof covers canonical scenario loading, minimum scenario
+count, persona/budget coverage, and hallucinated-SKU failure detection.
+Integration proof runs 30 scenarios through the deterministic parser and
+LangGraph-wrapped generator against the local catalog snapshot. Browser proof is
+not required because this story adds a local release gate, not a UI surface.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.
