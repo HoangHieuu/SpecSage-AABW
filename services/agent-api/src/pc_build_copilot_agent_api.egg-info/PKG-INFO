@@ -4,6 +4,7 @@ Version: 0.1.0
 Summary: FastAPI session and intent foundation for PC Build Copilot.
 Requires-Python: >=3.12
 Requires-Dist: fastapi>=0.128.0
+Requires-Dist: langgraph<2.0.0,>=1.0.0
 Requires-Dist: pydantic>=2.12.0
 Requires-Dist: uvicorn[standard]>=0.32.0
 Provides-Extra: dev

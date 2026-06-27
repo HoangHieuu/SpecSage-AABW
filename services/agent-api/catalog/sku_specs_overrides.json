@@ -34,6 +34,17 @@
       "form_factor": "UDIMM"
     }
   },
+  "240601032": {
+    "category": "ram",
+    "specs_confidence": "verified",
+    "specs": {
+      "memory_type": "DDR4",
+      "capacity_gb": 32,
+      "module_count": 1,
+      "speed_mhz": 3200,
+      "form_factor": "UDIMM"
+    }
+  },
   "221000008": {
     "category": "storage",
     "specs_confidence": "verified",
@@ -42,6 +53,16 @@
       "interface": "NVMe",
       "form_factor": "M.2 2280",
       "pcie": "4.0"
+    }
+  },
+  "230900321": {
+    "category": "storage",
+    "specs_confidence": "verified",
+    "specs": {
+      "capacity_gb": 1000,
+      "interface": "NVMe",
+      "form_factor": "M.2 2280",
+      "pcie": "3.0"
     }
   },
   "260508255": {
@@ -58,11 +79,35 @@
       "slot_width": 2.5
     }
   },
+  "231101406": {
+    "category": "vga",
+    "specs_confidence": "verified",
+    "specs": {
+      "chipset": "RTX 4060",
+      "vram_gb": 8,
+      "memory_type": "GDDR6",
+      "pcie": "4.0",
+      "tdp_w": 115,
+      "length_mm": 199,
+      "power_connectors": ["1x8-pin"],
+      "slot_width": 2
+    }
+  },
   "210800662": {
     "category": "psu",
     "specs_confidence": "verified",
     "specs": {
       "wattage_w": 650,
+      "efficiency_rating": "80 Plus Bronze",
+      "pcie_8pin_connectors": 2,
+      "form_factor": "ATX"
+    }
+  },
+  "230700750": {
+    "category": "psu",
+    "specs_confidence": "verified",
+    "specs": {
+      "wattage_w": 750,
       "efficiency_rating": "80 Plus Bronze",
       "pcie_8pin_connectors": 2,
       "form_factor": "ATX"

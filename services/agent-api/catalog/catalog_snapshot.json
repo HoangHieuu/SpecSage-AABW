@@ -102,6 +102,36 @@
       "raw_category": "ram"
     },
     {
+      "sku": "240601032",
+      "name": "RAM Kingston Fury Beast 32GB DDR4 3200MHz",
+      "category": "ram",
+      "price_vnd": 1390000,
+      "list_price_vnd": 1690000,
+      "discount_amount_vnd": 300000,
+      "stock_quantity": 16,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/ram-kingston-fury-beast-32gb-ddr4-3200mhz--s240601032",
+      "image_url": null,
+      "brand": "Kingston",
+      "warranty_text": "36 tháng",
+      "highlights": [
+        "1 x 32GB",
+        "DDR4 3200MHz",
+        "Desktop UDIMM"
+      ],
+      "specs": {
+        "module_count": 1,
+        "capacity_gb": 32,
+        "memory_type": "DDR4",
+        "speed_mhz": 3200,
+        "form_factor": "UDIMM"
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "ram"
+    },
+    {
       "sku": "221000008",
       "name": "SSD Kingston NV2 500GB M.2 PCIe NVMe",
       "category": "storage",
@@ -124,6 +154,35 @@
         "interface": "NVMe",
         "form_factor": "M.2 2280",
         "pcie": "4.0"
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "o-cung-ssd"
+    },
+    {
+      "sku": "230900321",
+      "name": "SSD Samsung 980 1TB M.2 PCIe NVMe",
+      "category": "storage",
+      "price_vnd": 1490000,
+      "list_price_vnd": 1790000,
+      "discount_amount_vnd": 300000,
+      "stock_quantity": 14,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/ssd-samsung-980-1tb-m2-pcie-nvme--s230900321",
+      "image_url": null,
+      "brand": "Samsung",
+      "warranty_text": "60 tháng",
+      "highlights": [
+        "1TB",
+        "M.2 2280",
+        "NVMe PCIe 3.0"
+      ],
+      "specs": {
+        "capacity_gb": 1000,
+        "interface": "NVMe",
+        "form_factor": "M.2 2280",
+        "pcie": "3.0"
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
@@ -166,6 +225,42 @@
       "raw_category": "vga-card-man-hinh"
     },
     {
+      "sku": "231101406",
+      "name": "VGA MSI GeForce RTX 4060 Ventus 2X 8GB GDDR6",
+      "category": "vga",
+      "price_vnd": 8990000,
+      "list_price_vnd": 9690000,
+      "discount_amount_vnd": 700000,
+      "stock_quantity": 11,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/vga-msi-geforce-rtx-4060-ventus-2x-8gb-gddr6--s231101406",
+      "image_url": null,
+      "brand": "MSI",
+      "warranty_text": "36 tháng",
+      "highlights": [
+        "8GB GDDR6",
+        "PCI-E 4.0",
+        "NVIDIA CUDA",
+        "1 x 8-pin"
+      ],
+      "specs": {
+        "vram_gb": 8,
+        "memory_type": "GDDR6",
+        "pcie": "4.0",
+        "chipset": "RTX 4060",
+        "tdp_w": 115,
+        "length_mm": 199,
+        "power_connectors": [
+          "1x8-pin"
+        ],
+        "slot_width": 2
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "vga-card-man-hinh"
+    },
+    {
       "sku": "210800662",
       "name": "PSU MSI MAG A650BN 650W 80 Plus Bronze",
       "category": "psu",
@@ -185,6 +280,36 @@
       ],
       "specs": {
         "wattage_w": 650,
+        "efficiency_rating": "80 Plus Bronze",
+        "pcie_8pin_connectors": 2,
+        "form_factor": "ATX"
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "psu-nguon-may-tinh"
+    },
+    {
+      "sku": "230700750",
+      "name": "PSU Cooler Master MWE 750 Bronze V2 750W",
+      "category": "psu",
+      "price_vnd": 1790000,
+      "list_price_vnd": 2090000,
+      "discount_amount_vnd": 300000,
+      "stock_quantity": 10,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/psu-cooler-master-mwe-750-bronze-v2-750w--s230700750",
+      "image_url": null,
+      "brand": "Cooler Master",
+      "warranty_text": "60 tháng",
+      "highlights": [
+        "750W",
+        "80 Plus Bronze",
+        "ATX",
+        "2 x 8-pin"
+      ],
+      "specs": {
+        "wattage_w": 750,
         "efficiency_rating": "80 Plus Bronze",
         "pcie_8pin_connectors": 2,
         "form_factor": "ATX"
@@ -231,7 +356,7 @@
   "validation": {
     "snapshot_version": "catalog_v2026_06_27_fixture",
     "generated_at": "2026-06-27T00:00:00Z",
-    "sku_count": 7,
+    "sku_count": 11,
     "issue_count": 0,
     "blocking_issue_count": 0,
     "issues": []
