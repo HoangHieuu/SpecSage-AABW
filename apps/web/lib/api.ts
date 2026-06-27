@@ -53,6 +53,18 @@ export type BuildIntent = {
   safe_defaults: string[];
 };
 
+export type IntentAgentAnalysis = {
+  provider: "openrouter";
+  model: string;
+  status: "available" | "degraded" | "disabled";
+  summary_vi: string | null;
+  clarification_vi: string | null;
+  confidence_notes_vi: string[];
+  safety_notes_vi: string[];
+  raw_json_valid: boolean;
+  error_vi: string | null;
+};
+
 export type IntentResponse = {
   session: BuildSession;
   revision: {
@@ -67,6 +79,7 @@ export type IntentResponse = {
     };
     confirmed: boolean;
   };
+  agent_analysis: IntentAgentAnalysis | null;
 };
 
 export type CompatibilityResult = {
@@ -104,6 +117,21 @@ export type BuildItem = {
   explanation_vi: string;
 };
 
+export type PerformanceProfile = {
+  use_case: string;
+  fit_level: "good" | "adequate" | "limited" | "unknown";
+  confidence: "high" | "medium" | "low";
+  summary_vi: string;
+  fit_notes_vi: string[];
+  bottleneck_notes_vi: string[];
+  warnings_vi: string[];
+  evidence: Array<{
+    label: string;
+    value: string;
+    source: "catalog_spec" | "intent" | "rule";
+  }>;
+};
+
 export type BuildArtifact = {
   build_id: string;
   build_session_id: string;
@@ -120,6 +148,7 @@ export type BuildArtifact = {
   can_approve: boolean;
   items: BuildItem[];
   compatibility_report: CompatibilityReport;
+  performance_profile: PerformanceProfile;
   explanations_vi: string[];
   warnings_vi: string[];
   mock_cart_payload: {
@@ -190,11 +219,12 @@ export function submitIntent(
   buildSessionId: string,
   message: string,
   confirm = false,
-  preset?: UseCase
+  preset?: UseCase,
+  useLlm = !confirm
 ): Promise<IntentResponse> {
   return request<IntentResponse>(`/sessions/${buildSessionId}/intent`, {
     method: "POST",
-    body: JSON.stringify({ message, confirm, preset })
+    body: JSON.stringify({ message, confirm, preset, use_llm: useLlm })
   });
 }
 

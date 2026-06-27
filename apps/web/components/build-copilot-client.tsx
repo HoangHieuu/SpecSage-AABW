@@ -7,7 +7,9 @@ import {
   BuildItem,
   BuildSession,
   CartReadyHandoff,
+  IntentAgentAnalysis,
   IntentResponse,
+  PerformanceProfile,
   UseCase,
   approveBuild,
   createSession,
@@ -54,6 +56,7 @@ export function BuildCopilotClient() {
   const [message, setMessage] = useState(presets[0].sample);
   const [preset, setPreset] = useState<UseCase>("gaming");
   const [intentResponse, setIntentResponse] = useState<IntentResponse | null>(null);
+  const [agentAnalysis, setAgentAnalysis] = useState<IntentAgentAnalysis | null>(null);
   const [buildArtifact, setBuildArtifact] = useState<BuildArtifact | null>(null);
   const [cartHandoff, setCartHandoff] = useState<CartReadyHandoff | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,6 +89,7 @@ export function BuildCopilotClient() {
       const created = await createSession();
       setSession(created);
       setIntentResponse(null);
+      setAgentAnalysis(null);
       setBuildArtifact(null);
       setCartHandoff(null);
     } catch (err) {
@@ -108,6 +112,11 @@ export function BuildCopilotClient() {
       const response = await submitIntent(activeSession.build_session_id, message, confirm, preset);
       setSession(response.session);
       setIntentResponse(response);
+      if (response.agent_analysis) {
+        setAgentAnalysis(response.agent_analysis);
+      } else if (!confirm) {
+        setAgentAnalysis(null);
+      }
       setBuildArtifact(null);
       setCartHandoff(null);
     } catch (err) {
@@ -275,6 +284,8 @@ export function BuildCopilotClient() {
             </div>
           ) : null}
 
+          {agentAnalysis ? <LlmAgentPanel analysis={agentAnalysis} /> : null}
+
           {intent ? (
             <div className="chips">
               {intent.brand_preferences.map((brand) => (
@@ -316,6 +327,8 @@ export function BuildCopilotClient() {
               <Metric label="Catalog" value={buildArtifact.catalog_version} />
               <Metric label="Rules" value={buildArtifact.rules_version} />
             </div>
+
+            <PerformanceProfilePanel profile={buildArtifact.performance_profile} />
 
             <div className="table-wrap">
               <table>
@@ -402,6 +415,153 @@ export function BuildCopilotClient() {
         )}
       </section>
     </main>
+  );
+}
+
+function PerformanceProfilePanel({ profile }: { profile: PerformanceProfile }) {
+  const fitLabel: Record<PerformanceProfile["fit_level"], string> = {
+    good: "Phù hợp tốt",
+    adequate: "Đủ dùng",
+    limited: "Còn hạn chế",
+    unknown: "Chưa đủ dữ liệu"
+  };
+  const confidenceLabel: Record<PerformanceProfile["confidence"], string> = {
+    high: "Dữ liệu cao",
+    medium: "Dữ liệu vừa",
+    low: "Dữ liệu thấp"
+  };
+  const statusClassName =
+    profile.fit_level === "good"
+      ? "status confirmed"
+      : profile.fit_level === "adequate"
+        ? "status warning"
+        : profile.fit_level === "limited"
+          ? "status blocked"
+          : "status";
+
+  return (
+    <section className="performance-fit" data-testid="performance-profile">
+      <div className="performance-fit-heading">
+        <div>
+          <h3>Workload fit</h3>
+          <p>{profile.summary_vi}</p>
+        </div>
+        <div className="performance-fit-status">
+          <span className={statusClassName}>{fitLabel[profile.fit_level]}</span>
+          <small>{confidenceLabel[profile.confidence]}</small>
+        </div>
+      </div>
+
+      {profile.evidence.length ? (
+        <div className="performance-evidence" aria-label="Performance facts">
+          {profile.evidence.map((fact) => (
+            <div key={`${fact.label}-${fact.value}`}>
+              <span>{fact.label}</span>
+              <strong>{fact.value}</strong>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="performance-notes">
+        {profile.fit_notes_vi.length ? (
+          <div>
+            <h4>Phù hợp</h4>
+            <ul>
+              {profile.fit_notes_vi.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {profile.bottleneck_notes_vi.length ? (
+          <div>
+            <h4>Bottleneck</h4>
+            <ul>
+              {profile.bottleneck_notes_vi.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {profile.warnings_vi.length ? (
+          <div>
+            <h4>Lưu ý</h4>
+            <ul>
+              {profile.warnings_vi.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function LlmAgentPanel({ analysis }: { analysis: IntentAgentAnalysis }) {
+  const statusLabel: Record<IntentAgentAnalysis["status"], string> = {
+    available: "Đang hoạt động",
+    degraded: "Dự phòng",
+    disabled: "Chưa bật"
+  };
+  const statusClassName =
+    analysis.status === "available"
+      ? "status confirmed"
+      : analysis.status === "degraded"
+        ? "status warning"
+        : "status";
+
+  return (
+    <section className="llm-agent" data-testid="llm-agent-panel">
+      <div className="llm-agent-heading">
+        <div>
+          <h3>LLM Agent</h3>
+          <p>
+            OpenRouter <span>{analysis.model}</span>
+          </p>
+        </div>
+        <span className={statusClassName}>{statusLabel[analysis.status]}</span>
+      </div>
+
+      {analysis.summary_vi ? (
+        <div className="llm-agent-block">
+          <strong>Tóm tắt từ LLM</strong>
+          <p>{analysis.summary_vi}</p>
+        </div>
+      ) : null}
+
+      {analysis.clarification_vi ? (
+        <div className="llm-agent-block">
+          <strong>Câu hỏi gợi ý</strong>
+          <p>{analysis.clarification_vi}</p>
+        </div>
+      ) : null}
+
+      {analysis.error_vi ? <p className="llm-agent-error">{analysis.error_vi}</p> : null}
+
+      {analysis.confidence_notes_vi.length ? (
+        <div className="llm-agent-block">
+          <strong>Ghi chú hiểu intent</strong>
+          <ul>
+            {analysis.confidence_notes_vi.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {analysis.safety_notes_vi.length ? (
+        <div className="llm-agent-block">
+          <strong>Ghi chú an toàn</strong>
+          <ul>
+            {analysis.safety_notes_vi.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
   );
 }
 
