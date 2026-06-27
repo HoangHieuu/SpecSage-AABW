@@ -26,5 +26,7 @@ coverage/
 .pytest_cache/
 __pycache__/
 *.pyc
+*.tsbuildinfo
+.playwright-cli/
 
 .env
