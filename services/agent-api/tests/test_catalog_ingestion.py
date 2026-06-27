@@ -46,7 +46,7 @@ def test_overrides_complete_required_compatibility_specs() -> None:
         generated_at=SNAPSHOT_AT,
     )
 
-    assert report.sku_count == 7
+    assert report.sku_count == 11
     assert report.blocking_issue_count == 0
     assert all(item.specs_confidence == "verified" for item in items)
 
@@ -89,6 +89,6 @@ def test_catalog_cli_writes_snapshot_with_embedded_validation(tmp_path: Path) ->
     snapshot = CatalogSnapshot.model_validate_json(output.read_text(encoding="utf-8"))
     assert exit_code == 0
     assert snapshot.snapshot_version == "catalog_test_cli"
-    assert len(snapshot.items) == 7
+    assert len(snapshot.items) == 11
     assert snapshot.validation is not None
     assert snapshot.validation.blocking_issue_count == 0

@@ -37,7 +37,7 @@ def test_catalog_health_exposes_snapshot_validation_state() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["snapshot_version"] == "catalog_test_api"
-    assert body["sku_count"] == 7
+    assert body["sku_count"] == 11
     assert body["blocking_issue_count"] == 0
 
 
