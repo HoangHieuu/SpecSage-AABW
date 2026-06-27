@@ -51,7 +51,19 @@ def test_overrides_complete_required_compatibility_specs() -> None:
     assert report.demo_ready is True
     assert report.category_counts[ComponentCategory.CPU] == 1
     assert report.category_counts[ComponentCategory.VGA] == 2
+    assert report.recommended_demo_category_counts[ComponentCategory.CPU] == 2
     assert report.missing_required_demo_categories == []
+    assert report.thin_demo_categories == [
+        ComponentCategory.CPU,
+        ComponentCategory.MAINBOARD,
+        ComponentCategory.CASE,
+    ]
+    assert any(
+        issue.severity == "warn"
+        and issue.code == "CATALOG_THIN_DEMO_CATEGORY"
+        and issue.field == "category_counts.cpu"
+        for issue in report.issues
+    )
     assert all(item.specs_confidence == "verified" for item in items)
 
 
@@ -92,6 +104,8 @@ def test_validation_blocks_snapshots_missing_required_demo_categories() -> None:
     assert report.demo_ready is False
     assert ComponentCategory.VGA in report.missing_required_demo_categories
     assert ComponentCategory.PSU in report.missing_required_demo_categories
+    assert ComponentCategory.VGA not in report.thin_demo_categories
+    assert ComponentCategory.PSU not in report.thin_demo_categories
     assert any(
         issue.code == "CATALOG_MISSING_DEMO_CATEGORY"
         and issue.field == "category_counts.vga"
@@ -125,3 +139,5 @@ def test_catalog_cli_writes_snapshot_with_embedded_validation(tmp_path: Path) ->
     assert snapshot.validation.blocking_issue_count == 0
     assert snapshot.validation.demo_ready is True
     assert snapshot.validation.category_counts[ComponentCategory.CASE] == 1
+    assert snapshot.validation.recommended_demo_category_counts[ComponentCategory.CASE] == 2
+    assert ComponentCategory.CASE in snapshot.validation.thin_demo_categories

@@ -42,7 +42,14 @@ def test_catalog_health_exposes_snapshot_validation_state() -> None:
     assert body["demo_ready"] is True
     assert body["category_counts"]["cpu"] == 1
     assert body["category_counts"]["vga"] == 2
+    assert body["recommended_demo_category_counts"]["cpu"] == 2
     assert body["missing_required_demo_categories"] == []
+    assert body["thin_demo_categories"] == ["cpu", "mainboard", "case"]
+    assert any(
+        issue["code"] == "CATALOG_THIN_DEMO_CATEGORY"
+        and issue["field"] == "category_counts.mainboard"
+        for issue in body["issues"]
+    )
 
 
 def test_catalog_query_filters_by_category_price_stock_and_vram() -> None:
