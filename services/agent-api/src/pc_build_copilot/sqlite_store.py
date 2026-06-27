@@ -12,10 +12,12 @@ from pydantic import BaseModel
 from pc_build_copilot.build_models import (
     BuildApproval,
     BuildArtifact,
+    BuildFeedback,
+    BuildFeedbackRequest,
     BuildStatus,
     CartReadyHandoff,
 )
-from pc_build_copilot.build_store import BuildStore
+from pc_build_copilot.build_store import BuildStore, build_feedback_from_artifact
 from pc_build_copilot.models import BuildSession, IntentRevision, SessionState
 from pc_build_copilot.store import SessionStore
 
@@ -280,6 +282,67 @@ class SqliteBuildStore(BuildStore):
             )
         return handoff
 
+    def save_feedback(
+        self,
+        build_id: str,
+        payload: BuildFeedbackRequest,
+    ) -> BuildFeedback:
+        artifact = self.get(build_id)
+        feedback = build_feedback_from_artifact(artifact, payload)
+        with _connect(self.db_path) as conn:
+            conn.execute(
+                """
+                INSERT INTO build_feedback (
+                    feedback_id,
+                    build_id,
+                    build_session_id,
+                    build_version,
+                    created_at,
+                    rating,
+                    review_queue_status,
+                    payload_json
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    feedback.feedback_id,
+                    feedback.build_id,
+                    feedback.build_session_id,
+                    feedback.build_version,
+                    _iso(feedback.created_at),
+                    feedback.rating.value,
+                    feedback.review_queue_status.value,
+                    _model_json(feedback),
+                ),
+            )
+        return feedback
+
+    def feedback_for_build(self, build_id: str) -> list[BuildFeedback]:
+        self.get(build_id)
+        with _connect(self.db_path) as conn:
+            rows = conn.execute(
+                """
+                SELECT payload_json
+                FROM build_feedback
+                WHERE build_id = ?
+                ORDER BY created_at ASC
+                """,
+                (build_id,),
+            ).fetchall()
+        return [BuildFeedback.model_validate_json(row["payload_json"]) for row in rows]
+
+    def feedback_review_queue(self) -> list[BuildFeedback]:
+        with _connect(self.db_path) as conn:
+            rows = conn.execute(
+                """
+                SELECT payload_json
+                FROM build_feedback
+                WHERE review_queue_status = 'queued'
+                ORDER BY created_at DESC
+                """,
+            ).fetchall()
+        return [BuildFeedback.model_validate_json(row["payload_json"]) for row in rows]
+
 
 def _resolve_db_path(db_path: str | os.PathLike[str] | None) -> Path:
     value = db_path or os.environ.get(DB_PATH_ENV) or DEFAULT_DB_PATH
@@ -334,6 +397,26 @@ def _ensure_schema(db_path: Path) -> None:
 
             CREATE INDEX IF NOT EXISTS idx_cart_handoffs_session
                 ON cart_handoffs(build_session_id);
+
+            CREATE TABLE IF NOT EXISTS build_feedback (
+                feedback_id TEXT PRIMARY KEY,
+                build_id TEXT NOT NULL,
+                build_session_id TEXT NOT NULL,
+                build_version INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                rating TEXT NOT NULL,
+                review_queue_status TEXT NOT NULL,
+                payload_json TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_build_feedback_build
+                ON build_feedback(build_id, created_at);
+
+            CREATE INDEX IF NOT EXISTS idx_build_feedback_session
+                ON build_feedback(build_session_id, created_at);
+
+            CREATE INDEX IF NOT EXISTS idx_build_feedback_review
+                ON build_feedback(review_queue_status, created_at);
             """
         )
 

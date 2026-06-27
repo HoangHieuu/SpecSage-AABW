@@ -33,6 +33,29 @@ class CartHandoffStatus(str, Enum):
     CART_READY = "cart_ready"
 
 
+class BuildFeedbackRating(str, Enum):
+    THUMBS_UP = "thumbs_up"
+    THUMBS_DOWN = "thumbs_down"
+
+
+class BuildFeedbackReason(str, Enum):
+    FITS_NEED = "fits_need"
+    GOOD_VALUE = "good_value"
+    CLEAR_EXPLANATION = "clear_explanation"
+    CONFUSING_EXPLANATION = "confusing_explanation"
+    OVER_BUDGET = "over_budget"
+    MISSING_PART = "missing_part"
+    WRONG_PERFORMANCE_FIT = "wrong_performance_fit"
+    COMPATIBILITY_CONCERN = "compatibility_concern"
+    PRICE_OR_STOCK_CONCERN = "price_or_stock_concern"
+    OTHER = "other"
+
+
+class BuildFeedbackReviewStatus(str, Enum):
+    NOT_QUEUED = "not_queued"
+    QUEUED = "queued"
+
+
 class OrchestrationAgent(str, Enum):
     CATALOG = "catalog"
     OPTIMIZER = "optimizer"
@@ -236,3 +259,43 @@ class CartReadyHandoff(BaseModel):
     item_count: int
     mock_cart_payload: MockCartPayload
     warnings_vi: list[str] = Field(default_factory=list)
+
+
+class PartFeedbackRequest(BaseModel):
+    slot: BuildSlot
+    sku: str
+    rating: BuildFeedbackRating
+    reason_tags: list[BuildFeedbackReason] = Field(default_factory=list, max_length=5)
+    comment_vi: str | None = Field(default=None, max_length=500)
+
+
+class BuildFeedbackRequest(BaseModel):
+    rating: BuildFeedbackRating
+    reason_tags: list[BuildFeedbackReason] = Field(default_factory=list, max_length=5)
+    comment_vi: str | None = Field(default=None, max_length=1000)
+    part_feedback: list[PartFeedbackRequest] = Field(default_factory=list, max_length=8)
+
+
+class PartFeedback(BaseModel):
+    slot: BuildSlot
+    sku: str
+    name: str
+    rating: BuildFeedbackRating
+    reason_tags: list[BuildFeedbackReason] = Field(default_factory=list)
+    comment_vi: str | None = None
+
+
+class BuildFeedback(BaseModel):
+    feedback_id: str = Field(default_factory=lambda: f"fb_{uuid4().hex}")
+    build_id: str
+    build_session_id: str
+    build_version: int
+    catalog_version: str
+    rules_version: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    rating: BuildFeedbackRating
+    reason_tags: list[BuildFeedbackReason] = Field(default_factory=list)
+    comment_vi: str | None = None
+    part_feedback: list[PartFeedback] = Field(default_factory=list)
+    review_queue_status: BuildFeedbackReviewStatus = BuildFeedbackReviewStatus.NOT_QUEUED
+    review_queue_reason_vi: str | None = None

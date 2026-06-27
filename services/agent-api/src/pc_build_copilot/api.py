@@ -9,6 +9,8 @@ from pc_build_copilot.build_orchestrator import generate_build_with_orchestratio
 from pc_build_copilot.build_models import (
     BuildAlternativesResponse,
     BuildArtifact,
+    BuildFeedback,
+    BuildFeedbackRequest,
     BuildTraceReplay,
     CartReadyHandoff,
     SessionTraceReplay,
@@ -123,6 +125,21 @@ def create_app(
             base_artifact=builds.get(build_id),
             catalog=catalog_store.snapshot(),
         )
+
+    @app.post("/builds/{build_id}/feedback", response_model=BuildFeedback)
+    def submit_build_feedback(
+        build_id: str,
+        payload: BuildFeedbackRequest,
+    ) -> BuildFeedback:
+        return builds.save_feedback(build_id, payload)
+
+    @app.get("/builds/{build_id}/feedback", response_model=list[BuildFeedback])
+    def get_build_feedback(build_id: str) -> list[BuildFeedback]:
+        return builds.feedback_for_build(build_id)
+
+    @app.get("/feedback/review-queue", response_model=list[BuildFeedback])
+    def get_feedback_review_queue() -> list[BuildFeedback]:
+        return builds.feedback_review_queue()
 
     @app.post(
         "/builds/{build_id}/alternatives/{variant_id}/apply",
