@@ -359,6 +359,28 @@
     "sku_count": 11,
     "issue_count": 0,
     "blocking_issue_count": 0,
+    "category_counts": {
+      "cpu": 1,
+      "mainboard": 1,
+      "ram": 2,
+      "vga": 2,
+      "storage": 2,
+      "psu": 2,
+      "case": 1,
+      "cooler": 0,
+      "monitor": 0
+    },
+    "required_demo_categories": [
+      "cpu",
+      "mainboard",
+      "ram",
+      "storage",
+      "vga",
+      "psu",
+      "case"
+    ],
+    "missing_required_demo_categories": [],
+    "demo_ready": true,
     "issues": []
   }
 }

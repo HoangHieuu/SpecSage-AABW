@@ -20,6 +20,16 @@ REQUIRED_SPECS: dict[ComponentCategory, list[str]] = {
     ComponentCategory.MONITOR: ["resolution", "refresh_rate_hz"],
 }
 
+DEMO_REQUIRED_CATEGORIES: tuple[ComponentCategory, ...] = (
+    ComponentCategory.CPU,
+    ComponentCategory.MAINBOARD,
+    ComponentCategory.RAM,
+    ComponentCategory.STORAGE,
+    ComponentCategory.VGA,
+    ComponentCategory.PSU,
+    ComponentCategory.CASE,
+)
+
 
 def validate_catalog(
     items: list[CatalogSku],
@@ -29,8 +39,14 @@ def validate_catalog(
 ) -> CatalogValidationReport:
     issues: list[CatalogIssue] = []
     seen: set[str] = set()
+    category_counts: dict[ComponentCategory, int] = {
+        category: 0 for category in ComponentCategory if category != ComponentCategory.UNKNOWN
+    }
 
     for item in items:
+        if item.category != ComponentCategory.UNKNOWN:
+            category_counts[item.category] = category_counts.get(item.category, 0) + 1
+
         if item.sku in seen:
             issues.append(
                 CatalogIssue(
@@ -88,6 +104,19 @@ def validate_catalog(
                     )
                 )
 
+    missing_required_categories = [
+        category for category in DEMO_REQUIRED_CATEGORIES if category_counts.get(category, 0) == 0
+    ]
+    for category in missing_required_categories:
+        issues.append(
+            CatalogIssue(
+                severity="block",
+                code="CATALOG_MISSING_DEMO_CATEGORY",
+                field=f"category_counts.{category.value}",
+                message=f"Catalog snapshot is missing required demo category {category.value}.",
+            )
+        )
+
     blocking_count = sum(1 for issue in issues if issue.severity == "block")
     return CatalogValidationReport(
         snapshot_version=snapshot_version,
@@ -95,5 +124,9 @@ def validate_catalog(
         sku_count=len(items),
         issue_count=len(issues),
         blocking_issue_count=blocking_count,
+        category_counts=category_counts,
+        required_demo_categories=list(DEMO_REQUIRED_CATEGORIES),
+        missing_required_demo_categories=missing_required_categories,
+        demo_ready=blocking_count == 0 and not missing_required_categories,
         issues=issues,
     )

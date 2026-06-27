@@ -39,6 +39,10 @@ def test_catalog_health_exposes_snapshot_validation_state() -> None:
     assert body["snapshot_version"] == "catalog_test_api"
     assert body["sku_count"] == 11
     assert body["blocking_issue_count"] == 0
+    assert body["demo_ready"] is True
+    assert body["category_counts"]["cpu"] == 1
+    assert body["category_counts"]["vga"] == 2
+    assert body["missing_required_demo_categories"] == []
 
 
 def test_catalog_query_filters_by_category_price_stock_and_vram() -> None:
