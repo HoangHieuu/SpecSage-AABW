@@ -49,18 +49,37 @@ The first demo should prove a narrow vertical slice:
 4. Deterministic rules block invalid hardware combinations.
 5. The optimizer produces one compatible build under or near budget.
 6. The UI shows parts, total, compatibility status, and grounded explanations.
-7. The user approves a safe generated build and receives a mock cart-ready
+7. The generated build shows a qualitative workload fit profile grounded in
+   catalog facts, without FPS or benchmark claims.
+8. The user can inspect validated alternative variants with slot-level deltas
+   and price trade-offs.
+9. The user can apply a selected alternative as the active build version.
+10. The user approves a safe generated build and receives a mock cart-ready
    handoff with real SKU links.
+11. The generated build carries an agent orchestration trace showing the
+    LangGraph catalog, optimizer, compatibility, performance, explainer, and
+    validator steps.
 
-Current first-slice implementation reaches step 7 with a deterministic
-fixture-backed generator and mock cart handoff. It produces one build from the
-local catalog snapshot, validates it through the compatibility rule engine,
-reports explicit budget gaps when the current snapshot cannot satisfy a low
-budget, and creates a mock cart-ready handoff only after approval gates pass.
-`US-006` adds an advisory OpenRouter LLM layer to the intent step. That layer
-summarizes customer needs and suggests clarifying questions in Vietnamese, but
-it does not choose SKUs, prices, compatibility outcomes, budget gates, approval,
-or cart handoff payloads.
+Current first-slice implementation reaches step 10 with a deterministic
+fixture-backed generator, performance fit profile, alternatives panel, and mock
+cart handoff. It produces one build from the local catalog snapshot, validates
+it through the compatibility rule engine, reports explicit budget gaps when the
+current snapshot cannot satisfy a low budget, summarizes qualitative workload
+fit from CPU/GPU/RAM/storage facts, returns deterministic upgrade alternatives
+from the same catalog snapshot, applies a selected alternative as a new active
+build version, and creates a mock cart-ready handoff only after approval gates
+pass. `US-006` adds an advisory OpenRouter LLM layer to the intent step.
+That layer summarizes customer needs and suggests clarifying questions in
+Vietnamese, but it does not choose SKUs, prices, compatibility outcomes, budget
+gates, approval, alternatives, applied builds, performance claims, or cart
+handoff payloads.
+
+`US-010` adds local SQLite persistence for sessions, intent revisions, build
+artifacts, applied build versions, and mock cart handoffs so the demo can
+survive an Agent API process restart without requiring Postgres credentials.
+`US-011` routes build generation through a bounded LangGraph state graph and
+surfaces a schema-valid orchestration trace while preserving deterministic SKU,
+price, compatibility, workload fit, approval, and handoff behavior.
 
 Out of first-slice scope unless a later story selects it:
 
@@ -78,7 +97,7 @@ Out of first-slice scope unless a later story selects it:
 | 1 | Session foundation and intent capture | First build slice |
 | 2 | Catalog intelligence and product grounding | First build slice |
 | 3 | Compatibility and safety engine | First build slice |
-| 4 | Performance modeling and workload fit | Seed minimal benchmark table |
+| 4 | Performance modeling and workload fit | Qualitative profile first; benchmark table later |
 | 5 | Build optimization and iteration | First vertical slice |
 | 6 | Explanation and education | First vertical slice |
 | 7 | Upgrade planning | Later |

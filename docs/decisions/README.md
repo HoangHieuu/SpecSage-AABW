@@ -12,6 +12,8 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0008` | PC Build Copilot source hierarchy |
 | `0009` | Hybrid Python and TypeScript stack |
 | `0010` | Local catalog mirror before private API |
+| `0011` | Local SQLite product state before Postgres |
+| `0012` | LangGraph build orchestration before autonomous optimization |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:

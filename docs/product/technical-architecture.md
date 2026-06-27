@@ -124,6 +124,7 @@ First public endpoints should be introduced with OpenAPI contracts:
 - `POST /builds/{id}/approve`
 - `POST /builds/{id}/validate`
 - `GET /builds/{id}/alternatives`
+- `POST /builds/{id}/alternatives/{variant_id}/apply`
 - `POST /builds/{id}/cart-payload`
 
 Do not expose checkout, staff auth, webhooks, or admin mutation APIs until their
@@ -157,6 +158,10 @@ Approval is allowed only when the generated build has `can_approve=true` and
 status `generated`. The handoff contains real SKU links from the existing build
 artifact and remains labeled as a mock cart payload.
 
+`US-010` persists the same handoff payload in the local SQLite product store for
+restart-safe demos; real checkout, auth, payment, and Teko provider APIs remain
+out of scope.
+
 ## Current LLM Advisor Slice
 
 `US-006` adds a narrow OpenRouter adapter for intent-time explanation:
@@ -173,3 +178,99 @@ This is not the full LangGraph/Pydantic AI orchestration layer yet. It is a
 boundary-safe provider adapter that parses structured LLM JSON before it reaches
 the UI. Provider failures degrade to deterministic parser output instead of
 blocking the session.
+
+## Current Performance Fit Slice
+
+`US-007` adds a deterministic qualitative profile to generated builds without
+introducing benchmark tables, LLM scoring, or numeric performance promises:
+
+- `services/agent-api/src/pc_build_copilot/performance_profile.py`
+- `BuildArtifact.performance_profile`
+- `apps/web/components/build-copilot-client.tsx`
+
+The profile is generated from selected SKU facts plus the confirmed
+`BuildIntent`. It labels workload fit, confidence, evidence, bottlenecks, and
+warnings for gaming, creator, AI/local LLM, office, and student use cases. It
+may mention facts such as RAM capacity, CPU core/thread counts, storage type,
+and GPU VRAM, but it must not invent FPS, benchmark deltas, or game-specific
+numeric outcomes until a maintained benchmark source is added.
+
+## Current Build Alternatives Slice
+
+`US-008` adds the first Phase 5 iteration surface without introducing
+LangGraph checkpointing, PostgreSQL, OR-Tools, or persisted variant history:
+
+- `GET /builds/{build_id}/alternatives`
+- `services/agent-api/src/pc_build_copilot/build_alternatives.py`
+- `BuildAlternativesResponse`
+- `apps/web/components/build-copilot-client.tsx`
+
+The alternatives service starts from a stored generated build, reuses the local
+catalog snapshot, swaps one supported slot at a time, reruns deterministic
+compatibility rules, recomputes budget status, and regenerates the qualitative
+performance profile. Current curated variants cover RAM upgrade, larger SSD,
+NVIDIA GPU, and PSU headroom when matching SKUs exist in the snapshot.
+
+This follows the `techstack.md` Phase 5 recommendation for alternatives and
+slot-level diffs, but keeps the hackathon implementation narrow: no autonomous
+optimizer loop, no long-running orchestration, no external provider calls, and
+no persisted variant history.
+
+## Current Alternative Apply Slice
+
+`US-009` adds the second Phase 5 iteration surface without introducing
+LangGraph checkpointing, PostgreSQL, OR-Tools, or persisted history:
+
+- `POST /builds/{build_id}/alternatives/{variant_id}/apply`
+- `services/agent-api/src/pc_build_copilot/build_alternatives.py`
+- `apps/web/components/build-copilot-client.tsx`
+
+Applying an alternative re-derives the selected variant from the stored base
+build and the current local catalog snapshot, then creates a new `BuildArtifact`
+with a fresh `build_id` and `build_version = base + 1`. Compatibility rules and
+the qualitative performance profile are rerun against the applied SKU set using
+the new build ID. The original build remains retrievable and unchanged.
+
+Applying a variant does not approve it. The existing `POST /builds/{build_id}/approve`
+gate still decides whether the active build is compatible, within budget, and
+ready for mock cart handoff.
+
+## Current Local Persistence Slice
+
+`US-010` adds a local durable store without introducing Postgres credentials,
+Redis, auth, account history, or production migrations:
+
+- `services/agent-api/src/pc_build_copilot/sqlite_store.py`
+- Default DB path: `.local/pc-build-copilot.sqlite3`
+- Override env var: `PC_BUILD_COPILOT_DB_PATH`
+- Tables: `build_sessions`, `intent_revisions`, `build_artifacts`,
+  `cart_handoffs`
+
+The SQLite store persists full Pydantic payload JSON for each domain object and
+keeps the existing API contracts unchanged. Tests can still inject the
+in-memory `SessionStore` and `BuildStore` for isolated proof.
+
+SQLite is a local hackathon bridge. PostgreSQL remains the production target for
+LangGraph checkpointing, account-linked saved builds, catalog/search expansion,
+analytics, and multi-user history.
+
+## Current LangGraph Orchestration Slice
+
+`US-011` introduces the first real LangGraph runtime without replacing the
+deterministic build path:
+
+- `services/agent-api/src/pc_build_copilot/build_orchestrator.py`
+- `BuildArtifact.orchestration_trace`
+- `apps/web/components/build-copilot-client.tsx`
+
+The graph is a sequential `StateGraph` with catalog, optimizer, compatibility,
+performance, explainer, and validator steps. The optimizer node currently calls
+the existing deterministic build generator, and later nodes record facts from
+the generated artifact. This keeps SKU selection, prices, budget status,
+compatibility reports, performance fit, approval gates, alternatives, and mock
+cart handoff behavior unchanged.
+
+This is a foundation slice, not the full Phase 5 optimizer loop. LangGraph
+checkpointing, PostgreSQL/Redis checkpointers, OR-Tools, Pydantic AI build
+agents, parallel Pareto variants, and external provider calls remain future
+story work.

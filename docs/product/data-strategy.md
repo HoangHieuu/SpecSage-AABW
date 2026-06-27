@@ -110,9 +110,15 @@ Current implementation:
   selected SKU map, approval id, handoff id, total snapshot price, and Phong Vu
   product links.
 - Over-budget and blocked builds return 409 instead of creating a cart payload.
+- `US-010` persists sessions, intent revisions, build artifacts, applied build
+  versions, and mock cart handoffs in local SQLite so the demo survives an Agent
+  API process restart.
 
 Pilot and production:
 
 - Swap the scraper/local mirror behind a `CommerceAdapter` and `CatalogAdapter`
   interface.
 - Preserve build reproducibility through catalog and rules versions.
+- Replace local SQLite with PostgreSQL/Redis when multi-user account history,
+  LangGraph checkpointing, analytics, or production deployment becomes the
+  selected story.

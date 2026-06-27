@@ -16,14 +16,21 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-007` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-011` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
 first build generation, a mock cart-ready approval handoff, and an advisory
 OpenRouter LLM intent analysis layer. Generated builds now also include a
 deterministic qualitative workload fit profile grounded in catalog facts, with
-no FPS or benchmark claims.
+no FPS or benchmark claims, plus deterministic catalog-grounded alternatives
+with slot deltas and compatibility proof. A selected alternative can be applied
+as a new active build version, then approved through the existing handoff gate.
+Sessions, intent revisions, build artifacts, applied build versions, and mock
+cart handoffs persist in a local SQLite store for restart-safe demos.
+Build generation now runs through a bounded LangGraph orchestration layer with
+catalog, optimizer, compatibility, performance, explainer, and validator steps
+recorded on each build artifact.
 
 Accepted product direction:
 
@@ -70,6 +77,10 @@ The initial implementation backlog is intentionally small:
 5. `US-005` - review approval and mock cart-ready handoff. Implemented.
 6. `US-006` - OpenRouter LLM intent advisor. Implemented.
 7. `US-007` - deterministic performance fit profile. Implemented.
+8. `US-008` - build alternatives and iteration controls. Implemented.
+9. `US-009` - apply alternative as active build. Implemented.
+10. `US-010` - persistent session and build store. Implemented.
+11. `US-011` - LangGraph build orchestration foundation. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -108,10 +119,13 @@ Optional LLM advisor configuration for the API:
 OPENROUTER_API_KEY=...
 OPENROUTER_MODEL=deepseek/deepseek-v4-flash
 LLM_AGENT_ENABLED=true
+PC_BUILD_COPILOT_DB_PATH=.local/pc-build-copilot.sqlite3
 ```
 
 The API reads these from local environment or `.env`. The key stays server-side;
 the browser receives only the model name, provider status, and advisory text.
+`PC_BUILD_COPILOT_DB_PATH` is optional; when omitted, the API uses
+`.local/pc-build-copilot.sqlite3`.
 
 Validate the current slice:
 
@@ -125,6 +139,10 @@ scripts/bin/harness-cli story verify US-004
 scripts/bin/harness-cli story verify US-005
 scripts/bin/harness-cli story verify US-006
 scripts/bin/harness-cli story verify US-007
+scripts/bin/harness-cli story verify US-008
+scripts/bin/harness-cli story verify US-009
+scripts/bin/harness-cli story verify US-010
+scripts/bin/harness-cli story verify US-011
 ```
 
 Catalog endpoints after `pnpm catalog:sync`:
@@ -133,6 +151,8 @@ Catalog endpoints after `pnpm catalog:sync`:
 - API SKU query: `http://127.0.0.1:8000/catalog/skus?category=vga&in_stock=true`
 - API build validation: `POST http://127.0.0.1:8000/builds/demo/validate`
 - API build generation: `POST http://127.0.0.1:8000/sessions/{build_session_id}/generate`
+- API build alternatives: `GET http://127.0.0.1:8000/builds/{build_id}/alternatives`
+- API apply alternative: `POST http://127.0.0.1:8000/builds/{build_id}/alternatives/{variant_id}/apply`
 - API mock cart handoff: `POST http://127.0.0.1:8000/builds/{build_id}/approve`
 
 ## Tool Setup

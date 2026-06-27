@@ -2,7 +2,7 @@
 
 ## Status
 
-in_progress
+implemented
 
 ## Lane
 
@@ -48,9 +48,6 @@ benchmark tables exist.
 
 ## Validation
 
-When updating durable proof status, use numeric booleans:
-`scripts/bin/harness-cli story update --id <id> --unit 1 --integration 1 --e2e 0 --platform 0`.
-
 | Layer | Expected proof |
 | --- | --- |
 | Unit | Performance profile tests for gaming, creator, AI, and office thresholds |
@@ -65,4 +62,13 @@ No harness behavior change expected.
 
 ## Evidence
 
-Pending validation.
+- `pnpm check` passed with Next.js production build and 46 API tests.
+- `scripts/bin/harness-cli story verify US-007` passed.
+- Playwright browser flow opened the local app, analyzed intent through the
+  OpenRouter advisor, confirmed intent, generated a valid 7-SKU build, and
+  displayed `Workload fit` with `Phù hợp tốt`, `RX 7600 · 8GB VRAM`, `144Hz`,
+  and qualitative fit notes.
+- Direct Playwright extraction confirmed the performance profile panel contains
+  no `fps` text.
+- Mobile viewport check at 390px showed no page-wide horizontal overflow.
+- Console had one non-blocking 404 for `/favicon.ico`.

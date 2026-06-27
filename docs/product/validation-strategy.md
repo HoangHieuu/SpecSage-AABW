@@ -61,6 +61,42 @@ does not spend tokens. Browser proof should make one live intent analysis call
 when `OPENROUTER_API_KEY` is configured, then confirm/generate to prove the
 deterministic flow still works if the LLM panel is available or degraded.
 
+`US-007` is verified by `pnpm check` plus Browser E2E against local dev servers.
+Unit proof covers deterministic fit thresholds for gaming, creator, AI/local
+LLM, and office builds. Integration proof checks the generate endpoint returns
+`performance_profile`. Browser proof must show the generated build view renders
+the `Workload fit` panel and must not rely on numeric FPS or benchmark claims.
+
+`US-008` is verified by `pnpm check` plus Browser E2E against local dev servers.
+Unit proof covers deterministic alternative generation from catalog SKUs,
+changed slot deltas, compatibility revalidation, and absence of FPS claims.
+Integration proof checks `GET /builds/{build_id}/alternatives` returns variants
+for stored builds and 404s missing build IDs. Browser proof must show the
+generated build view renders the `Alternatives` panel with concrete SKU deltas.
+
+`US-009` is verified by `pnpm check` plus Browser E2E against local dev servers.
+Unit proof covers converting a deterministic variant into a new versioned build
+artifact. Integration proof checks
+`POST /builds/{build_id}/alternatives/{variant_id}/apply` stores a new build,
+preserves the original build, rejects missing variants, and allows approval when
+the applied build remains eligible. Browser proof must apply a visible variant,
+show the main build table updated, and approve the applied build through the
+existing handoff gate.
+
+`US-010` is verified by `pnpm check` plus Browser E2E against local dev servers.
+Unit and integration proof cover SQLite round-trips for sessions, intent
+revisions, builds, applied build versions, and idempotent cart handoffs by
+re-instantiating FastAPI apps over the same DB file. Browser proof must show the
+default persistent API still supports the generate -> alternatives -> apply ->
+approve flow.
+
+`US-011` is verified by `pnpm check` plus Browser E2E against local dev servers.
+Unit proof covers the LangGraph orchestration service, expected agent sequence,
+and deterministic build output preservation. Integration proof checks the
+generate endpoint returns `orchestration_trace` and existing alternatives,
+apply, approval, and SQLite persistence paths remain compatible. Browser proof
+must show the generated build view renders the `Agent orchestration` panel.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.
@@ -69,3 +105,5 @@ deterministic flow still works if the LLM panel is available or degraded.
 - Do not claim production readiness without deployment and observability proof.
 - Do not claim LLM output is authoritative for SKU, price, budget, stock,
   compatibility, approval, or cart readiness.
+- Do not claim FPS, benchmark deltas, or game-specific performance numbers
+  without a maintained benchmark source.

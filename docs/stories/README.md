@@ -15,6 +15,10 @@ Initial PC Build Copilot story packets:
 | `US-005` | Review approval and mock cart-ready handoff | implemented | normal |
 | `US-006` | OpenRouter LLM intent advisor | implemented | normal |
 | `US-007` | Deterministic performance fit profile | implemented | normal |
+| `US-008` | Build alternatives and iteration controls | implemented | normal |
+| `US-009` | Apply alternative as active build | implemented | normal |
+| `US-010` | Persistent session and build store | implemented | normal |
+| `US-011` | LangGraph build orchestration foundation | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 
