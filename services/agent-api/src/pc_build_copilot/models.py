@@ -33,6 +33,12 @@ class UseCase(str, Enum):
     UNKNOWN = "unknown"
 
 
+class AgentAnalysisStatus(str, Enum):
+    AVAILABLE = "available"
+    DEGRADED = "degraded"
+    DISABLED = "disabled"
+
+
 class BuildSessionCreate(BaseModel):
     locale: str = "vi-VN"
     channel: Channel = Channel.WEB
@@ -71,6 +77,7 @@ class IntentRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
     confirm: bool = False
     preset: UseCase | None = None
+    use_llm: bool = False
 
 
 class Clarification(BaseModel):
@@ -88,6 +95,19 @@ class IntentRevision(BaseModel):
     confirmed: bool = False
 
 
+class IntentAgentAnalysis(BaseModel):
+    provider: Literal["openrouter"] = "openrouter"
+    model: str
+    status: AgentAnalysisStatus
+    summary_vi: str | None = None
+    clarification_vi: str | None = None
+    confidence_notes_vi: list[str] = Field(default_factory=list)
+    safety_notes_vi: list[str] = Field(default_factory=list)
+    raw_json_valid: bool = True
+    error_vi: str | None = None
+
+
 class IntentResponse(BaseModel):
     session: BuildSession
     revision: IntentRevision
+    agent_analysis: IntentAgentAnalysis | None = None

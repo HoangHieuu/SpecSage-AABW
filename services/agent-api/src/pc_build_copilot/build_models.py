@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -30,6 +31,36 @@ class ApprovalStatus(str, Enum):
 
 class CartHandoffStatus(str, Enum):
     CART_READY = "cart_ready"
+
+
+class PerformanceFitLevel(str, Enum):
+    GOOD = "good"
+    ADEQUATE = "adequate"
+    LIMITED = "limited"
+    UNKNOWN = "unknown"
+
+
+class PerformanceConfidence(str, Enum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class PerformanceEvidence(BaseModel):
+    label: str
+    value: str
+    source: Literal["catalog_spec", "intent", "rule"]
+
+
+class PerformanceProfile(BaseModel):
+    use_case: str
+    fit_level: PerformanceFitLevel
+    confidence: PerformanceConfidence
+    summary_vi: str
+    fit_notes_vi: list[str] = Field(default_factory=list)
+    bottleneck_notes_vi: list[str] = Field(default_factory=list)
+    warnings_vi: list[str] = Field(default_factory=list)
+    evidence: list[PerformanceEvidence] = Field(default_factory=list)
 
 
 class BuildItem(BaseModel):
@@ -66,6 +97,7 @@ class BuildArtifact(BaseModel):
     can_approve: bool
     items: list[BuildItem]
     compatibility_report: CompatibilityReport
+    performance_profile: PerformanceProfile
     explanations_vi: list[str] = Field(default_factory=list)
     warnings_vi: list[str] = Field(default_factory=list)
     mock_cart_payload: MockCartPayload

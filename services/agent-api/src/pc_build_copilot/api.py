@@ -16,6 +16,7 @@ from pc_build_copilot.compatibility_models import (
 )
 from pc_build_copilot.compatibility_rules import validate_build_compatibility
 from pc_build_copilot.intent_parser import parse_intent
+from pc_build_copilot.llm_intent_advisor import LlmIntentAdvisor
 from pc_build_copilot.models import (
     BuildSession,
     BuildSessionCreate,
@@ -30,10 +31,12 @@ def create_app(
     store: SessionStore | None = None,
     catalog_repository: CatalogRepository | None = None,
     build_store: BuildStore | None = None,
+    intent_advisor: LlmIntentAdvisor | None = None,
 ) -> FastAPI:
     session_store = store or SessionStore()
     catalog_store = catalog_repository or CatalogRepository()
     builds = build_store or BuildStore()
+    advisor = intent_advisor or LlmIntentAdvisor.from_env()
     app = FastAPI(title="PC Build Copilot Agent API", version="0.1.0")
 
     app.add_middleware(
@@ -124,6 +127,9 @@ def create_app(
         session = session_store.get(build_session_id)
         intent, clarification = parse_intent(payload.message, payload.preset)
         confirmed = payload.confirm and clarification.field is None
+        agent_analysis = None
+        if payload.use_llm and not payload.confirm:
+            agent_analysis = advisor.analyze(payload.message, intent, clarification)
         revision = session_store.add_revision(
             IntentRevision(
                 build_session_id=build_session_id,
@@ -132,7 +138,11 @@ def create_app(
                 confirmed=confirmed,
             )
         )
-        return IntentResponse(session=session_store.get(session.build_session_id), revision=revision)
+        return IntentResponse(
+            session=session_store.get(session.build_session_id),
+            revision=revision,
+            agent_analysis=agent_analysis,
+        )
 
     @app.post("/sessions/{build_session_id}/generate", response_model=BuildArtifact)
     def generate_build(build_session_id: str) -> BuildArtifact:

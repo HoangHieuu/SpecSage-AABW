@@ -14,6 +14,7 @@ from pc_build_copilot.catalog_models import CatalogSku, CatalogSnapshot, Compone
 from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.compatibility_rules import validate_build_compatibility
 from pc_build_copilot.models import BuildIntent, UseCase
+from pc_build_copilot.performance_profile import generate_performance_profile
 
 
 REQUIRED_BASE_SLOTS = (
@@ -43,6 +44,7 @@ def generate_build_artifact(
     budget_status, budget_gap = _budget_status(total_price, intent.budget_max)
     can_approve = compatibility_report.can_approve and budget_status != BudgetStatus.OVER_BUDGET
     status = _build_status(compatibility_report.can_approve, budget_status)
+    performance_profile = generate_performance_profile(intent=intent, selected_skus=selected)
 
     items = [
         BuildItem(
@@ -59,7 +61,10 @@ def generate_build_artifact(
         for slot, item in selected.items()
     ]
 
-    warnings = _budget_warnings(total_price, intent.budget_max, budget_gap)
+    warnings = [
+        *_budget_warnings(total_price, intent.budget_max, budget_gap),
+        *performance_profile.warnings_vi,
+    ]
     if not compatibility_report.can_approve:
         warnings.append("Cấu hình có lỗi tương thích mức block nên chưa thể duyệt.")
 
@@ -77,6 +82,7 @@ def generate_build_artifact(
         can_approve=can_approve,
         items=items,
         compatibility_report=compatibility_report,
+        performance_profile=performance_profile,
         explanations_vi=_build_explanations(intent, total_price, budget_status, catalog),
         warnings_vi=warnings,
         mock_cart_payload=MockCartPayload(

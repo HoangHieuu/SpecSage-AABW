@@ -34,6 +34,7 @@ def test_generator_creates_compatible_grounded_build_under_budget() -> None:
         use_case=UseCase.GAMING,
         budget_max=20_000_000,
         target_games=["Valorant", "LMHT"],
+        performance_targets=["144Hz"],
     )
 
     artifact = generate_build_artifact(
@@ -47,11 +48,17 @@ def test_generator_creates_compatible_grounded_build_under_budget() -> None:
     assert artifact.can_approve is True
     assert artifact.total_price_vnd == 17_190_000
     assert artifact.compatibility_report.status == "approved"
+    assert artifact.performance_profile.use_case == "gaming"
+    assert artifact.performance_profile.fit_level == "good"
+    assert artifact.performance_profile.confidence == "high"
+    assert any("8GB VRAM" in fact.value for fact in artifact.performance_profile.evidence)
+    assert any("144Hz" in fact.value for fact in artifact.performance_profile.evidence)
     assert artifact.catalog_version == "catalog_test_build"
     assert artifact.rules_version == artifact.compatibility_report.rules_version
     assert {item.sku for item in artifact.items}.issubset({item.sku for item in _items()})
     assert all(item.url.startswith("https://phongvu.vn/") for item in artifact.items)
     assert "fps" not in " ".join(artifact.explanations_vi).casefold()
+    assert "fps" not in artifact.performance_profile.summary_vi.casefold()
 
 
 def test_generator_returns_explicit_over_budget_gap_without_inventing_parts() -> None:
@@ -133,6 +140,12 @@ def test_generate_endpoint_creates_and_stores_build_artifact() -> None:
     assert body["can_approve"] is True
     assert body["total_price_vnd"] == 17_190_000
     assert len(body["items"]) == 7
+    assert body["performance_profile"]["use_case"] == "gaming"
+    assert body["performance_profile"]["fit_level"] == "good"
+    assert any(
+        fact["label"] == "GPU" and "8GB VRAM" in fact["value"]
+        for fact in body["performance_profile"]["evidence"]
+    )
     assert all(item["url"].startswith("https://phongvu.vn/") for item in body["items"])
 
     stored = client.get(f"/builds/{body['build_id']}")
@@ -264,3 +277,73 @@ def test_approve_endpoint_rejects_blocked_build() -> None:
 
     assert build["status"] == "blocked"
     assert response.status_code == 409
+
+
+def test_creator_profile_warns_when_ram_is_below_creator_threshold() -> None:
+    intent = BuildIntent(
+        raw_text="PC đồ họa 35 triệu dùng Premiere và After Effects",
+        use_case=UseCase.CREATOR,
+        budget_max=35_000_000,
+        target_apps=["Adobe Premiere Pro", "Adobe After Effects"],
+    )
+
+    artifact = generate_build_artifact(
+        build_session_id="bs_creator",
+        intent=intent,
+        catalog=_snapshot(),
+    )
+
+    assert artifact.performance_profile.use_case == "creator"
+    assert artifact.performance_profile.fit_level == "limited"
+    assert any("RAM 16GB" in note for note in artifact.performance_profile.bottleneck_notes_vi)
+    assert any("32GB" in warning for warning in artifact.performance_profile.warnings_vi)
+    assert any("32GB" in warning for warning in artifact.warnings_vi)
+
+
+def test_ai_profile_surfaces_vram_and_ram_limits_without_fps_claims() -> None:
+    intent = BuildIntent(
+        raw_text="PC AI local LLM 40 triệu, ưu tiên NVIDIA và 32GB RAM",
+        use_case=UseCase.AI,
+        budget_max=40_000_000,
+        target_apps=["Local LLM"],
+        brand_preferences=["NVIDIA"],
+    )
+
+    artifact = generate_build_artifact(
+        build_session_id="bs_ai",
+        intent=intent,
+        catalog=_snapshot(),
+    )
+    profile_text = " ".join(
+        [
+            artifact.performance_profile.summary_vi,
+            *artifact.performance_profile.fit_notes_vi,
+            *artifact.performance_profile.bottleneck_notes_vi,
+            *artifact.performance_profile.warnings_vi,
+        ]
+    ).casefold()
+
+    assert artifact.performance_profile.use_case == "ai"
+    assert artifact.performance_profile.fit_level == "adequate"
+    assert "vram 8gb" in profile_text
+    assert "32gb" in profile_text
+    assert "fps" not in profile_text
+
+
+def test_office_profile_explains_discrete_gpu_when_cpu_has_no_igpu() -> None:
+    intent = BuildIntent(
+        raw_text="Máy văn phòng khoảng 20 triệu, ưu tiên êm và bền",
+        use_case=UseCase.OFFICE,
+        budget_max=20_000_000,
+        noise_preferences="quiet",
+    )
+
+    artifact = generate_build_artifact(
+        build_session_id="bs_office",
+        intent=intent,
+        catalog=_snapshot(),
+    )
+
+    assert artifact.performance_profile.use_case == "office"
+    assert artifact.performance_profile.fit_level == "good"
+    assert any("không có iGPU" in note for note in artifact.performance_profile.fit_notes_vi)
