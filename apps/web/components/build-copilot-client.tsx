@@ -6,12 +6,17 @@ import {
   BuildAlternative,
   BuildAlternativesResponse,
   BuildArtifact,
+  BuildFeedback,
+  BuildFeedbackRating,
+  BuildFeedbackReason,
+  BuildFeedbackRequest,
   BuildItem,
   BuildOrchestrationStep,
   BuildSession,
   CartReadyHandoff,
   IntentAgentAnalysis,
   IntentResponse,
+  PartFeedbackRequest,
   PerformanceProfile,
   SessionTraceReplay,
   TraceReplayEvent,
@@ -22,6 +27,7 @@ import {
   generateBuild,
   getBuildAlternatives,
   getSessionTrace,
+  submitBuildFeedback,
   submitIntent
 } from "@/lib/api";
 
@@ -69,9 +75,11 @@ export function BuildCopilotClient() {
   const [buildAlternatives, setBuildAlternatives] = useState<BuildAlternativesResponse | null>(null);
   const [sessionTrace, setSessionTrace] = useState<SessionTraceReplay | null>(null);
   const [cartHandoff, setCartHandoff] = useState<CartReadyHandoff | null>(null);
+  const [buildFeedback, setBuildFeedback] = useState<BuildFeedback | null>(null);
   const [appliedAlternativeLabel, setAppliedAlternativeLabel] = useState<string | null>(null);
   const [traceCopyState, setTraceCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const intent = intentResponse?.revision.intent;
@@ -106,6 +114,7 @@ export function BuildCopilotClient() {
       setBuildAlternatives(null);
       setSessionTrace(null);
       setCartHandoff(null);
+      setBuildFeedback(null);
       setAppliedAlternativeLabel(null);
       setTraceCopyState("idle");
     } catch (err) {
@@ -137,6 +146,7 @@ export function BuildCopilotClient() {
       setBuildAlternatives(null);
       setSessionTrace(null);
       setCartHandoff(null);
+      setBuildFeedback(null);
       setAppliedAlternativeLabel(null);
       setTraceCopyState("idle");
     } catch (err) {
@@ -160,6 +170,7 @@ export function BuildCopilotClient() {
       setBuildAlternatives(alternatives);
       setSessionTrace(trace);
       setCartHandoff(null);
+      setBuildFeedback(null);
       setAppliedAlternativeLabel(null);
       setTraceCopyState("idle");
       setSession((current) => (current ? { ...current, state: "generated" } : current));
@@ -184,6 +195,7 @@ export function BuildCopilotClient() {
       setBuildAlternatives(alternatives);
       setSessionTrace(trace);
       setCartHandoff(null);
+      setBuildFeedback(null);
       setAppliedAlternativeLabel(alternative.label_vi);
       setTraceCopyState("idle");
       setSession((current) => (current ? { ...current, state: "generated" } : current));
@@ -216,6 +228,20 @@ export function BuildCopilotClient() {
       setError(toErrorMessage(err));
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleSubmitFeedback(payload: BuildFeedbackRequest) {
+    if (!buildArtifact) return;
+    setIsSubmittingFeedback(true);
+    setError(null);
+    try {
+      const feedback = await submitBuildFeedback(buildArtifact.build_id, payload);
+      setBuildFeedback(feedback);
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setIsSubmittingFeedback(false);
     }
   }
 
@@ -493,6 +519,13 @@ export function BuildCopilotClient() {
               </button>
             </div>
 
+            <BuildFeedbackPanel
+              artifact={buildArtifact}
+              feedback={buildFeedback}
+              isSubmitting={isSubmittingFeedback}
+              onSubmit={handleSubmitFeedback}
+            />
+
             {cartHandoff ? <CartReadyPanel handoff={cartHandoff} /> : null}
           </>
         ) : (
@@ -503,6 +536,223 @@ export function BuildCopilotClient() {
         )}
       </section>
     </main>
+  );
+}
+
+const positiveFeedbackReasons: Array<{ value: BuildFeedbackReason; label: string }> = [
+  { value: "fits_need", label: "Đúng nhu cầu" },
+  { value: "good_value", label: "Tối ưu giá" },
+  { value: "clear_explanation", label: "Dễ hiểu" }
+];
+
+const negativeFeedbackReasons: Array<{ value: BuildFeedbackReason; label: string }> = [
+  { value: "confusing_explanation", label: "Giải thích chưa rõ" },
+  { value: "wrong_performance_fit", label: "Chưa đúng hiệu năng" },
+  { value: "over_budget", label: "Ngân sách chưa ổn" },
+  { value: "missing_part", label: "Thiếu linh kiện" },
+  { value: "compatibility_concern", label: "Lo tương thích" },
+  { value: "price_or_stock_concern", label: "Giá/tồn kho cần kiểm tra" },
+  { value: "other", label: "Lý do khác" }
+];
+
+function BuildFeedbackPanel({
+  artifact,
+  feedback,
+  isSubmitting,
+  onSubmit
+}: {
+  artifact: BuildArtifact;
+  feedback: BuildFeedback | null;
+  isSubmitting: boolean;
+  onSubmit: (payload: BuildFeedbackRequest) => void;
+}) {
+  const [rating, setRating] = useState<BuildFeedbackRating | null>(null);
+  const [reasonTags, setReasonTags] = useState<BuildFeedbackReason[]>([]);
+  const [comment, setComment] = useState("");
+  const [partRatings, setPartRatings] = useState<Record<string, BuildFeedbackRating>>({});
+  const reasonOptions =
+    rating === "thumbs_down" ? negativeFeedbackReasons : positiveFeedbackReasons;
+
+  function handleRating(nextRating: BuildFeedbackRating) {
+    setRating(nextRating);
+    setReasonTags([]);
+  }
+
+  function toggleReason(reason: BuildFeedbackReason) {
+    setReasonTags((current) =>
+      current.includes(reason)
+        ? current.filter((item) => item !== reason)
+        : [...current, reason]
+    );
+  }
+
+  function togglePartRating(item: BuildItem, nextRating: BuildFeedbackRating) {
+    const key = feedbackPartKey(item);
+    setPartRatings((current) => {
+      const next = { ...current };
+      if (next[key] === nextRating) {
+        delete next[key];
+      } else {
+        next[key] = nextRating;
+      }
+      return next;
+    });
+  }
+
+  function handleSubmitFeedback() {
+    if (!rating) return;
+    const part_feedback: PartFeedbackRequest[] = artifact.items.flatMap((item) => {
+      const selectedRating = partRatings[feedbackPartKey(item)];
+      if (!selectedRating) return [];
+      return [
+        {
+          slot: item.slot,
+          sku: item.sku,
+          rating: selectedRating
+        }
+      ];
+    });
+    onSubmit({
+      rating,
+      reason_tags: reasonTags,
+      comment_vi: comment.trim() ? comment.trim() : null,
+      part_feedback
+    });
+  }
+
+  if (feedback) {
+    return (
+      <section className="feedback-panel saved" data-testid="feedback-panel">
+        <div className="feedback-heading">
+          <div>
+            <h3>Feedback build</h3>
+            <p>Đã lưu đánh giá cho build version {feedback.build_version}.</p>
+          </div>
+          <span
+            className={
+              feedback.review_queue_status === "queued" ? "status warning" : "status confirmed"
+            }
+          >
+            {feedback.review_queue_status === "queued"
+              ? "Đã đưa vào review queue"
+              : "Đã ghi nhận"}
+          </span>
+        </div>
+        <div className="feedback-saved-grid">
+          <Metric
+            label="Đánh giá"
+            value={feedback.rating === "thumbs_up" ? "Hữu ích" : "Chưa phù hợp"}
+          />
+          <Metric label="Part feedback" value={`${feedback.part_feedback.length}`} />
+          <Metric label="Catalog" value={feedback.catalog_version} />
+          <Metric label="Rules" value={feedback.rules_version} />
+        </div>
+        {feedback.review_queue_reason_vi ? <p>{feedback.review_queue_reason_vi}</p> : null}
+      </section>
+    );
+  }
+
+  return (
+    <section className="feedback-panel" data-testid="feedback-panel">
+      <div className="feedback-heading">
+        <div>
+          <h3>Feedback build</h3>
+          <p>Ghi nhận cảm nhận tổng thể và từng linh kiện cho vòng review sau demo.</p>
+        </div>
+        <span className="status">Build v{artifact.build_version}</span>
+      </div>
+
+      <div className="feedback-rating-row" aria-label="Đánh giá tổng thể">
+        <button
+          type="button"
+          className={rating === "thumbs_up" ? "selected" : ""}
+          data-testid="feedback-thumbs-up"
+          onClick={() => handleRating("thumbs_up")}
+        >
+          Hữu ích
+        </button>
+        <button
+          type="button"
+          className={rating === "thumbs_down" ? "selected" : ""}
+          data-testid="feedback-thumbs-down"
+          onClick={() => handleRating("thumbs_down")}
+        >
+          Chưa phù hợp
+        </button>
+      </div>
+
+      {rating ? (
+        <div className="feedback-reasons" aria-label="Lý do đánh giá">
+          {reasonOptions.map((reason) => (
+            <button
+              key={reason.value}
+              type="button"
+              className={reasonTags.includes(reason.value) ? "selected" : ""}
+              data-testid={`feedback-reason-${reason.value}`}
+              onClick={() => toggleReason(reason.value)}
+            >
+              {reason.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="feedback-parts">
+        <h4>Đánh giá từng linh kiện</h4>
+        <div className="feedback-part-list">
+          {artifact.items.map((item) => {
+            const selectedRating = partRatings[feedbackPartKey(item)];
+            return (
+              <div className="feedback-part-row" key={`${item.slot}-${item.sku}`}>
+                <div>
+                  <strong>{slotLabel(item.slot)}</strong>
+                  <span>{item.name}</span>
+                  <small>{item.sku}</small>
+                </div>
+                <div className="feedback-part-actions">
+                  <button
+                    type="button"
+                    className={selectedRating === "thumbs_up" ? "selected" : ""}
+                    data-testid={`part-feedback-${item.slot}-up`}
+                    onClick={() => togglePartRating(item, "thumbs_up")}
+                  >
+                    Ổn
+                  </button>
+                  <button
+                    type="button"
+                    className={selectedRating === "thumbs_down" ? "selected" : ""}
+                    data-testid={`part-feedback-${item.slot}-down`}
+                    onClick={() => togglePartRating(item, "thumbs_down")}
+                  >
+                    Xem lại
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <label htmlFor="feedback-comment">Ghi chú thêm</label>
+      <textarea
+        id="feedback-comment"
+        data-testid="feedback-comment"
+        value={comment}
+        onChange={(event) => setComment(event.target.value)}
+        rows={4}
+      />
+
+      <div className="feedback-submit-row">
+        <button
+          type="button"
+          data-testid="submit-feedback"
+          disabled={isSubmitting || !rating}
+          onClick={handleSubmitFeedback}
+        >
+          {isSubmitting ? "Đang lưu..." : "Lưu feedback"}
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -963,6 +1213,10 @@ function slotLabel(slot: BuildItem["slot"]) {
     cooler: "Cooler"
   };
   return labels[slot];
+}
+
+function feedbackPartKey(item: BuildItem) {
+  return `${item.slot}:${item.sku}`;
 }
 
 function fitLevelLabel(level: PerformanceProfile["fit_level"]) {

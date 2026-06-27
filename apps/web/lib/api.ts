@@ -16,6 +16,18 @@ export type BuildSlot =
   | "psu"
   | "case"
   | "cooler";
+export type BuildFeedbackRating = "thumbs_up" | "thumbs_down";
+export type BuildFeedbackReason =
+  | "fits_need"
+  | "good_value"
+  | "clear_explanation"
+  | "confusing_explanation"
+  | "over_budget"
+  | "missing_part"
+  | "wrong_performance_fit"
+  | "compatibility_concern"
+  | "price_or_stock_concern"
+  | "other";
 export type UseCase =
   | "gaming"
   | "creator"
@@ -280,6 +292,46 @@ export type CartReadyHandoff = {
   warnings_vi: string[];
 };
 
+export type PartFeedbackRequest = {
+  slot: BuildSlot;
+  sku: string;
+  rating: BuildFeedbackRating;
+  reason_tags?: BuildFeedbackReason[];
+  comment_vi?: string | null;
+};
+
+export type BuildFeedbackRequest = {
+  rating: BuildFeedbackRating;
+  reason_tags?: BuildFeedbackReason[];
+  comment_vi?: string | null;
+  part_feedback?: PartFeedbackRequest[];
+};
+
+export type PartFeedback = {
+  slot: BuildSlot;
+  sku: string;
+  name: string;
+  rating: BuildFeedbackRating;
+  reason_tags: BuildFeedbackReason[];
+  comment_vi: string | null;
+};
+
+export type BuildFeedback = {
+  feedback_id: string;
+  build_id: string;
+  build_session_id: string;
+  build_version: number;
+  catalog_version: string;
+  rules_version: string;
+  created_at: string;
+  rating: BuildFeedbackRating;
+  reason_tags: BuildFeedbackReason[];
+  comment_vi: string | null;
+  part_feedback: PartFeedback[];
+  review_queue_status: "not_queued" | "queued";
+  review_queue_reason_vi: string | null;
+};
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_AGENT_API_URL?.replace(/\/$/, "") || "http://127.0.0.1:8000";
 
@@ -351,4 +403,18 @@ export function approveBuild(buildId: string): Promise<CartReadyHandoff> {
     method: "POST",
     body: JSON.stringify({})
   });
+}
+
+export function submitBuildFeedback(
+  buildId: string,
+  payload: BuildFeedbackRequest
+): Promise<BuildFeedback> {
+  return request<BuildFeedback>(`/builds/${buildId}/feedback`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getBuildFeedback(buildId: string): Promise<BuildFeedback[]> {
+  return request<BuildFeedback[]>(`/builds/${buildId}/feedback`);
 }
