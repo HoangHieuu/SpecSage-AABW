@@ -24,6 +24,16 @@ class BuildStore:
             raise HTTPException(status_code=404, detail="build_id not found")
         return artifact
 
+    def list_for_session(self, build_session_id: str) -> list[BuildArtifact]:
+        return sorted(
+            [
+                artifact
+                for artifact in self._builds.values()
+                if artifact.build_session_id == build_session_id
+            ],
+            key=lambda artifact: (artifact.build_version, artifact.generated_at),
+        )
+
     def approve(self, build_id: str) -> CartReadyHandoff:
         artifact = self.get(build_id)
         existing_handoff_id = self._cart_handoff_by_build.get(build_id)

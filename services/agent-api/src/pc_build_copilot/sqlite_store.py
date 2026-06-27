@@ -210,6 +210,19 @@ class SqliteBuildStore(BuildStore):
             raise HTTPException(status_code=404, detail="build_id not found")
         return BuildArtifact.model_validate_json(row["payload_json"])
 
+    def list_for_session(self, build_session_id: str) -> list[BuildArtifact]:
+        with _connect(self.db_path) as conn:
+            rows = conn.execute(
+                """
+                SELECT payload_json
+                FROM build_artifacts
+                WHERE build_session_id = ?
+                ORDER BY build_version ASC, generated_at ASC
+                """,
+                (build_session_id,),
+            ).fetchall()
+        return [BuildArtifact.model_validate_json(row["payload_json"]) for row in rows]
+
     def approve(self, build_id: str) -> CartReadyHandoff:
         artifact = self.get(build_id)
         with _connect(self.db_path) as conn:

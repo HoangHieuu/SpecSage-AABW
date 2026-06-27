@@ -108,6 +108,45 @@ class BuildOrchestrationStep(BaseModel):
     summary_vi: str
     inputs: dict[str, str | int | bool | None] = Field(default_factory=dict)
     outputs: dict[str, str | int | bool | None] = Field(default_factory=dict)
+    tool_calls: list[str] = Field(default_factory=list)
+    latency_ms: int = Field(default=0, ge=0)
+    model_version: str = "deterministic-local-v1"
+    started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    completed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
+class TraceReplayEvent(BaseModel):
+    event_id: str
+    sequence: int
+    build_session_id: str
+    build_id: str
+    build_version: int
+    generated_at: datetime
+    agent: OrchestrationAgent
+    status: OrchestrationStepStatus
+    summary_vi: str
+    inputs_redacted: dict[str, str | int | bool | None] = Field(default_factory=dict)
+    tool_calls: list[str] = Field(default_factory=list)
+    outputs_redacted: dict[str, str | int | bool | None] = Field(default_factory=dict)
+    latency_ms: int = Field(default=0, ge=0)
+    model_version: str = "deterministic-local-v1"
+
+
+class BuildTraceReplay(BaseModel):
+    build_session_id: str
+    build_id: str
+    build_version: int
+    generated_at: datetime
+    replay_status: Literal["complete", "empty"]
+    events: list[TraceReplayEvent] = Field(default_factory=list)
+
+
+class SessionTraceReplay(BaseModel):
+    build_session_id: str
+    generated_build_count: int
+    redaction_policy_vi: str
+    support_export_text: str
+    builds: list[BuildTraceReplay] = Field(default_factory=list)
 
 
 class BuildArtifact(BaseModel):

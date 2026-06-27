@@ -9,7 +9,9 @@ from pc_build_copilot.build_orchestrator import generate_build_with_orchestratio
 from pc_build_copilot.build_models import (
     BuildAlternativesResponse,
     BuildArtifact,
+    BuildTraceReplay,
     CartReadyHandoff,
+    SessionTraceReplay,
 )
 from pc_build_copilot.build_store import BuildStore
 from pc_build_copilot.catalog_models import (
@@ -34,6 +36,7 @@ from pc_build_copilot.models import (
 )
 from pc_build_copilot.sqlite_store import create_sqlite_stores
 from pc_build_copilot.store import SessionStore
+from pc_build_copilot.trace_replay import build_trace_replay, session_trace_replay
 
 
 def create_app(
@@ -110,6 +113,10 @@ def create_app(
     def get_build(build_id: str) -> BuildArtifact:
         return builds.get(build_id)
 
+    @app.get("/builds/{build_id}/trace", response_model=BuildTraceReplay)
+    def get_build_trace(build_id: str) -> BuildTraceReplay:
+        return build_trace_replay(builds.get(build_id))
+
     @app.get("/builds/{build_id}/alternatives", response_model=BuildAlternativesResponse)
     def get_build_alternatives(build_id: str) -> BuildAlternativesResponse:
         return generate_build_alternatives(
@@ -156,6 +163,14 @@ def create_app(
     @app.get("/sessions/{build_session_id}/intent-revisions", response_model=list[IntentRevision])
     def get_intent_revisions(build_session_id: str) -> list[IntentRevision]:
         return session_store.revisions(build_session_id)
+
+    @app.get("/sessions/{build_session_id}/trace", response_model=SessionTraceReplay)
+    def get_session_trace(build_session_id: str) -> SessionTraceReplay:
+        session_store.get(build_session_id)
+        return session_trace_replay(
+            build_session_id=build_session_id,
+            artifacts=builds.list_for_session(build_session_id),
+        )
 
     @app.post("/sessions/{build_session_id}/intent", response_model=IntentResponse)
     def submit_intent(build_session_id: str, payload: IntentRequest) -> IntentResponse:
