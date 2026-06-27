@@ -357,7 +357,7 @@
     "snapshot_version": "catalog_v2026_06_27_fixture",
     "generated_at": "2026-06-27T00:00:00Z",
     "sku_count": 11,
-    "issue_count": 0,
+    "issue_count": 3,
     "blocking_issue_count": 0,
     "category_counts": {
       "cpu": 1,
@@ -370,6 +370,15 @@
       "cooler": 0,
       "monitor": 0
     },
+    "recommended_demo_category_counts": {
+      "cpu": 2,
+      "mainboard": 2,
+      "ram": 2,
+      "storage": 2,
+      "vga": 2,
+      "psu": 2,
+      "case": 2
+    },
     "required_demo_categories": [
       "cpu",
       "mainboard",
@@ -380,7 +389,34 @@
       "case"
     ],
     "missing_required_demo_categories": [],
+    "thin_demo_categories": [
+      "cpu",
+      "mainboard",
+      "case"
+    ],
     "demo_ready": true,
-    "issues": []
+    "issues": [
+      {
+        "severity": "warn",
+        "code": "CATALOG_THIN_DEMO_CATEGORY",
+        "sku": null,
+        "field": "category_counts.cpu",
+        "message": "Catalog snapshot has 1 cpu SKU(s); recommended demo coverage is 2."
+      },
+      {
+        "severity": "warn",
+        "code": "CATALOG_THIN_DEMO_CATEGORY",
+        "sku": null,
+        "field": "category_counts.mainboard",
+        "message": "Catalog snapshot has 1 mainboard SKU(s); recommended demo coverage is 2."
+      },
+      {
+        "severity": "warn",
+        "code": "CATALOG_THIN_DEMO_CATEGORY",
+        "sku": null,
+        "field": "category_counts.case",
+        "message": "Catalog snapshot has 1 case SKU(s); recommended demo coverage is 2."
+      }
+    ]
   }
 }

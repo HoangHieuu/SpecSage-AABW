@@ -68,8 +68,12 @@ class CatalogValidationReport(BaseModel):
     issue_count: int
     blocking_issue_count: int
     category_counts: dict[ComponentCategory, int] = Field(default_factory=dict)
+    recommended_demo_category_counts: dict[ComponentCategory, int] = Field(
+        default_factory=dict
+    )
     required_demo_categories: list[ComponentCategory] = Field(default_factory=list)
     missing_required_demo_categories: list[ComponentCategory] = Field(default_factory=list)
+    thin_demo_categories: list[ComponentCategory] = Field(default_factory=list)
     demo_ready: bool = False
     issues: list[CatalogIssue] = Field(default_factory=list)
 

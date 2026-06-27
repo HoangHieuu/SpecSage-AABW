@@ -30,6 +30,10 @@ DEMO_REQUIRED_CATEGORIES: tuple[ComponentCategory, ...] = (
     ComponentCategory.CASE,
 )
 
+DEMO_RECOMMENDED_CATEGORY_COUNTS: dict[ComponentCategory, int] = {
+    category: 2 for category in DEMO_REQUIRED_CATEGORIES
+}
+
 
 def validate_catalog(
     items: list[CatalogSku],
@@ -117,6 +121,25 @@ def validate_catalog(
             )
         )
 
+    thin_demo_categories = [
+        category
+        for category, recommended_count in DEMO_RECOMMENDED_CATEGORY_COUNTS.items()
+        if 0 < category_counts.get(category, 0) < recommended_count
+    ]
+    for category in thin_demo_categories:
+        issues.append(
+            CatalogIssue(
+                severity="warn",
+                code="CATALOG_THIN_DEMO_CATEGORY",
+                field=f"category_counts.{category.value}",
+                message=(
+                    f"Catalog snapshot has {category_counts.get(category, 0)} "
+                    f"{category.value} SKU(s); recommended demo coverage is "
+                    f"{DEMO_RECOMMENDED_CATEGORY_COUNTS[category]}."
+                ),
+            )
+        )
+
     blocking_count = sum(1 for issue in issues if issue.severity == "block")
     return CatalogValidationReport(
         snapshot_version=snapshot_version,
@@ -125,8 +148,10 @@ def validate_catalog(
         issue_count=len(issues),
         blocking_issue_count=blocking_count,
         category_counts=category_counts,
+        recommended_demo_category_counts=DEMO_RECOMMENDED_CATEGORY_COUNTS,
         required_demo_categories=list(DEMO_REQUIRED_CATEGORIES),
         missing_required_demo_categories=missing_required_categories,
+        thin_demo_categories=thin_demo_categories,
         demo_ready=blocking_count == 0 and not missing_required_categories,
         issues=issues,
     )
