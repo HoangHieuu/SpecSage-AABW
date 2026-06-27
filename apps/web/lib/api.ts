@@ -132,6 +132,20 @@ export type PerformanceProfile = {
   }>;
 };
 
+export type BuildOrchestrationStep = {
+  agent:
+    | "catalog"
+    | "optimizer"
+    | "compatibility"
+    | "performance"
+    | "explainer"
+    | "validator";
+  status: "completed" | "blocked";
+  summary_vi: string;
+  inputs: Record<string, string | number | boolean | null>;
+  outputs: Record<string, string | number | boolean | null>;
+};
+
 export type BuildArtifact = {
   build_id: string;
   build_session_id: string;
@@ -151,11 +165,50 @@ export type BuildArtifact = {
   performance_profile: PerformanceProfile;
   explanations_vi: string[];
   warnings_vi: string[];
+  orchestration_trace: BuildOrchestrationStep[];
   mock_cart_payload: {
     provider: string;
     disclaimer_vi: string;
     items: Array<{ sku: string; url: string }>;
   };
+};
+
+export type BuildAlternativeChangedSlot = {
+  slot: BuildSlot;
+  current_sku: string;
+  current_name: string;
+  candidate_sku: string;
+  candidate_name: string;
+  price_delta_vnd: number;
+  reason_vi: string;
+};
+
+export type BuildAlternative = {
+  variant_id: string;
+  kind: "ram_upgrade" | "storage_upgrade" | "nvidia_gpu" | "psu_headroom";
+  label_vi: string;
+  summary_vi: string;
+  total_price_vnd: number;
+  price_delta_vnd: number;
+  budget_status: "within_budget" | "over_budget" | "unknown_budget";
+  budget_gap_vnd: number;
+  status: "generated" | "over_budget" | "blocked";
+  can_approve: boolean;
+  items: BuildItem[];
+  changed_slots: BuildAlternativeChangedSlot[];
+  compatibility_report: CompatibilityReport;
+  performance_profile: PerformanceProfile;
+  explanations_vi: string[];
+  warnings_vi: string[];
+};
+
+export type BuildAlternativesResponse = {
+  build_id: string;
+  build_session_id: string;
+  catalog_version: string;
+  rules_version: string;
+  base_total_price_vnd: number;
+  alternatives: BuildAlternative[];
 };
 
 export type BuildApproval = {
@@ -237,6 +290,17 @@ export function generateBuild(buildSessionId: string): Promise<BuildArtifact> {
 
 export function getBuild(buildId: string): Promise<BuildArtifact> {
   return request<BuildArtifact>(`/builds/${buildId}`);
+}
+
+export function getBuildAlternatives(buildId: string): Promise<BuildAlternativesResponse> {
+  return request<BuildAlternativesResponse>(`/builds/${buildId}/alternatives`);
+}
+
+export function applyBuildAlternative(buildId: string, variantId: string): Promise<BuildArtifact> {
+  return request<BuildArtifact>(`/builds/${buildId}/alternatives/${variantId}/apply`, {
+    method: "POST",
+    body: JSON.stringify({})
+  });
 }
 
 export function approveBuild(buildId: string): Promise<CartReadyHandoff> {

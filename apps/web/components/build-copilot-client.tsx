@@ -3,17 +3,22 @@
 import { FormEvent, useMemo, useState } from "react";
 
 import {
+  BuildAlternative,
+  BuildAlternativesResponse,
   BuildArtifact,
   BuildItem,
+  BuildOrchestrationStep,
   BuildSession,
   CartReadyHandoff,
   IntentAgentAnalysis,
   IntentResponse,
   PerformanceProfile,
   UseCase,
+  applyBuildAlternative,
   approveBuild,
   createSession,
   generateBuild,
+  getBuildAlternatives,
   submitIntent
 } from "@/lib/api";
 
@@ -58,7 +63,9 @@ export function BuildCopilotClient() {
   const [intentResponse, setIntentResponse] = useState<IntentResponse | null>(null);
   const [agentAnalysis, setAgentAnalysis] = useState<IntentAgentAnalysis | null>(null);
   const [buildArtifact, setBuildArtifact] = useState<BuildArtifact | null>(null);
+  const [buildAlternatives, setBuildAlternatives] = useState<BuildAlternativesResponse | null>(null);
   const [cartHandoff, setCartHandoff] = useState<CartReadyHandoff | null>(null);
+  const [appliedAlternativeLabel, setAppliedAlternativeLabel] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,7 +98,9 @@ export function BuildCopilotClient() {
       setIntentResponse(null);
       setAgentAnalysis(null);
       setBuildArtifact(null);
+      setBuildAlternatives(null);
       setCartHandoff(null);
+      setAppliedAlternativeLabel(null);
     } catch (err) {
       setError(toErrorMessage(err));
     } finally {
@@ -118,7 +127,9 @@ export function BuildCopilotClient() {
         setAgentAnalysis(null);
       }
       setBuildArtifact(null);
+      setBuildAlternatives(null);
       setCartHandoff(null);
+      setAppliedAlternativeLabel(null);
     } catch (err) {
       setError(toErrorMessage(err));
     } finally {
@@ -132,8 +143,30 @@ export function BuildCopilotClient() {
     setError(null);
     try {
       const artifact = await generateBuild(session.build_session_id);
+      const alternatives = await getBuildAlternatives(artifact.build_id);
       setBuildArtifact(artifact);
+      setBuildAlternatives(alternatives);
       setCartHandoff(null);
+      setAppliedAlternativeLabel(null);
+      setSession((current) => (current ? { ...current, state: "generated" } : current));
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleApplyAlternative(alternative: BuildAlternative) {
+    if (!buildArtifact) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const artifact = await applyBuildAlternative(buildArtifact.build_id, alternative.variant_id);
+      const alternatives = await getBuildAlternatives(artifact.build_id);
+      setBuildArtifact(artifact);
+      setBuildAlternatives(alternatives);
+      setCartHandoff(null);
+      setAppliedAlternativeLabel(alternative.label_vi);
       setSession((current) => (current ? { ...current, state: "generated" } : current));
     } catch (err) {
       setError(toErrorMessage(err));
@@ -328,6 +361,18 @@ export function BuildCopilotClient() {
               <Metric label="Rules" value={buildArtifact.rules_version} />
             </div>
 
+            {appliedAlternativeLabel ? (
+              <p className="build-version-note" data-testid="applied-alternative-note">
+                Đã áp dụng biến thể {appliedAlternativeLabel} vào build version{" "}
+                {buildArtifact.build_version}. Bạn có thể duyệt build mới sau khi kiểm tra bảng
+                linh kiện.
+              </p>
+            ) : null}
+
+            {buildArtifact.orchestration_trace.length ? (
+              <AgentTracePanel steps={buildArtifact.orchestration_trace} />
+            ) : null}
+
             <PerformanceProfilePanel profile={buildArtifact.performance_profile} />
 
             <div className="table-wrap">
@@ -359,6 +404,14 @@ export function BuildCopilotClient() {
                 </tbody>
               </table>
             </div>
+
+            {buildAlternatives ? (
+              <BuildAlternativesPanel
+                response={buildAlternatives}
+                isApplying={isLoading}
+                onApplyAlternative={handleApplyAlternative}
+              />
+            ) : null}
 
             <div className="build-notes">
               <div>
@@ -415,6 +468,125 @@ export function BuildCopilotClient() {
         )}
       </section>
     </main>
+  );
+}
+
+function AgentTracePanel({ steps }: { steps: BuildOrchestrationStep[] }) {
+  const labels: Record<BuildOrchestrationStep["agent"], string> = {
+    catalog: "Catalog",
+    optimizer: "Optimizer",
+    compatibility: "Compatibility",
+    performance: "Performance",
+    explainer: "Explainer",
+    validator: "Validator"
+  };
+
+  return (
+    <section className="agent-trace" data-testid="agent-trace-panel">
+      <div className="agent-trace-heading">
+        <div>
+          <h3>Agent orchestration</h3>
+          <p>LangGraph chạy các agent theo thứ tự, còn rule và số liệu vẫn là deterministic.</p>
+        </div>
+        <span className="status">{steps.length} bước</span>
+      </div>
+      <ol className="agent-trace-list">
+        {steps.map((step) => (
+          <li key={`${step.agent}-${step.summary_vi}`}>
+            <span className={step.status === "completed" ? "trace-dot" : "trace-dot blocked"} />
+            <div>
+              <strong>{labels[step.agent]}</strong>
+              <p>{step.summary_vi}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function BuildAlternativesPanel({
+  response,
+  isApplying,
+  onApplyAlternative
+}: {
+  response: BuildAlternativesResponse;
+  isApplying: boolean;
+  onApplyAlternative: (alternative: BuildAlternative) => void;
+}) {
+  if (!response.alternatives.length) return null;
+
+  return (
+    <section className="alternatives-panel" data-testid="alternatives-panel">
+      <div className="alternatives-heading">
+        <div>
+          <h3>Alternatives</h3>
+          <p>
+            Các biến thể được tạo từ cùng catalog snapshot và đã chạy lại rule
+            compatibility.
+          </p>
+        </div>
+        <span className="status">{response.alternatives.length} biến thể</span>
+      </div>
+
+      <div className="alternatives-grid">
+        {response.alternatives.map((alternative) => (
+          <article className="alternative-card" key={alternative.variant_id}>
+            <div className="alternative-card-heading">
+              <div>
+                <h4>{alternative.label_vi}</h4>
+                <p>{alternative.summary_vi}</p>
+              </div>
+              <span className={alternativeStatusClass(alternative)}>
+                {alternativeStatusLabel(alternative)}
+              </span>
+            </div>
+
+            <div className="alternative-metrics">
+              <Metric label="Tổng giá" value={formatVnd(alternative.total_price_vnd)} />
+              <Metric label="Chênh lệch" value={formatDeltaVnd(alternative.price_delta_vnd)} />
+              <Metric label="Fit" value={fitLevelLabel(alternative.performance_profile.fit_level)} />
+            </div>
+
+            <div className="alternative-changes">
+              <h5>Thay đổi</h5>
+              <ul>
+                {alternative.changed_slots.map((change) => (
+                  <li key={`${alternative.variant_id}-${change.slot}`}>
+                    <strong>{slotLabel(change.slot)}</strong>
+                    <span>
+                      {change.current_name} sang {change.candidate_name}
+                    </span>
+                    <small>{formatDeltaVnd(change.price_delta_vnd)}</small>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <ul className="alternative-reasons">
+              {alternative.changed_slots.map((change) => (
+                <li key={`${alternative.variant_id}-${change.slot}-reason`}>
+                  {change.reason_vi}
+                </li>
+              ))}
+              {alternative.warnings_vi.map((warning) => (
+                <li key={`${alternative.variant_id}-${warning}`}>{warning}</li>
+              ))}
+            </ul>
+
+            <button
+              type="button"
+              className="alternative-apply"
+              data-testid={`apply-alternative-${alternative.kind}`}
+              disabled={isApplying}
+              onClick={() => onApplyAlternative(alternative)}
+            >
+              Áp dụng biến thể
+            </button>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -628,6 +800,13 @@ function formatVnd(value: number) {
   }).format(value);
 }
 
+function formatDeltaVnd(value: number) {
+  const formatted = formatVnd(Math.abs(value));
+  if (value > 0) return `+${formatted}`;
+  if (value < 0) return `-${formatted}`;
+  return formatted;
+}
+
 function slotLabel(slot: BuildItem["slot"]) {
   const labels: Record<BuildItem["slot"], string> = {
     cpu: "CPU",
@@ -642,6 +821,16 @@ function slotLabel(slot: BuildItem["slot"]) {
   return labels[slot];
 }
 
+function fitLevelLabel(level: PerformanceProfile["fit_level"]) {
+  const labels: Record<PerformanceProfile["fit_level"], string> = {
+    good: "Phù hợp tốt",
+    adequate: "Đủ dùng",
+    limited: "Hạn chế",
+    unknown: "Chưa rõ"
+  };
+  return labels[level];
+}
+
 function buildStatusLabel(artifact: BuildArtifact) {
   if (artifact.status === "generated") return "Hợp lệ";
   if (artifact.status === "over_budget") return "Vượt ngân sách";
@@ -651,6 +840,18 @@ function buildStatusLabel(artifact: BuildArtifact) {
 function statusClass(artifact: BuildArtifact) {
   if (artifact.status === "generated") return "status confirmed";
   if (artifact.status === "over_budget") return "status warning";
+  return "status blocked";
+}
+
+function alternativeStatusLabel(alternative: BuildAlternative) {
+  if (alternative.status === "generated") return "Hợp lệ";
+  if (alternative.status === "over_budget") return "Vượt ngân sách";
+  return "Bị chặn";
+}
+
+function alternativeStatusClass(alternative: BuildAlternative) {
+  if (alternative.status === "generated") return "status confirmed";
+  if (alternative.status === "over_budget") return "status warning";
   return "status blocked";
 }
 
