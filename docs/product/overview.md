@@ -65,6 +65,8 @@ The first demo should prove a narrow vertical slice:
     logic.
 14. Catalog health reports whether the local snapshot is demo-ready for the
     required full-build categories before generation or evals run.
+15. Catalog health reports thin required categories as non-blocking variety
+    warnings before broader SKU expansion.
 
 Current first-slice implementation reaches step 10 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, and mock
@@ -97,6 +99,8 @@ gate for pull requests and pushes to `main`.
 catalog, and rules versions, with low ratings marked for local review.
 `US-016` adds demo-readiness category coverage to catalog health so missing
 required full-build categories are caught as catalog validation failures.
+`US-017` adds non-blocking variety warnings so present-but-thin required
+categories remain visible without blocking the current demo flow.
 
 Out of first-slice scope unless a later story selects it:
 

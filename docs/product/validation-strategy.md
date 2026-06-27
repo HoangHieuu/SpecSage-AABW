@@ -131,6 +131,13 @@ blocking issues for missing required demo categories. Integration proof checks
 `GET /catalog/health` exposes `demo_ready`, required categories, missing
 categories, and per-category counts.
 
+`US-017` is verified by `pnpm catalog:sync`, `pnpm check`, `pnpm eval:run`,
+and Harness story verification. Unit proof covers recommended category counts,
+thin-category warning issues, and missing categories remaining blocking.
+Integration proof checks `GET /catalog/health` exposes recommended demo counts,
+thin demo categories, and warning issues without making the current snapshot
+not demo-ready.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.

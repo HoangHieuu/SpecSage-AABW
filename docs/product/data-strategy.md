@@ -100,6 +100,12 @@ categories, and a `demo_ready` flag. The current fixture is demo-ready for the
 first full-build flow because it includes CPU, mainboard, RAM, storage, VGA,
 PSU, and case categories. Cooler and monitor remain optional for this slice.
 
+`US-017` extends catalog health with demo variety warnings. The current
+recommended minimum is two SKUs for each required full-build category. A
+category with at least one SKU but fewer than the recommended count remains
+demo-ready, but the report marks it as thin coverage so future SKU curation can
+target the weakest slots first.
+
 ## Commerce Adapter Boundary
 
 Hackathon:

@@ -114,18 +114,23 @@ must update the manifest and tests together.
 
 ## Current Catalog Health Slice
 
-`US-016` makes catalog readiness explicit in the local validation report:
+`US-016` and `US-017` make catalog readiness and variety explicit in the local
+validation report:
 
 - `CatalogValidationReport.category_counts`
+- `CatalogValidationReport.recommended_demo_category_counts`
 - `CatalogValidationReport.required_demo_categories`
 - `CatalogValidationReport.missing_required_demo_categories`
+- `CatalogValidationReport.thin_demo_categories`
 - `CatalogValidationReport.demo_ready`
 
 `GET /catalog/health` returns those fields from the embedded snapshot
 validation report. Missing CPU, mainboard, RAM, storage, VGA, PSU, or case
 coverage is a blocking catalog validation issue because those categories are
-required for the current full-build demo flow. This does not add live scraping,
-external catalog APIs, Typesense, Postgres, or admin catalog editing.
+required for the current full-build demo flow. Present-but-thin categories are
+warning issues, not blockers; the current recommended minimum is two SKUs for
+each required category. This does not add live scraping, external catalog APIs,
+Typesense, Postgres, or admin catalog editing.
 
 ## API Boundary
 

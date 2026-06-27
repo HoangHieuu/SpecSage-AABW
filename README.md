@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-013` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-017` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -37,7 +37,8 @@ canonical scenarios as a release gate for catalog-grounding, budget,
 compatibility, required slots, SKU hallucination, and explanation-rubric
 regressions.
 Catalog health now also reports demo-readiness category coverage for the local
-snapshot before build generation or evals run.
+snapshot before build generation or evals run, plus non-blocking variety
+warnings when required demo categories have too little fallback choice.
 
 Accepted product direction:
 
@@ -93,6 +94,7 @@ The initial implementation backlog is intentionally small:
 14. `US-014` - CI quality gate foundation. Implemented.
 15. `US-015` - user feedback loop foundation. Implemented.
 16. `US-016` - catalog demo readiness health. Implemented.
+17. `US-017` - catalog demo variety health. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -159,6 +161,8 @@ scripts/bin/harness-cli story verify US-012
 scripts/bin/harness-cli story verify US-013
 scripts/bin/harness-cli story verify US-014
 scripts/bin/harness-cli story verify US-015
+scripts/bin/harness-cli story verify US-016
+scripts/bin/harness-cli story verify US-017
 pnpm eval:run
 ```
 

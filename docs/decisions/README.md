@@ -16,6 +16,10 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0012` | LangGraph build orchestration before autonomous optimization |
 | `0013` | Local trace replay before Langfuse |
 | `0014` | Local quality evals before Langfuse experiments |
+| `0015` | CI quality gate for local evals |
+| `0016` | Feedback capture before admin console |
+| `0017` | Catalog demo readiness before live scraping |
+| `0018` | Catalog variety health before broad SKU expansion |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:
