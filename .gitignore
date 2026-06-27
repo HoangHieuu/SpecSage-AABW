@@ -10,3 +10,17 @@ dist/
 # Downloaded Harness CLI binary for installed project instances.
 scripts/bin/harness-cli
 scripts/bin/harness-cli.exe
+
+# Local development dependencies and build outputs.
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.turbo/
+.venv/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+.env
