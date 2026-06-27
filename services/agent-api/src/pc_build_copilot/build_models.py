@@ -33,6 +33,27 @@ class CartHandoffStatus(str, Enum):
     CART_READY = "cart_ready"
 
 
+class OrchestrationAgent(str, Enum):
+    CATALOG = "catalog"
+    OPTIMIZER = "optimizer"
+    COMPATIBILITY = "compatibility"
+    PERFORMANCE = "performance"
+    EXPLAINER = "explainer"
+    VALIDATOR = "validator"
+
+
+class OrchestrationStepStatus(str, Enum):
+    COMPLETED = "completed"
+    BLOCKED = "blocked"
+
+
+class BuildAlternativeKind(str, Enum):
+    RAM_UPGRADE = "ram_upgrade"
+    STORAGE_UPGRADE = "storage_upgrade"
+    NVIDIA_GPU = "nvidia_gpu"
+    PSU_HEADROOM = "psu_headroom"
+
+
 class PerformanceFitLevel(str, Enum):
     GOOD = "good"
     ADEQUATE = "adequate"
@@ -81,6 +102,14 @@ class MockCartPayload(BaseModel):
     items: list[dict[str, str]]
 
 
+class BuildOrchestrationStep(BaseModel):
+    agent: OrchestrationAgent
+    status: OrchestrationStepStatus = OrchestrationStepStatus.COMPLETED
+    summary_vi: str
+    inputs: dict[str, str | int | bool | None] = Field(default_factory=dict)
+    outputs: dict[str, str | int | bool | None] = Field(default_factory=dict)
+
+
 class BuildArtifact(BaseModel):
     build_id: str = Field(default_factory=lambda: f"build_{uuid4().hex}")
     build_session_id: str
@@ -100,7 +129,46 @@ class BuildArtifact(BaseModel):
     performance_profile: PerformanceProfile
     explanations_vi: list[str] = Field(default_factory=list)
     warnings_vi: list[str] = Field(default_factory=list)
+    orchestration_trace: list[BuildOrchestrationStep] = Field(default_factory=list)
     mock_cart_payload: MockCartPayload
+
+
+class BuildAlternativeChangedSlot(BaseModel):
+    slot: BuildSlot
+    current_sku: str
+    current_name: str
+    candidate_sku: str
+    candidate_name: str
+    price_delta_vnd: int
+    reason_vi: str
+
+
+class BuildAlternative(BaseModel):
+    variant_id: str
+    kind: BuildAlternativeKind
+    label_vi: str
+    summary_vi: str
+    total_price_vnd: int
+    price_delta_vnd: int
+    budget_status: BudgetStatus
+    budget_gap_vnd: int
+    status: BuildStatus
+    can_approve: bool
+    items: list[BuildItem]
+    changed_slots: list[BuildAlternativeChangedSlot]
+    compatibility_report: CompatibilityReport
+    performance_profile: PerformanceProfile
+    explanations_vi: list[str] = Field(default_factory=list)
+    warnings_vi: list[str] = Field(default_factory=list)
+
+
+class BuildAlternativesResponse(BaseModel):
+    build_id: str
+    build_session_id: str
+    catalog_version: str
+    rules_version: str
+    base_total_price_vnd: int
+    alternatives: list[BuildAlternative] = Field(default_factory=list)
 
 
 class BuildApproval(BaseModel):

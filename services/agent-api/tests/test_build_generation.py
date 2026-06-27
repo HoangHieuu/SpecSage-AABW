@@ -3,9 +3,14 @@ from datetime import UTC, datetime
 from fastapi.testclient import TestClient
 
 from pc_build_copilot.api import create_app
+from pc_build_copilot.build_alternatives import (
+    apply_build_alternative,
+    generate_build_alternatives,
+)
 from pc_build_copilot.build_generator import generate_build_artifact
 from pc_build_copilot.catalog_models import CatalogSnapshot
 from pc_build_copilot.catalog_repository import CatalogRepository
+from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.models import BuildIntent, UseCase
 from pc_build_copilot.store import SessionStore
 
@@ -142,6 +147,15 @@ def test_generate_endpoint_creates_and_stores_build_artifact() -> None:
     assert len(body["items"]) == 7
     assert body["performance_profile"]["use_case"] == "gaming"
     assert body["performance_profile"]["fit_level"] == "good"
+    assert [step["agent"] for step in body["orchestration_trace"]] == [
+        "catalog",
+        "optimizer",
+        "compatibility",
+        "performance",
+        "explainer",
+        "validator",
+    ]
+    assert body["orchestration_trace"][-1]["outputs"]["can_approve"] is True
     assert any(
         fact["label"] == "GPU" and "8GB VRAM" in fact["value"]
         for fact in body["performance_profile"]["evidence"]
@@ -175,6 +189,196 @@ def test_generate_endpoint_returns_over_budget_artifact_for_low_budget() -> None
     assert body["budget_status"] == "over_budget"
     assert body["budget_gap_vnd"] == 9_190_000
     assert body["can_approve"] is False
+    assert body["orchestration_trace"][-1]["agent"] == "validator"
+    assert body["orchestration_trace"][-1]["status"] == "blocked"
+
+
+def test_alternative_generator_returns_grounded_validated_variants() -> None:
+    intent = BuildIntent(
+        raw_text="PC gaming 25 triệu chơi Valorant và LMHT 144Hz",
+        use_case=UseCase.GAMING,
+        budget_max=25_000_000,
+        target_games=["Valorant", "LMHT"],
+        performance_targets=["144Hz"],
+    )
+    base_artifact = generate_build_artifact(
+        build_session_id="bs_alternatives",
+        intent=intent,
+        catalog=_snapshot(),
+    )
+
+    response = generate_build_alternatives(
+        base_artifact=base_artifact,
+        catalog=_snapshot(),
+    )
+    catalog_skus = {item.sku for item in _items()}
+    kinds = {alternative.kind for alternative in response.alternatives}
+    profile_text = " ".join(
+        [
+            alternative.summary_vi
+            for alternative in response.alternatives
+        ]
+    ).casefold()
+
+    assert response.build_id == base_artifact.build_id
+    assert response.base_total_price_vnd == 17_190_000
+    assert kinds == {"ram_upgrade", "storage_upgrade", "nvidia_gpu", "psu_headroom"}
+    assert all(alternative.compatibility_report.can_approve for alternative in response.alternatives)
+    assert all(alternative.price_delta_vnd > 0 for alternative in response.alternatives)
+    assert all(
+        {item.sku for item in alternative.items}.issubset(catalog_skus)
+        for alternative in response.alternatives
+    )
+    assert any(
+        changed.slot == BuildSlot.RAM and changed.candidate_sku == "240601032"
+        for alternative in response.alternatives
+        for changed in alternative.changed_slots
+    )
+    assert any(
+        changed.slot == BuildSlot.VGA and changed.candidate_sku == "231101406"
+        for alternative in response.alternatives
+        for changed in alternative.changed_slots
+    )
+    assert "fps" not in profile_text
+
+
+def test_apply_alternative_generator_returns_versioned_active_artifact() -> None:
+    intent = BuildIntent(
+        raw_text="PC gaming 25 triệu chơi Valorant và LMHT 144Hz",
+        use_case=UseCase.GAMING,
+        budget_max=25_000_000,
+        target_games=["Valorant", "LMHT"],
+        performance_targets=["144Hz"],
+    )
+    base_artifact = generate_build_artifact(
+        build_session_id="bs_apply_alternative",
+        intent=intent,
+        catalog=_snapshot(),
+    )
+    alternatives = generate_build_alternatives(
+        base_artifact=base_artifact,
+        catalog=_snapshot(),
+    )
+    ram_upgrade = next(item for item in alternatives.alternatives if item.kind == "ram_upgrade")
+
+    applied = apply_build_alternative(
+        base_artifact=base_artifact,
+        variant_id=ram_upgrade.variant_id,
+        catalog=_snapshot(),
+    )
+
+    assert applied is not None
+    assert applied.build_id != base_artifact.build_id
+    assert applied.build_version == 2
+    assert applied.status == "generated"
+    assert applied.can_approve is True
+    assert applied.total_price_vnd == 17_890_000
+    assert applied.compatibility_report.build_id == applied.build_id
+    assert any(item.sku == "240601032" and item.slot == BuildSlot.RAM for item in applied.items)
+    assert len(applied.mock_cart_payload.items) == len(applied.items)
+    assert any("Approval" in explanation for explanation in applied.explanations_vi)
+
+
+def test_alternatives_endpoint_returns_variants_for_stored_build() -> None:
+    client = _client()
+    session = client.post("/sessions", json={}).json()
+    client.post(
+        f"/sessions/{session['build_session_id']}/intent",
+        json={
+            "message": "PC gaming 25 triệu chơi Valorant và LMHT 144Hz",
+            "confirm": True,
+            "preset": "gaming",
+        },
+    )
+    build = client.post(f"/sessions/{session['build_session_id']}/generate").json()
+
+    response = client.get(f"/builds/{build['build_id']}/alternatives")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["build_id"] == build["build_id"]
+    assert body["base_total_price_vnd"] == build["total_price_vnd"]
+    assert len(body["alternatives"]) == 4
+    assert {item["kind"] for item in body["alternatives"]} == {
+        "ram_upgrade",
+        "storage_upgrade",
+        "nvidia_gpu",
+        "psu_headroom",
+    }
+    assert all(item["compatibility_report"]["can_approve"] for item in body["alternatives"])
+
+
+def test_alternatives_endpoint_404s_for_missing_build() -> None:
+    client = _client()
+
+    response = client.get("/builds/build_missing/alternatives")
+
+    assert response.status_code == 404
+
+
+def test_apply_alternative_endpoint_creates_new_stored_build_version_and_can_approve() -> None:
+    client = _client()
+    session = client.post("/sessions", json={}).json()
+    client.post(
+        f"/sessions/{session['build_session_id']}/intent",
+        json={
+            "message": "PC gaming 25 triệu chơi Valorant và LMHT 144Hz",
+            "confirm": True,
+            "preset": "gaming",
+        },
+    )
+    build = client.post(f"/sessions/{session['build_session_id']}/generate").json()
+    alternatives = client.get(f"/builds/{build['build_id']}/alternatives").json()
+    ram_upgrade = next(
+        item for item in alternatives["alternatives"] if item["kind"] == "ram_upgrade"
+    )
+
+    response = client.post(
+        f"/builds/{build['build_id']}/alternatives/{ram_upgrade['variant_id']}/apply"
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["build_id"] != build["build_id"]
+    assert body["build_session_id"] == build["build_session_id"]
+    assert body["build_version"] == build["build_version"] + 1
+    assert body["total_price_vnd"] == ram_upgrade["total_price_vnd"]
+    assert body["total_price_vnd"] == 17_890_000
+    assert body["status"] == "generated"
+    assert body["can_approve"] is True
+    assert body["compatibility_report"]["build_id"] == body["build_id"]
+    assert any(item["slot"] == "ram" and item["sku"] == "240601032" for item in body["items"])
+
+    original = client.get(f"/builds/{build['build_id']}").json()
+    stored = client.get(f"/builds/{body['build_id']}").json()
+    assert original["build_version"] == 1
+    assert any(item["slot"] == "ram" and item["sku"] == "210602265" for item in original["items"])
+    assert stored["build_id"] == body["build_id"]
+
+    handoff = client.post(f"/builds/{body['build_id']}/approve")
+    assert handoff.status_code == 200
+    assert handoff.json()["status"] == "cart_ready"
+    assert handoff.json()["build_id"] == body["build_id"]
+    assert handoff.json()["total_price_vnd"] == body["total_price_vnd"]
+
+
+def test_apply_alternative_endpoint_404s_for_missing_variant() -> None:
+    client = _client()
+    session = client.post("/sessions", json={}).json()
+    client.post(
+        f"/sessions/{session['build_session_id']}/intent",
+        json={
+            "message": "PC gaming 25 triệu chơi Valorant và LMHT 144Hz",
+            "confirm": True,
+            "preset": "gaming",
+        },
+    )
+    build = client.post(f"/sessions/{session['build_session_id']}/generate").json()
+
+    response = client.post(f"/builds/{build['build_id']}/alternatives/variant_missing/apply")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "variant_id not found"
 
 
 def test_approve_endpoint_creates_cart_ready_handoff_for_approvable_build() -> None:

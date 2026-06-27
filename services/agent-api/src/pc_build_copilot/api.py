@@ -1,8 +1,16 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from pc_build_copilot.build_generator import generate_build_artifact
-from pc_build_copilot.build_models import BuildArtifact, CartReadyHandoff
+from pc_build_copilot.build_alternatives import (
+    apply_build_alternative,
+    generate_build_alternatives,
+)
+from pc_build_copilot.build_orchestrator import generate_build_with_orchestration
+from pc_build_copilot.build_models import (
+    BuildAlternativesResponse,
+    BuildArtifact,
+    CartReadyHandoff,
+)
 from pc_build_copilot.build_store import BuildStore
 from pc_build_copilot.catalog_models import (
     CatalogQueryResponse,
@@ -24,6 +32,7 @@ from pc_build_copilot.models import (
     IntentResponse,
     IntentRevision,
 )
+from pc_build_copilot.sqlite_store import create_sqlite_stores
 from pc_build_copilot.store import SessionStore
 
 
@@ -33,9 +42,12 @@ def create_app(
     build_store: BuildStore | None = None,
     intent_advisor: LlmIntentAdvisor | None = None,
 ) -> FastAPI:
-    session_store = store or SessionStore()
+    if store is None and build_store is None:
+        session_store, builds = create_sqlite_stores()
+    else:
+        session_store = store or SessionStore()
+        builds = build_store or BuildStore()
     catalog_store = catalog_repository or CatalogRepository()
-    builds = build_store or BuildStore()
     advisor = intent_advisor or LlmIntentAdvisor.from_env()
     app = FastAPI(title="PC Build Copilot Agent API", version="0.1.0")
 
@@ -98,6 +110,29 @@ def create_app(
     def get_build(build_id: str) -> BuildArtifact:
         return builds.get(build_id)
 
+    @app.get("/builds/{build_id}/alternatives", response_model=BuildAlternativesResponse)
+    def get_build_alternatives(build_id: str) -> BuildAlternativesResponse:
+        return generate_build_alternatives(
+            base_artifact=builds.get(build_id),
+            catalog=catalog_store.snapshot(),
+        )
+
+    @app.post(
+        "/builds/{build_id}/alternatives/{variant_id}/apply",
+        response_model=BuildArtifact,
+    )
+    def apply_alternative(build_id: str, variant_id: str) -> BuildArtifact:
+        artifact = apply_build_alternative(
+            base_artifact=builds.get(build_id),
+            variant_id=variant_id,
+            catalog=catalog_store.snapshot(),
+        )
+        if artifact is None:
+            raise HTTPException(status_code=404, detail="variant_id not found")
+        builds.save(artifact)
+        session_store.mark_generated(artifact.build_session_id)
+        return artifact
+
     @app.post("/builds/{build_id}/approve", response_model=CartReadyHandoff)
     def approve_build(build_id: str) -> CartReadyHandoff:
         artifact = builds.get(build_id)
@@ -147,7 +182,7 @@ def create_app(
     @app.post("/sessions/{build_session_id}/generate", response_model=BuildArtifact)
     def generate_build(build_session_id: str) -> BuildArtifact:
         revision = session_store.latest_confirmed_revision(build_session_id)
-        artifact = generate_build_artifact(
+        artifact = generate_build_with_orchestration(
             build_session_id=build_session_id,
             intent=revision.intent,
             catalog=catalog_store.snapshot(),
