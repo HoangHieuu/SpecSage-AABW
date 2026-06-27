@@ -1,0 +1,51 @@
+{
+  "version": "compat_rules_v2026_06_27",
+  "thresholds": {
+    "base_system_power_w": 150,
+    "psu_headroom_factor": 1.3,
+    "gpu_clearance_warn_mm": 20,
+    "cooler_clearance_warn_mm": 10
+  },
+  "rules": [
+    {
+      "id": "COMPAT_SOCKET_MISMATCH",
+      "severity": "block",
+      "description": "CPU socket must match mainboard socket."
+    },
+    {
+      "id": "COMPAT_RAM_TYPE_MISMATCH",
+      "severity": "block",
+      "description": "RAM memory type must match mainboard memory type."
+    },
+    {
+      "id": "COMPAT_PSU_WATTAGE_TOO_LOW",
+      "severity": "block",
+      "description": "PSU wattage must meet CPU, GPU, base system load, and headroom requirement."
+    },
+    {
+      "id": "COMPAT_GPU_POWER_CONNECTOR_MISSING",
+      "severity": "block",
+      "description": "PSU must provide enough PCIe 8-pin connectors for the selected GPU."
+    },
+    {
+      "id": "COMPAT_GPU_CASE_CLEARANCE_BLOCK",
+      "severity": "block",
+      "description": "GPU length must not exceed case GPU clearance."
+    },
+    {
+      "id": "COMPAT_GPU_CASE_CLEARANCE_TIGHT",
+      "severity": "warn",
+      "description": "GPU length fits but clearance margin is tight."
+    },
+    {
+      "id": "COMPAT_COOLER_CASE_CLEARANCE_BLOCK",
+      "severity": "block",
+      "description": "Cooler height must not exceed case cooler height clearance."
+    },
+    {
+      "id": "COMPAT_COOLER_CASE_CLEARANCE_TIGHT",
+      "severity": "warn",
+      "description": "Cooler height fits but clearance margin is tight."
+    }
+  ]
+}

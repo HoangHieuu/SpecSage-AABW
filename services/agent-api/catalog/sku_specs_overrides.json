@@ -1,0 +1,81 @@
+{
+  "211208130": {
+    "category": "cpu",
+    "specs_confidence": "verified",
+    "specs": {
+      "socket": "LGA1700",
+      "tdp_w": 65,
+      "cores": 6,
+      "threads": 12,
+      "integrated_graphics": false
+    }
+  },
+  "230203929": {
+    "category": "mainboard",
+    "specs_confidence": "verified",
+    "specs": {
+      "socket": "LGA1700",
+      "chipset": "B760",
+      "memory_type": "DDR4",
+      "form_factor": "mATX",
+      "supported_cpu_generations": ["Intel 12th Gen", "Intel 13th Gen", "Intel 14th Gen"],
+      "max_memory_gb": 64,
+      "m2_slots": 2
+    }
+  },
+  "210602265": {
+    "category": "ram",
+    "specs_confidence": "verified",
+    "specs": {
+      "memory_type": "DDR4",
+      "capacity_gb": 16,
+      "module_count": 1,
+      "speed_mhz": 3200,
+      "form_factor": "UDIMM"
+    }
+  },
+  "221000008": {
+    "category": "storage",
+    "specs_confidence": "verified",
+    "specs": {
+      "capacity_gb": 500,
+      "interface": "NVMe",
+      "form_factor": "M.2 2280",
+      "pcie": "4.0"
+    }
+  },
+  "260508255": {
+    "category": "vga",
+    "specs_confidence": "verified",
+    "specs": {
+      "chipset": "RX 7600",
+      "vram_gb": 8,
+      "memory_type": "GDDR6",
+      "pcie": "4.0",
+      "tdp_w": 165,
+      "length_mm": 245,
+      "power_connectors": ["1x8-pin"],
+      "slot_width": 2.5
+    }
+  },
+  "210800662": {
+    "category": "psu",
+    "specs_confidence": "verified",
+    "specs": {
+      "wattage_w": 650,
+      "efficiency_rating": "80 Plus Bronze",
+      "pcie_8pin_connectors": 2,
+      "form_factor": "ATX"
+    }
+  },
+  "220101742": {
+    "category": "case",
+    "specs_confidence": "verified",
+    "specs": {
+      "motherboard_support": ["ATX", "mATX", "Mini-ITX"],
+      "gpu_clearance_mm": 330,
+      "psu_support": "ATX",
+      "max_cooler_height_mm": 160
+    }
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "snapshot_version": "catalog_v2026_06_27_fixture",
+  "generated_at": "2026-06-27T00:00:00Z",
+  "source": "services/agent-api/fixtures/phongvu-category-components.html",
+  "items": [
+    {
+      "sku": "211208130",
+      "name": "CPU Intel Core i5-12400F (2.5GHz Turbo 4.4GHz / 6 nhân 12 luồng / 18MB / LGA1700)",
+      "category": "cpu",
+      "price_vnd": 4390000,
+      "list_price_vnd": 5490000,
+      "discount_amount_vnd": 1100000,
+      "stock_quantity": 10,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/cpu-intel-core-i5-12400f--s211208130",
+      "image_url": null,
+      "brand": "Intel",
+      "warranty_text": "36 tháng",
+      "highlights": [
+        "6 nhân 12 luồng",
+        "Turbo 4.4GHz",
+        "Socket LGA1700",
+        "TDP 65W"
+      ],
+      "specs": {
+        "socket": "LGA1700",
+        "cores": 6,
+        "threads": 12,
+        "tdp_w": 65,
+        "integrated_graphics": false
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "cpu"
+    },
+    {
+      "sku": "230203929",
+      "name": "Mainboard ASUS PRIME B760M-K D4",
+      "category": "mainboard",
+      "price_vnd": 2290000,
+      "list_price_vnd": 2790000,
+      "discount_amount_vnd": 500000,
+      "stock_quantity": 8,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/mainboard-asus-prime-b760m-k-d4--s230203929",
+      "image_url": null,
+      "brand": "ASUS",
+      "warranty_text": "36 tháng",
+      "highlights": [
+        "Intel B760",
+        "Socket LGA1700",
+        "DDR4",
+        "mATX"
+      ],
+      "specs": {
+        "socket": "LGA1700",
+        "chipset": "B760",
+        "memory_type": "DDR4",
+        "form_factor": "mATX",
+        "supported_cpu_generations": [
+          "Intel 12th Gen",
+          "Intel 13th Gen",
+          "Intel 14th Gen"
+        ],
+        "max_memory_gb": 64,
+        "m2_slots": 2
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "mainboard-bo-mach-chu"
+    },
+    {
+      "sku": "210602265",
+      "name": "RAM Kingmax 16GB DDR4 3200MHz",
+      "category": "ram",
+      "price_vnd": 690000,
+      "list_price_vnd": 890000,
+      "discount_amount_vnd": 200000,
+      "stock_quantity": 25,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/ram-kingmax-16gb-ddr4-3200mhz--s210602265",
+      "image_url": null,
+      "brand": "Kingmax",
+      "warranty_text": "36 tháng",
+      "highlights": [
+        "1 x 16GB",
+        "DDR4 3200MHz",
+        "Desktop UDIMM"
+      ],
+      "specs": {
+        "module_count": 1,
+        "capacity_gb": 16,
+        "memory_type": "DDR4",
+        "speed_mhz": 3200,
+        "form_factor": "UDIMM"
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "ram"
+    },
+    {
+      "sku": "221000008",
+      "name": "SSD Kingston NV2 500GB M.2 PCIe NVMe",
+      "category": "storage",
+      "price_vnd": 890000,
+      "list_price_vnd": 1090000,
+      "discount_amount_vnd": 200000,
+      "stock_quantity": 18,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/ssd-kingston-nv2-500gb-m2-pcie-nvme--s221000008",
+      "image_url": null,
+      "brand": "Kingston",
+      "warranty_text": "36 tháng",
+      "highlights": [
+        "500GB",
+        "M.2 2280",
+        "NVMe PCIe 4.0"
+      ],
+      "specs": {
+        "capacity_gb": 500,
+        "interface": "NVMe",
+        "form_factor": "M.2 2280",
+        "pcie": "4.0"
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "o-cung-ssd"
+    },
+    {
+      "sku": "260508255",
+      "name": "VGA ASUS Dual Radeon RX 7600 8GB GDDR6",
+      "category": "vga",
+      "price_vnd": 6990000,
+      "list_price_vnd": 7590000,
+      "discount_amount_vnd": 600000,
+      "stock_quantity": 12,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/vga-asus-dual-radeon-rx-7600-8gb-gddr6--s260508255",
+      "image_url": null,
+      "brand": "ASUS",
+      "warranty_text": "36 tháng",
+      "highlights": [
+        "8GB GDDR6",
+        "PCI-E 4.0",
+        "1 x 8-pin"
+      ],
+      "specs": {
+        "vram_gb": 8,
+        "memory_type": "GDDR6",
+        "pcie": "4.0",
+        "chipset": "RX 7600",
+        "tdp_w": 165,
+        "length_mm": 245,
+        "power_connectors": [
+          "1x8-pin"
+        ],
+        "slot_width": 2.5
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "vga-card-man-hinh"
+    },
+    {
+      "sku": "210800662",
+      "name": "PSU MSI MAG A650BN 650W 80 Plus Bronze",
+      "category": "psu",
+      "price_vnd": 1150000,
+      "list_price_vnd": 1390000,
+      "discount_amount_vnd": 240000,
+      "stock_quantity": 9,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/psu-msi-mag-a650bn-650w-80-plus-bronze--s210800662",
+      "image_url": null,
+      "brand": "MSI",
+      "warranty_text": "60 tháng",
+      "highlights": [
+        "650W",
+        "80 Plus Bronze",
+        "ATX"
+      ],
+      "specs": {
+        "wattage_w": 650,
+        "efficiency_rating": "80 Plus Bronze",
+        "pcie_8pin_connectors": 2,
+        "form_factor": "ATX"
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "psu-nguon-may-tinh"
+    },
+    {
+      "sku": "220101742",
+      "name": "Case Xigmatek LUX S 3FX",
+      "category": "case",
+      "price_vnd": 790000,
+      "list_price_vnd": 990000,
+      "discount_amount_vnd": 200000,
+      "stock_quantity": 7,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/case-xigmatek-lux-s-3fx--s220101742",
+      "image_url": null,
+      "brand": "Xigmatek",
+      "warranty_text": "12 tháng",
+      "highlights": [
+        "ATX / mATX / Mini-ITX",
+        "GPU clearance 330mm",
+        "PSU ATX"
+      ],
+      "specs": {
+        "motherboard_support": [
+          "ATX",
+          "mATX",
+          "Mini-ITX"
+        ],
+        "gpu_clearance_mm": 330,
+        "psu_support": "ATX",
+        "max_cooler_height_mm": 160
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_next_data_fixture",
+      "raw_category": "case-thung-may-tinh"
+    }
+  ],
+  "validation": {
+    "snapshot_version": "catalog_v2026_06_27_fixture",
+    "generated_at": "2026-06-27T00:00:00Z",
+    "sku_count": 7,
+    "issue_count": 0,
+    "blocking_issue_count": 0,
+    "issues": []
+  }
+}
