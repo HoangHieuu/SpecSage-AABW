@@ -156,3 +156,20 @@ auth, payment, Teko provider APIs, or persistent storage:
 Approval is allowed only when the generated build has `can_approve=true` and
 status `generated`. The handoff contains real SKU links from the existing build
 artifact and remains labeled as a mock cart payload.
+
+## Current LLM Advisor Slice
+
+`US-006` adds a narrow OpenRouter adapter for intent-time explanation:
+
+- `OPENROUTER_API_KEY` stays server-side in local environment or `.env`.
+- `OPENROUTER_MODEL` defaults to `deepseek/deepseek-v4-flash`.
+- `IntentRequest.use_llm=true` opts into one non-streaming chat completion for
+  draft intent analysis.
+- `IntentResponse.agent_analysis` returns provider status, model name,
+  Vietnamese summary, optional clarification wording, confidence notes, and
+  safety notes.
+
+This is not the full LangGraph/Pydantic AI orchestration layer yet. It is a
+boundary-safe provider adapter that parses structured LLM JSON before it reaches
+the UI. Provider failures degrade to deterministic parser output instead of
+blocking the session.

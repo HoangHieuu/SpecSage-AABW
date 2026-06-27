@@ -55,9 +55,17 @@ servers. Required rendered flows are one happy path from Vietnamese intent to a
 visible cart-ready handoff and one over-budget path proving approval remains
 blocked or the API returns 409.
 
+`US-006` is verified by `pnpm check` plus Browser E2E against local dev servers.
+Unit and integration proof must mock OpenRouter transport so normal validation
+does not spend tokens. Browser proof should make one live intent analysis call
+when `OPENROUTER_API_KEY` is configured, then confirm/generate to prove the
+deterministic flow still works if the LLM panel is available or degraded.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.
 - Do not claim full catalog coverage when using a curated snapshot.
 - Do not claim compatibility correctness without rule tests.
 - Do not claim production readiness without deployment and observability proof.
+- Do not claim LLM output is authoritative for SKU, price, budget, stock,
+  compatibility, approval, or cart readiness.

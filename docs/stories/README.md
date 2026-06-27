@@ -13,6 +13,8 @@ Initial PC Build Copilot story packets:
 | `US-003` | Deterministic compatibility rules | implemented | normal |
 | `US-004` | Build generation vertical slice | implemented | normal |
 | `US-005` | Review approval and mock cart-ready handoff | implemented | normal |
+| `US-006` | OpenRouter LLM intent advisor | implemented | normal |
+| `US-007` | Deterministic performance fit profile | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

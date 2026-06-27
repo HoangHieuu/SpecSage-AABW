@@ -23,6 +23,7 @@ This file maps product behavior to proof. Durable proof status also lives in
 | US-003 | Deterministic compatibility rules block invalid builds and report remediation | yes | yes | no | no | implemented | `pnpm check`; `scripts/bin/harness-cli story verify US-003`; rule tests cover socket, RAM, PSU, GPU connector, GPU/case clearance, cooler/case clearance |
 | US-004 | System generates an explained compatible build from confirmed intent and catalog snapshot | yes | yes | yes | no | implemented | `pnpm check`; browser E2E happy path and over-budget path; generated 7-row SKU build with catalog/rules versions and Phong Vu links |
 | US-005 | User approves a safe generated build and receives mock cart-ready handoff | yes | yes | yes | no | implemented | `pnpm check`; Browser happy path to cart-ready handoff with 7 SKU links; over-budget path kept approval blocked and rendered no cart panel |
+| US-006 | OpenRouter LLM adds advisory Vietnamese intent analysis without replacing deterministic parser/rules | yes | yes | yes | yes | implemented | `pnpm check`; Playwright browser flow showed `LLM Agent` available with `deepseek/deepseek-v4-flash`, then confirmed intent and generated valid 7-SKU build; direct OpenRouter diagnostic returned HTTP 200 |
 
 ## Evidence Rules
 

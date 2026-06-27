@@ -57,6 +57,10 @@ fixture-backed generator and mock cart handoff. It produces one build from the
 local catalog snapshot, validates it through the compatibility rule engine,
 reports explicit budget gaps when the current snapshot cannot satisfy a low
 budget, and creates a mock cart-ready handoff only after approval gates pass.
+`US-006` adds an advisory OpenRouter LLM layer to the intent step. That layer
+summarizes customer needs and suggests clarifying questions in Vietnamese, but
+it does not choose SKUs, prices, compatibility outcomes, budget gates, approval,
+or cart handoff payloads.
 
 Out of first-slice scope unless a later story selects it:
 

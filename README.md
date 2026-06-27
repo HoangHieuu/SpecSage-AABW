@@ -16,11 +16,14 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-005` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-007` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
-first build generation, and a mock cart-ready approval handoff.
+first build generation, a mock cart-ready approval handoff, and an advisory
+OpenRouter LLM intent analysis layer. Generated builds now also include a
+deterministic qualitative workload fit profile grounded in catalog facts, with
+no FPS or benchmark claims.
 
 Accepted product direction:
 
@@ -65,6 +68,8 @@ The initial implementation backlog is intentionally small:
 3. `US-003` - deterministic compatibility rule engine. Implemented.
 4. `US-004` - build generation and explanation vertical slice. Implemented.
 5. `US-005` - review approval and mock cart-ready handoff. Implemented.
+6. `US-006` - OpenRouter LLM intent advisor. Implemented.
+7. `US-007` - deterministic performance fit profile. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -97,6 +102,17 @@ Open:
 - API health: `http://127.0.0.1:8000/health`
 - API docs: `http://127.0.0.1:8000/docs`
 
+Optional LLM advisor configuration for the API:
+
+```bash
+OPENROUTER_API_KEY=...
+OPENROUTER_MODEL=deepseek/deepseek-v4-flash
+LLM_AGENT_ENABLED=true
+```
+
+The API reads these from local environment or `.env`. The key stays server-side;
+the browser receives only the model name, provider status, and advisory text.
+
 Validate the current slice:
 
 ```bash
@@ -107,6 +123,8 @@ scripts/bin/harness-cli story verify US-002
 scripts/bin/harness-cli story verify US-003
 scripts/bin/harness-cli story verify US-004
 scripts/bin/harness-cli story verify US-005
+scripts/bin/harness-cli story verify US-006
+scripts/bin/harness-cli story verify US-007
 ```
 
 Catalog endpoints after `pnpm catalog:sync`:
