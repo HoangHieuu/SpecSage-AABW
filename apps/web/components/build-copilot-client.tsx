@@ -13,12 +13,15 @@ import {
   IntentAgentAnalysis,
   IntentResponse,
   PerformanceProfile,
+  SessionTraceReplay,
+  TraceReplayEvent,
   UseCase,
   applyBuildAlternative,
   approveBuild,
   createSession,
   generateBuild,
   getBuildAlternatives,
+  getSessionTrace,
   submitIntent
 } from "@/lib/api";
 
@@ -64,8 +67,10 @@ export function BuildCopilotClient() {
   const [agentAnalysis, setAgentAnalysis] = useState<IntentAgentAnalysis | null>(null);
   const [buildArtifact, setBuildArtifact] = useState<BuildArtifact | null>(null);
   const [buildAlternatives, setBuildAlternatives] = useState<BuildAlternativesResponse | null>(null);
+  const [sessionTrace, setSessionTrace] = useState<SessionTraceReplay | null>(null);
   const [cartHandoff, setCartHandoff] = useState<CartReadyHandoff | null>(null);
   const [appliedAlternativeLabel, setAppliedAlternativeLabel] = useState<string | null>(null);
+  const [traceCopyState, setTraceCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,8 +104,10 @@ export function BuildCopilotClient() {
       setAgentAnalysis(null);
       setBuildArtifact(null);
       setBuildAlternatives(null);
+      setSessionTrace(null);
       setCartHandoff(null);
       setAppliedAlternativeLabel(null);
+      setTraceCopyState("idle");
     } catch (err) {
       setError(toErrorMessage(err));
     } finally {
@@ -128,8 +135,10 @@ export function BuildCopilotClient() {
       }
       setBuildArtifact(null);
       setBuildAlternatives(null);
+      setSessionTrace(null);
       setCartHandoff(null);
       setAppliedAlternativeLabel(null);
+      setTraceCopyState("idle");
     } catch (err) {
       setError(toErrorMessage(err));
     } finally {
@@ -143,11 +152,16 @@ export function BuildCopilotClient() {
     setError(null);
     try {
       const artifact = await generateBuild(session.build_session_id);
-      const alternatives = await getBuildAlternatives(artifact.build_id);
+      const [alternatives, trace] = await Promise.all([
+        getBuildAlternatives(artifact.build_id),
+        getSessionTrace(artifact.build_session_id)
+      ]);
       setBuildArtifact(artifact);
       setBuildAlternatives(alternatives);
+      setSessionTrace(trace);
       setCartHandoff(null);
       setAppliedAlternativeLabel(null);
+      setTraceCopyState("idle");
       setSession((current) => (current ? { ...current, state: "generated" } : current));
     } catch (err) {
       setError(toErrorMessage(err));
@@ -162,16 +176,31 @@ export function BuildCopilotClient() {
     setError(null);
     try {
       const artifact = await applyBuildAlternative(buildArtifact.build_id, alternative.variant_id);
-      const alternatives = await getBuildAlternatives(artifact.build_id);
+      const [alternatives, trace] = await Promise.all([
+        getBuildAlternatives(artifact.build_id),
+        getSessionTrace(artifact.build_session_id)
+      ]);
       setBuildArtifact(artifact);
       setBuildAlternatives(alternatives);
+      setSessionTrace(trace);
       setCartHandoff(null);
       setAppliedAlternativeLabel(alternative.label_vi);
+      setTraceCopyState("idle");
       setSession((current) => (current ? { ...current, state: "generated" } : current));
     } catch (err) {
       setError(toErrorMessage(err));
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleCopyTraceExport() {
+    if (!sessionTrace) return;
+    try {
+      await navigator.clipboard.writeText(sessionTrace.support_export_text);
+      setTraceCopyState("copied");
+    } catch {
+      setTraceCopyState("failed");
     }
   }
 
@@ -369,7 +398,13 @@ export function BuildCopilotClient() {
               </p>
             ) : null}
 
-            {buildArtifact.orchestration_trace.length ? (
+            {sessionTrace ? (
+              <TraceReplayPanel
+                trace={sessionTrace}
+                copyState={traceCopyState}
+                onCopyExport={handleCopyTraceExport}
+              />
+            ) : buildArtifact.orchestration_trace.length ? (
               <AgentTracePanel steps={buildArtifact.orchestration_trace} />
             ) : null}
 
@@ -468,6 +503,115 @@ export function BuildCopilotClient() {
         )}
       </section>
     </main>
+  );
+}
+
+function TraceReplayPanel({
+  trace,
+  copyState,
+  onCopyExport
+}: {
+  trace: SessionTraceReplay;
+  copyState: "idle" | "copied" | "failed";
+  onCopyExport: () => void;
+}) {
+  const totalEvents = trace.builds.reduce((count, build) => count + build.events.length, 0);
+
+  return (
+    <section className="trace-replay" data-testid="trace-replay-panel">
+      <div className="trace-replay-heading">
+        <div>
+          <h3>Trace replay</h3>
+          <p>{trace.redaction_policy_vi}</p>
+        </div>
+        <div className="trace-replay-actions">
+          <span className="status">
+            {trace.generated_build_count} build / {totalEvents} event
+          </span>
+          <button type="button" className="secondary" onClick={onCopyExport}>
+            {copyState === "copied"
+              ? "Đã copy trace"
+              : copyState === "failed"
+                ? "Không copy được"
+                : "Copy support trace"}
+          </button>
+        </div>
+      </div>
+
+      <div className="trace-builds">
+        {trace.builds.map((build) => (
+          <article className="trace-build-card" key={build.build_id}>
+            <div className="trace-build-card-heading">
+              <div>
+                <h4>Build v{build.build_version}</h4>
+                <p>{build.build_id}</p>
+              </div>
+              <span className={build.replay_status === "complete" ? "status confirmed" : "status"}>
+                {build.replay_status === "complete" ? `${build.events.length} event` : "Không có event"}
+              </span>
+            </div>
+
+            {build.events.length ? (
+              <ol className="trace-event-list">
+                {build.events.map((event) => (
+                  <TraceReplayEventRow event={event} key={event.event_id} />
+                ))}
+              </ol>
+            ) : (
+              <p className="trace-empty">
+                Build version này được tạo từ thao tác apply deterministic nên không có bước
+                LangGraph riêng.
+              </p>
+            )}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TraceReplayEventRow({ event }: { event: TraceReplayEvent }) {
+  const labels: Record<TraceReplayEvent["agent"], string> = {
+    catalog: "Catalog",
+    optimizer: "Optimizer",
+    compatibility: "Compatibility",
+    performance: "Performance",
+    explainer: "Explainer",
+    validator: "Validator"
+  };
+
+  return (
+    <li>
+      <div className="trace-event-main">
+        <span className={event.status === "completed" ? "trace-dot" : "trace-dot blocked"} />
+        <div>
+          <div className="trace-event-title">
+            <strong>
+              {event.sequence}. {labels[event.agent]}
+            </strong>
+            <span>{event.latency_ms} ms</span>
+          </div>
+          <p>{event.summary_vi}</p>
+          <dl className="trace-event-facts">
+            <div>
+              <dt>Model</dt>
+              <dd>{event.model_version}</dd>
+            </div>
+            <div>
+              <dt>Tool calls</dt>
+              <dd>{event.tool_calls.length ? event.tool_calls.join(", ") : "none"}</dd>
+            </div>
+          </dl>
+          <details className="trace-event-payload">
+            <summary>Inputs / outputs</summary>
+            <div>
+              <pre>{formatPayload(event.inputs_redacted)}</pre>
+              <pre>{formatPayload(event.outputs_redacted)}</pre>
+            </div>
+          </details>
+        </div>
+      </div>
+    </li>
   );
 }
 
@@ -853,6 +997,11 @@ function alternativeStatusClass(alternative: BuildAlternative) {
   if (alternative.status === "generated") return "status confirmed";
   if (alternative.status === "over_budget") return "status warning";
   return "status blocked";
+}
+
+function formatPayload(payload: Record<string, string | number | boolean | null>) {
+  if (!Object.keys(payload).length) return "{}";
+  return JSON.stringify(payload, null, 2);
 }
 
 function toErrorMessage(error: unknown) {

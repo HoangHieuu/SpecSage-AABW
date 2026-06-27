@@ -144,6 +144,45 @@ export type BuildOrchestrationStep = {
   summary_vi: string;
   inputs: Record<string, string | number | boolean | null>;
   outputs: Record<string, string | number | boolean | null>;
+  tool_calls: string[];
+  latency_ms: number;
+  model_version: string;
+  started_at: string;
+  completed_at: string;
+};
+
+export type TraceReplayEvent = {
+  event_id: string;
+  sequence: number;
+  build_session_id: string;
+  build_id: string;
+  build_version: number;
+  generated_at: string;
+  agent: BuildOrchestrationStep["agent"];
+  status: BuildOrchestrationStep["status"];
+  summary_vi: string;
+  inputs_redacted: Record<string, string | number | boolean | null>;
+  tool_calls: string[];
+  outputs_redacted: Record<string, string | number | boolean | null>;
+  latency_ms: number;
+  model_version: string;
+};
+
+export type BuildTraceReplay = {
+  build_session_id: string;
+  build_id: string;
+  build_version: number;
+  generated_at: string;
+  replay_status: "complete" | "empty";
+  events: TraceReplayEvent[];
+};
+
+export type SessionTraceReplay = {
+  build_session_id: string;
+  generated_build_count: number;
+  redaction_policy_vi: string;
+  support_export_text: string;
+  builds: BuildTraceReplay[];
 };
 
 export type BuildArtifact = {
@@ -290,6 +329,10 @@ export function generateBuild(buildSessionId: string): Promise<BuildArtifact> {
 
 export function getBuild(buildId: string): Promise<BuildArtifact> {
   return request<BuildArtifact>(`/builds/${buildId}`);
+}
+
+export function getSessionTrace(buildSessionId: string): Promise<SessionTraceReplay> {
+  return request<SessionTraceReplay>(`/sessions/${buildSessionId}/trace`);
 }
 
 export function getBuildAlternatives(buildId: string): Promise<BuildAlternativesResponse> {
