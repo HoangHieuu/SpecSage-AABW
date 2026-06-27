@@ -3,7 +3,18 @@
 Stories are work packets. They turn product intent into bounded implementation
 and validation work.
 
-No story packets are active yet.
+Initial PC Build Copilot story packets:
+
+| Story | Title | Status | Lane |
+| --- | --- | --- | --- |
+| `US-000` | Product contract wiring | implemented | high-risk |
+| `US-001` | Session and intent foundation | implemented | normal |
+| `US-002` | Catalog snapshot ingestion | implemented | high-risk |
+| `US-003` | Deterministic compatibility rules | implemented | normal |
+| `US-004` | Build generation vertical slice | implemented | normal |
+| `US-005` | Review approval and mock cart-ready handoff | implemented | normal |
+
+Use `scripts/bin/harness-cli query matrix` for durable status before work.
 
 ## Normal Story
 
@@ -19,6 +30,11 @@ docs/stories/epics/E01-domain-name/US-001-short-story-title.md
 
 Use `docs/templates/high-risk-story/` when the feature intake classifies work as
 high-risk.
+
+`US-002` is already marked high-risk because catalog ingestion touches external
+product data and catalog contracts. Expand it into the high-risk folder template
+before implementation if it introduces live scraping, credentials, provider
+APIs, or persisted product data.
 
 Suggested path:
 

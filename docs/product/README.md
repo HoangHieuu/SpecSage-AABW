@@ -1,14 +1,22 @@
 # Product Docs
 
-This directory is intentionally generic and mostly empty in Harness v0.
+This directory is now the living product contract for **PC Build Copilot for
+Phong Vu**.
 
-When a user provides a project spec, derive smaller product contract files here
-instead of keeping one large spec as the living plan. Name files by the product
-domains that actually exist in that spec, for example `overview.md`,
-`billing.md`, `workflows.md`, `permissions.md`, or `api-conventions.md`.
+Source snapshots:
 
-Do not create domain files before the spec just to fill the folder. Empty
-structure is healthier than fake product truth.
+- `SPEC.md`
+- `Data.md`
+- `techstack.md`
+- `tools.md`
+
+Living contract files:
+
+- `overview.md`
+- `data-strategy.md`
+- `technical-architecture.md`
+- `validation-strategy.md`
+- `coding-agent-tooling.md`
 
 ## Update Rule
 
@@ -20,3 +28,6 @@ When behavior changes:
    `scripts/bin/harness-cli story update`.
 4. Record a decision if the change affects architecture, scope, risk, or a
    previously settled product rule.
+
+Do not keep extending `SPEC.md` as the operating plan after a story is accepted.
+Update the smaller contract docs instead.

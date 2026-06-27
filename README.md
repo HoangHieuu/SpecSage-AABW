@@ -1,272 +1,144 @@
-# repository-harness
+# SpecSage-AABW
 
-Turn any software repo into an agent-ready workspace.
+Agentic AI Build Week workspace for **PC Build Copilot for Phong Vu**.
 
-`repository-harness` is a repository-level operating harness for Claude Code,
-Codex, Cursor, and other coding agents. It gives agents the missing project
-context they need before they change code: where to start, what the product
-contract says, how risky the work is, what proof is required, and which
-decisions future agents should inherit.
+The repository started as a generic `repository-harness` install. It is now
+wired with the first real product sources:
 
-The app is what users touch. The harness is what agents touch.
+- `SPEC.md` - source product specification snapshot.
+- `Data.md` - source data strategy snapshot.
+- `techstack.md` - source technology stack snapshot.
+- `tools.md` - source coding-agent tool and plugin plan.
 
-## Why Star This Repo
-
-Star this repo if you want practical, reusable patterns for making AI-assisted
-software development more reliable, inspectable, and easier for humans to steer.
-
-This project is exploring a simple idea:
-
-> Coding agents do not only need better prompts. They need better repositories.
-
-## The Problem
-
-Most repos are built for humans reading code in a familiar codebase. Coding
-agents usually enter with only a chat prompt and a shallow snapshot of files.
-That leads to common failure modes:
-
-- The agent edits code before understanding product intent.
-- Important constraints live only in chat history or in someone's head.
-- Validation expectations are vague or discovered too late.
-- Architecture tradeoffs are repeated instead of inherited.
-- Large requests do not get broken into reviewable story-sized work.
-
-## The Harness Approach
-
-A repository starts to have a harness when it helps an agent answer practical
-engineering questions without relying only on chat history:
-
-- What should I read first?
-- What type of work is this?
-- Which product contract does it affect?
-- How risky is the change?
-- What proof will show the work is done?
-- What decision or lesson should future agents inherit?
-
-In this repo, those answers live in:
-
-- `AGENTS.md` — the stable agent shim with local project notes and Harness
-  doc links.
-- `docs/HARNESS.md` — the human-agent collaboration model.
-- `docs/FEATURE_INTAKE.md` — tiny, normal, and high-risk work classification.
-- `docs/ARCHITECTURE.md` — architecture discovery and boundary rules.
-- `docs/TEST_MATRIX.md` — behavior-to-proof validation expectations.
-- `docs/stories/` — story packets and backlog items.
-- `docs/decisions/` — durable decisions and tradeoffs.
-- `docs/templates/` — reusable spec, story, decision, and validation templates.
-
-OpenAI describes this shift as an agent-first world where humans steer and
-agents execute:
-
-https://openai.com/index/harness-engineering/
-
-## Install Harness Into A Project
-
-From a target project directory, run:
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.sh?$(date +%s)" | bash -s -- --yes
-```
-
-On Windows PowerShell, run:
-
-```powershell
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.ps1"))) -Yes
-```
-
-If the target already has `AGENTS.md`, `docs/`, or `scripts/`, choose one:
-
-```bash
-# Update an existing Harness repo without moving existing files
-curl -fsSL "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.sh?$(date +%s)" | bash -s -- --merge --yes
-
-# Back up and replace AGENTS.md, docs/, and scripts/
-curl -fsSL "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.sh?$(date +%s)" | bash -s -- --override --yes
-```
-
-```powershell
-# Update an existing Harness repo without moving existing files
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.ps1"))) -Merge -Yes
-
-# Back up and replace AGENTS.md, docs/, and scripts/
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.ps1"))) -Override -Yes
-```
-
-Use `--merge` when a project already has Harness and you want to append newly
-added Harness files without moving the existing `AGENTS.md`, `docs/`, or
-`scripts/` paths into backup. Existing files stay untouched; only missing
-Harness files are created.
-
-For older Harness installs whose `AGENTS.md` still contains the full generated
-operating guide, refresh it into the small stable shim:
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.sh?$(date +%s)" | bash -s -- --merge --refresh-agent-shim --yes
-```
-
-The refresh backs up the existing file. If it detects the old
-Harness-generated guide, it replaces it with the shim. If the file appears
-custom, it appends or updates a marked Harness block instead of overwriting the
-project's local instructions.
-
-If the project is driven with Claude Code, add `--claude`. Claude Code never
-auto-loads `AGENTS.md`, so without this the installed harness is invisible to
-fresh sessions. The flag installs (or refreshes) a `CLAUDE.md` whose marked
-Harness block `@`-imports `AGENTS.md` and `docs/FEATURE_INTAKE.md` into every
-session's context. An existing `CLAUDE.md` gets the block appended after a
-backup; plain installs without the flag never touch `CLAUDE.md`:
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.sh?$(date +%s)" | bash -s -- --claude --yes
-```
-
-Or install into a specific path:
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.sh?$(date +%s)" | bash -s -- --directory /path/to/project --yes
-```
-
-```powershell
-& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/hoangnb24/repository-harness/main/scripts/install-harness.ps1"))) -Directory C:\path\to\project -Yes
-```
-
-Use `--dry-run` on Bash or `-DryRun` on PowerShell to preview changes before
-writing files.
-
-The installer also downloads the prebuilt Harness CLI for the current platform,
-verifies its `.sha256` checksum, and installs it at
-`scripts/bin/harness-cli` on macOS/Linux or `scripts/bin/harness-cli.exe` on
-Windows. The Rust CLI is the main Harness tool and stable command path.
-
-Harness CLI release assets are published from tags by the
-`Harness CLI Release` GitHub Actions workflow. The installer expects each
-release to include `harness-cli-<platform>` and
-`harness-cli-<platform>.sha256` assets for macOS arm64, macOS x64, Linux x64,
-Linux arm64, and Windows x64. The Windows asset is
-`harness-cli-windows-x64.exe` plus `harness-cli-windows-x64.exe.sha256`.
-
-Merged pull requests are recorded in `CHANGELOG.md` by the
-`Post-Merge Maintenance` workflow. When a merged PR changes the Rust CLI source,
-schema, Cargo metadata, or CLI release packaging, that workflow bumps the CLI
-patch version, updates `scripts/harness-cli-release-tag`, creates a
-`harness-cli-v*` tag, and runs the Harness CLI release build for that tag.
-
-## Try The Flow
-
-The fastest way to understand the harness is to inspect the tiny demo:
-
-- `docs/demo/README.md`: shows how a simple product idea becomes product docs,
-  stories, validation expectations, and decisions before implementation starts.
-
-A typical flow looks like this:
-
-```text
-human intent or product spec
-  -> product contract
-  -> feature intake
-  -> story packet
-  -> validation expectations
-  -> implementation work
-  -> decision or lesson captured for future agents
-```
-
-Implementation prompts do not go straight to code. They first pass through
-feature intake, become story-sized work when needed, and then carry both product
-validation and harness maintenance expectations.
-
-## Tool Registry
-
-The harness can use optional external tools (linters, code-graph servers,
-deploy checks) without depending on any of them. You register a tool as a
-provider of a *capability*, the harness scans whether it is actually present,
-and a workflow step uses whatever is equipped — an absent tool is a clean skip,
-never a failure.
-
-```bash
-# register a tool as a provider of a capability
-scripts/bin/harness-cli tool register --name deploy-check --kind cli \
-  --capability deploy-verification --command ./scripts/deploy-check.sh \
-  --responsibility Verification --description "Verify deploy health before release"
-
-# scan presence (writes present/missing/unknown)
-scripts/bin/harness-cli tool check
-
-# a step looks up what is equipped for a purpose
-scripts/bin/harness-cli query tools --capability deploy-verification --status present
-```
-
-Kinds (`cli`, `binary`, `mcp`, `skill`, `http`) make it agent-generic: each
-agent runtime uses what it can orchestrate. See `docs/TOOL_REGISTRY.md` for the
-full model, the degrade ladder, and how to wire a tool into a flow step.
+The source snapshots are historical input material. The living project contract
+is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
+`docs/decisions/`.
 
 ## Current State
 
-This repository is in Harness v0.
+`US-001` through `US-005` are implemented: the repo has a minimal FastAPI agent
+API and Next.js customer web shell for session creation, Vietnamese intent
+parsing, clarification, confirmation, deterministic local catalog snapshot
+ingestion, read-only catalog API access, deterministic compatibility validation,
+first build generation, and a mock cart-ready approval handoff.
 
-There is no application implementation and no baked-in product specification
-yet. The current work is the reusable project harness: the file structure,
-agent operating model, feature intake process, story templates, and validation
-expectations that help humans and agents turn a future user-provided spec into
-implementation work.
+Accepted product direction:
 
-## Product Sources
+- Vietnamese-first PC build copilot for Phong Vu retail customers and staff.
+- Real SKU grounding through a local catalog mirror built from public Phong Vu
+  product data.
+- Deterministic compatibility and safety checks in code, not in LLM prompts.
+- Multi-agent orchestration for intent, catalog retrieval, compatibility,
+  performance, optimization, explanation, commerce, and final validation.
+- Hackathon path starts with a narrow, demoable slice rather than the full
+  enterprise roadmap.
 
-No product contract is currently defined.
+## Read First
 
-When a user provides a project specification, add or reference it as the input
-spec for the first buildout, then derive smaller living artifacts from it:
+Before product work, read:
 
-- `docs/product/`: current product contract files, created from the spec.
-- `docs/stories/`: story packets and backlog created from selected work.
-- `docs/TEST_MATRIX.md`: behavior-to-proof control panel.
-- `docs/decisions/`: durable decisions and tradeoffs.
-
-Do not keep a project-specific spec or product breakdown in this harness until
-a real project supplies one.
-
-## Repository Structure
-
-```text
-project/
-  AGENTS.md
-  README.md
-  docs/
-    HARNESS.md
-    FEATURE_INTAKE.md
-    ARCHITECTURE.md
-    TEST_MATRIX.md
-    HARNESS_BACKLOG.md
-    product/
-    stories/
-    decisions/
-    demo/
-    templates/
-  scripts/
-    README.md
+```bash
+sed -n '1,220p' AGENTS.md
+sed -n '1,220p' SPEC.md
+sed -n '1,220p' Data.md
+sed -n '1,220p' techstack.md
+scripts/bin/harness-cli query matrix
 ```
 
-## Contributing
+For implementation stories, also read the relevant files under
+`docs/product/` and the selected story packet under `docs/stories/`.
 
-This project is early and benefits most from real-world agent failure cases,
-example harness installs, docs improvements, and reusable workflow patterns.
-See `CONTRIBUTING.md` for contribution ideas.
+## Living Product Docs
 
-Useful contributions include:
+- `docs/product/overview.md` - product vision, users, phase map, non-goals.
+- `docs/product/data-strategy.md` - catalog mirror, enrichment, trust contract.
+- `docs/product/technical-architecture.md` - stack, agents, state, boundaries.
+- `docs/product/validation-strategy.md` - proof ladder and canonical scenarios.
+- `docs/product/coding-agent-tooling.md` - MCP/plugin plan and live tool notes.
 
-- Show how the harness works in a real project.
-- Add missing templates or improve existing ones.
-- Propose validation patterns for different stacks.
-- Share failures where an agent made the wrong change because the repo lacked
-  context.
-- Compare harness behavior across Claude Code, Codex, Cursor, and other tools.
+## First Build Slices
 
-## Share
+The initial implementation backlog is intentionally small:
 
-If this idea resonates, please star the repo and share it with someone building
-with coding agents.
+1. `US-001` - session and Vietnamese intent foundation. Implemented.
+2. `US-002` - local catalog snapshot ingestion. Implemented.
+3. `US-003` - deterministic compatibility rule engine. Implemented.
+4. `US-004` - build generation and explanation vertical slice. Implemented.
+5. `US-005` - review approval and mock cart-ready handoff. Implemented.
 
-Short description:
+Use Harness to keep each slice bounded:
 
-> An agent-ready repo harness for Claude Code, Codex, Cursor, and other coding
-> agents: AGENTS.md, product contracts, story packets, validation matrix, and
-> decision records.
+```bash
+scripts/bin/harness-cli query matrix
+scripts/bin/harness-cli query tools --summary
+scripts/bin/harness-cli story verify US-001
+```
+
+## Local Development
+
+Install dependencies:
+
+```bash
+pnpm install
+python3 -m venv .venv
+.venv/bin/python -m pip install -e 'services/agent-api[dev]'
+```
+
+Run the API and web app in separate terminals:
+
+```bash
+pnpm dev:api
+pnpm dev:web
+```
+
+Open:
+
+- Web: `http://127.0.0.1:3000`
+- API health: `http://127.0.0.1:8000/health`
+- API docs: `http://127.0.0.1:8000/docs`
+
+Validate the current slice:
+
+```bash
+pnpm catalog:sync
+pnpm check
+scripts/bin/harness-cli story verify US-001
+scripts/bin/harness-cli story verify US-002
+scripts/bin/harness-cli story verify US-003
+scripts/bin/harness-cli story verify US-004
+scripts/bin/harness-cli story verify US-005
+```
+
+Catalog endpoints after `pnpm catalog:sync`:
+
+- API catalog health: `http://127.0.0.1:8000/catalog/health`
+- API SKU query: `http://127.0.0.1:8000/catalog/skus?category=vga&in_stock=true`
+- API build validation: `POST http://127.0.0.1:8000/builds/demo/validate`
+- API build generation: `POST http://127.0.0.1:8000/sessions/{build_session_id}/generate`
+- API mock cart handoff: `POST http://127.0.0.1:8000/builds/{build_id}/approve`
+
+## Tool Setup
+
+Cursor MCP defaults live in `.cursor/mcp.json`:
+
+- Context7 for current framework documentation.
+- Playwright for UI and demo-flow verification.
+- shadcn MCP for UI component work.
+
+Optional keyed tools such as Firecrawl, Langfuse, GitHub, PostgreSQL MCP, AWS,
+and Vercel should be added only when the required credentials or target project
+exist.
+
+## Harness Commands
+
+```bash
+scripts/bin/harness-cli init
+scripts/bin/harness-cli intake --type "Spec slice" --summary "..." --lane normal
+scripts/bin/harness-cli story add --id US-001 --title "..." --lane normal
+scripts/bin/harness-cli tool check
+scripts/bin/harness-cli query matrix
+scripts/bin/harness-cli trace --summary "..." --outcome completed
+```
+
+See `docs/HARNESS.md`, `docs/FEATURE_INTAKE.md`, and
+`docs/TOOL_REGISTRY.md` for the full operating model.

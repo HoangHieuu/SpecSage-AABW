@@ -1,6 +1,6 @@
 # PC Build Copilot — Technology Stack Guide
 
-**Companion to:** [PC-Build-Copilot-SPEC.md](./PC-Build-Copilot-SPEC.md)  
+**Companion to:** [SPEC.md](./SPEC.md)
 **Version:** 1.0  
 **Last updated:** 2026-06-26
 
@@ -134,7 +134,7 @@ pc-build-copilot/
 
 ## 4. Phase-by-Phase Technology Map
 
-Each section maps to **PC-Build-Copilot-SPEC.md** phases.
+Each section maps to **SPEC.md** phases.
 
 ---
 
@@ -571,7 +571,7 @@ Use this as an implementation order reference (not a timeline):
 
 ## 11. References
 
-- [PC Build Copilot SPEC](./PC-Build-Copilot-SPEC.md)
+- [PC Build Copilot SPEC](./SPEC.md)
 - [Langfuse — AI Agent Framework Comparison (2025)](https://langfuse.com/blog/2025-03-19-ai-agent-comparison)
 - [LangGraph Overview](https://docs.langchain.com/oss/python/langgraph/overview)
 - [Pydantic AI Documentation](https://ai.pydantic.dev/)

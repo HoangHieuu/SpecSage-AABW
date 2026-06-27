@@ -1,6 +1,6 @@
 # PC Build Copilot — Data Strategy (No Phong Vũ DB Access)
 
-**Companion to:** [PC-Build-Copilot-SPEC.md](./PC-Build-Copilot-SPEC.md), [techstack.md](./techstack.md)  
+**Companion to:** [SPEC.md](./SPEC.md), [techstack.md](./techstack.md)
 **Version:** 1.0  
 **Last updated:** 2026-06-27
 

@@ -1,26 +1,49 @@
 # Architecture
 
-No application stack is selected yet.
+This repository now has an accepted product and stack direction derived from
+`SPEC.md`, `Data.md`, and `techstack.md`.
 
-No application code exists yet. This document defines generic architecture
-questions and boundary rules that future implementation should adapt after a
-user-provided spec and stack decision exist.
+## Product Surfaces
 
-## Discovery Before Shape
+Initial surface:
 
-Before proposing implementation shape, identify:
+- Customer web app for Vietnamese PC build guidance.
+- FastAPI agent API for sessions, intent parsing, build generation, validation,
+  alternatives, and mock cart payloads.
 
-- Product surfaces: browser, mobile, desktop, CLI, API, worker, or service.
-- Runtime stack: language, framework, database, queues, providers, and hosting.
-- Core domains: the product concepts that deserve stable names and contracts.
-- Boundary inputs: user input, API requests, webhooks, jobs, files, credentials,
-  provider payloads, and environment configuration.
-- Validation ladder: the smallest checks that can prove the selected stack.
+Later surfaces:
 
-Record stack choices in `docs/decisions/` when they meaningfully constrain
-future work.
+- Staff console.
+- Admin/rules console.
+- Embeddable widget.
+- Public API and webhooks.
 
-## Default Layering
+## Runtime Stack
+
+| Concern | Decision |
+| --- | --- |
+| Frontend | Next.js 15 App Router, React 19, Tailwind CSS 4, shadcn/ui |
+| Backend | Python 3.12, FastAPI, Pydantic v2 |
+| Agent orchestration | LangGraph plus Pydantic AI |
+| LLM routing | LiteLLM with Kimi/Qwen/Claude/OpenAI fallbacks |
+| Data | PostgreSQL 16, pgvector, Redis, Typesense |
+| Jobs | ARQ or BullMQ depending on service boundary |
+| Observability | Langfuse, OpenTelemetry, Sentry |
+| Deploy | AWS backend, Vercel optional frontend |
+
+## Core Domains
+
+- Build sessions.
+- Build intent.
+- Catalog SKUs and enriched specs.
+- Compatibility rules and reports.
+- Performance profiles.
+- Build configurations and variants.
+- Explanations and glossary.
+- Commerce handoff payloads.
+- Observability/evaluation records.
+
+## Layering
 
 ```text
 domain
@@ -30,104 +53,51 @@ domain
               <- app surfaces
 ```
 
-## Candidate Structure
+Inner layers must not depend on framework, database, UI, provider SDKs, or
+process environment. Boundary parsers translate unknown data into typed
+commands, DTOs, and domain objects before rules or optimization logic sees it.
+
+## First Implementation Shape
+
+Create folders only as stories require them:
 
 ```text
-app/
-  domain/
-    entities/
-    value-objects/
-    repositories/
-    services/
-
-  application/
-    commands/
-    queries/
-    handlers/
-
-  infrastructure/
-    database/
-    logging/
-    notifications/
-
-  interface/
-    controllers/
-    dto/
-    presenters/
-    routes/
-    middlewares/
-
-surfaces/
-  browser/
-  mobile/
-  desktop/
-  cli/
+apps/web
+services/agent-api
+services/catalog-sync
+services/commerce-adapter
+packages/shared-types
+packages/ui
+evals
+infra
 ```
 
-This is a thinking template, not a scaffold. Create real folders only when a
-story enters implementation and the selected stack needs them.
+The first vertical slice should not scaffold staff, admin, auth, checkout, or
+warehouse analytics unless the selected story explicitly includes them.
 
-## Dependency Rule
+## Hard Boundaries
 
-Inner layers must not depend on outer layers.
-
-| Layer | May depend on | Must not depend on |
-| --- | --- | --- |
-| domain | nothing project-external except tiny pure utilities | framework, database, UI, provider, process/env |
-| application | domain | framework, UI, provider, database concrete clients |
-| infrastructure | domain, application | interface controllers or UI |
-| interface | all backend layers | UI state or platform shell assumptions |
-| app surfaces | API contracts and app-facing clients | domain internals directly |
-
-## Parse-First Boundary Rule
-
-Unknown data must be parsed at boundaries before it enters inner code.
-
-Boundaries include:
-
-- HTTP request bodies, params, and query strings.
-- Session payloads and identity claims.
-- Environment variables.
-- Database rows returned from external clients.
-- Platform shell payloads.
-- Deep links, tokens, and signed URLs.
-- Provider webhooks, events, and async payloads.
-
-Target flow:
-
-```text
-unknown input
-  -> parser
-  -> typed DTO or command
-  -> application use case
-  -> domain object/value object
-```
-
-Inner layers should work with meaningful product types such as `UserId`,
-`AccountId`, `WorkspaceId`, `Role`, `DateRange`, or domain-specific IDs,
-rather than repeatedly validating raw strings.
-
-## Command/Query Boundary
-
-If the product has both reads and writes, keep command/query separation clear at
-the code level even when the storage layer is simple:
-
-- Commands mutate state and own audit side effects.
-- Queries read state and format for consumers.
-- Shared domain rules live in domain/application, not controllers.
+- Compatibility checks are code/rule-pack outputs, never LLM judgments.
+- Catalog recommendations must reference local snapshot SKUs.
+- Numeric claims must trace to catalog, rules, benchmarks, or build artifacts.
+- Mock cart payloads must be labeled as mock until a real Teko adapter exists.
+- Staff/admin/auth work is high-risk and needs a dedicated story packet before
+  implementation.
 
 ## Observability Contract
 
-The future server should emit one canonical JSON log line per request with:
+Backend requests should eventually emit structured JSON logs with:
 
 - timestamp
 - level
 - request_id
-- user_id when known
+- build_session_id when known
+- user_id or staff_id when known
 - action
 - duration_ms
 - status_code
 - message
 
-Audit logs are product records. Application logs are operational records. Do not
-use one as a substitute for the other.
+Agent traces should include agent name, input schema, tool calls, output schema,
+latency, model version, catalog version, and rules version. PII must be
+redacted from traces.

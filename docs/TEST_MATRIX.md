@@ -1,9 +1,7 @@
 # Test Matrix
 
-This file maps product behavior to proof.
-
-No product behavior has been defined or implemented yet. Do not mark a row
-implemented until tests or validation evidence exist.
+This file maps product behavior to proof. Durable proof status also lives in
+`harness.db`; prefer `scripts/bin/harness-cli query matrix` before work.
 
 ## Status Values
 
@@ -19,7 +17,12 @@ implemented until tests or validation evidence exist.
 
 | Story | Contract | Unit | Integration | E2E | Platform | Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| TBD | Add rows when story packets are created | no | no | no | no | planned | none |
+| US-000 | Harness product contract is wired from source snapshots into living docs, stories, decisions, and tool registry | no | no | no | no | implemented | `git diff --check`; Harness rows created |
+| US-001 | User can start a session and express/confirm Vietnamese build intent | yes | yes | yes | no | implemented | `pnpm check`; Browser desktop flow |
+| US-002 | Catalog snapshot contains real Phong Vu SKUs with enriched compatibility fields | yes | yes | no | no | implemented | `pnpm catalog:sync`; `.venv/bin/python -m pytest services/agent-api/tests`; 7-SKU snapshot with 0 blocking validation issues |
+| US-003 | Deterministic compatibility rules block invalid builds and report remediation | yes | yes | no | no | implemented | `pnpm check`; `scripts/bin/harness-cli story verify US-003`; rule tests cover socket, RAM, PSU, GPU connector, GPU/case clearance, cooler/case clearance |
+| US-004 | System generates an explained compatible build from confirmed intent and catalog snapshot | yes | yes | yes | no | implemented | `pnpm check`; browser E2E happy path and over-budget path; generated 7-row SKU build with catalog/rules versions and Phong Vu links |
+| US-005 | User approves a safe generated build and receives mock cart-ready handoff | yes | yes | yes | no | implemented | `pnpm check`; Browser happy path to cart-ready handoff with 7 SKU links; over-budget path kept approval blocked and rendered no cart panel |
 
 ## Evidence Rules
 
