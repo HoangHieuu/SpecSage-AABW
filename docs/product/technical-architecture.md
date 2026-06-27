@@ -112,6 +112,21 @@ The first rule set covers CPU/mainboard socket, RAM type, PSU wattage, GPU power
 connectors, GPU/case clearance, and cooler/case clearance. Future rule changes
 must update the manifest and tests together.
 
+## Current Catalog Health Slice
+
+`US-016` makes catalog readiness explicit in the local validation report:
+
+- `CatalogValidationReport.category_counts`
+- `CatalogValidationReport.required_demo_categories`
+- `CatalogValidationReport.missing_required_demo_categories`
+- `CatalogValidationReport.demo_ready`
+
+`GET /catalog/health` returns those fields from the embedded snapshot
+validation report. Missing CPU, mainboard, RAM, storage, VGA, PSU, or case
+coverage is a blocking catalog validation issue because those categories are
+required for the current full-build demo flow. This does not add live scraping,
+external catalog APIs, Typesense, Postgres, or admin catalog editing.
+
 ## API Boundary
 
 First public endpoints should be introduced with OpenAPI contracts:
@@ -312,3 +327,23 @@ score.
 This is the local release gate before Langfuse Datasets/Experiments, GitHub
 Actions, or LLM-as-judge review. The rubric score is a deterministic proxy
 until a human review workflow exists.
+
+## Current Feedback Loop Slice
+
+`US-015` adds customer feedback capture on generated build artifacts:
+
+- `BuildFeedbackRequest`, `BuildFeedback`, and `PartFeedback`
+- `POST /builds/{build_id}/feedback`
+- `GET /builds/{build_id}/feedback`
+- `GET /feedback/review-queue`
+- `build_feedback` in the local SQLite store
+- `BuildFeedbackPanel` in the web client
+
+Feedback is tied to the immutable build id, build session id, build version,
+catalog version, and rules version. Part-level feedback must reference a SKU in
+the generated build artifact; the API rejects mismatched SKUs instead of
+accepting free-form part claims.
+
+Low overall ratings or low part ratings mark the record as `queued` for the
+local review queue. This is not a staff/admin console, RBAC system, analytics
+warehouse, or production moderation workflow.

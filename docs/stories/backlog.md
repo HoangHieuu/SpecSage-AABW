@@ -10,12 +10,12 @@ the work is selected or when a product decision needs a durable place to land.
 | Epic | Description | Status |
 | --- | --- | --- |
 | E01 Session Intent | Start sessions, confirm Vietnamese `BuildIntent`, and persist session/build state | stories created: `US-001`, `US-010` |
-| E02 Catalog Grounding | Build local Phong Vu catalog snapshot and enriched SKU specs | story created: `US-002` |
+| E02 Catalog Grounding | Build local Phong Vu catalog snapshot, enriched SKU specs, and demo-readiness health | stories created: `US-002`, `US-016` |
 | E03 Compatibility Engine | Deterministic hardware compatibility report and blocking rules | story created: `US-003` |
 | E04 Agent Build Flow | Generate one compatible explained build from confirmed intent through a bounded orchestration graph | stories created: `US-004`, `US-011` |
 | E05 Build Iteration | Deterministic alternatives, slot deltas, applied variants, and future optimizer loop | stories created: `US-008`, `US-009` |
 | E06 Explanation and Education | LLM-assisted summaries and customer-facing rationale grounded in validated facts | story created: `US-006` |
 | E07 Performance Fit | Deterministic qualitative workload fit profile, benchmark tables later | story created: `US-007` |
 | E08 Commerce Handoff | Mock cart first, real Teko cart/promos after API access | story created: `US-005` |
-| E11 Observability Quality | Replay agent decisions and run local quality gates before production observability | stories created: `US-012`, `US-013` |
+| E11 Observability Quality | Replay agent decisions, run local quality gates, CI gates, and collect feedback before production observability | stories created: `US-012`, `US-013`, `US-014`, `US-015` |
 | Later Staff/Admin | Staff console, admin rules, auth/RBAC, analytics | unsliced high-risk |

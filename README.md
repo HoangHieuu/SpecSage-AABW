@@ -36,6 +36,8 @@ event payloads and support-export text. A local quality eval suite now runs 30
 canonical scenarios as a release gate for catalog-grounding, budget,
 compatibility, required slots, SKU hallucination, and explanation-rubric
 regressions.
+Catalog health now also reports demo-readiness category coverage for the local
+snapshot before build generation or evals run.
 
 Accepted product direction:
 
@@ -88,6 +90,9 @@ The initial implementation backlog is intentionally small:
 11. `US-011` - LangGraph build orchestration foundation. Implemented.
 12. `US-012` - agent trace session replay foundation. Implemented.
 13. `US-013` - quality evaluation suite foundation. Implemented.
+14. `US-014` - CI quality gate foundation. Implemented.
+15. `US-015` - user feedback loop foundation. Implemented.
+16. `US-016` - catalog demo readiness health. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -152,6 +157,8 @@ scripts/bin/harness-cli story verify US-010
 scripts/bin/harness-cli story verify US-011
 scripts/bin/harness-cli story verify US-012
 scripts/bin/harness-cli story verify US-013
+scripts/bin/harness-cli story verify US-014
+scripts/bin/harness-cli story verify US-015
 pnpm eval:run
 ```
 
@@ -165,8 +172,13 @@ Catalog endpoints after `pnpm catalog:sync`:
 - API apply alternative: `POST http://127.0.0.1:8000/builds/{build_id}/alternatives/{variant_id}/apply`
 - API build trace replay: `GET http://127.0.0.1:8000/builds/{build_id}/trace`
 - API session trace replay: `GET http://127.0.0.1:8000/sessions/{build_session_id}/trace`
+- API build feedback: `POST http://127.0.0.1:8000/builds/{build_id}/feedback`
+- API build feedback history: `GET http://127.0.0.1:8000/builds/{build_id}/feedback`
+- API feedback review queue: `GET http://127.0.0.1:8000/feedback/review-queue`
 - API mock cart handoff: `POST http://127.0.0.1:8000/builds/{build_id}/approve`
 - Local quality evals: `pnpm eval:run`
+- CI quality gate: `.github/workflows/ci.yml` runs `pnpm check` and
+  `pnpm eval:run`
 
 ## Tool Setup
 

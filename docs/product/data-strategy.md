@@ -94,6 +94,12 @@ The current snapshot is intentionally small: CPU, mainboard, RAM, SSD, GPU, PSU,
 and case SKUs for the next compatibility slice. It is not full catalog coverage
 and does not claim live price or stock freshness.
 
+`US-016` extends the embedded validation report with demo-readiness coverage:
+per-category SKU counts, required full-build demo categories, missing required
+categories, and a `demo_ready` flag. The current fixture is demo-ready for the
+first full-build flow because it includes CPU, mainboard, RAM, storage, VGA,
+PSU, and case categories. Cooler and monitor remain optional for this slice.
+
 ## Commerce Adapter Boundary
 
 Hackathon:

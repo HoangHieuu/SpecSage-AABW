@@ -111,6 +111,26 @@ Integration proof runs 30 scenarios through the deterministic parser and
 LangGraph-wrapped generator against the local catalog snapshot. Browser proof is
 not required because this story adds a local release gate, not a UI surface.
 
+`US-014` is verified locally by `pnpm check`, `pnpm eval:run`, and Harness story
+verification, and structurally by the checked-in GitHub Actions workflow. The
+workflow installs pnpm, Node.js, Python, and Agent API dev dependencies before
+running the same local gate. Browser proof is not required because the story has
+no user-visible surface. Hosted CI pass evidence should be added after the
+workflow runs on GitHub.
+
+`US-015` is verified by focused feedback API tests, SQLite restart-survival
+tests, `pnpm check`, `pnpm eval:run`, Harness story verification, and Browser
+E2E. Integration proof must show that feedback links to the generated build,
+catalog version, rules version, and review queue status, and that part-level
+feedback rejects SKUs not present in the build. Browser proof must show the
+post-generation feedback panel can submit and render saved feedback.
+
+`US-016` is verified by `pnpm catalog:sync`, `pnpm check`, `pnpm eval:run`,
+and Harness story verification. Unit proof covers category coverage counts and
+blocking issues for missing required demo categories. Integration proof checks
+`GET /catalog/health` exposes `demo_ready`, required categories, missing
+categories, and per-category counts.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.

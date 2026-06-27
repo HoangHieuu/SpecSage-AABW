@@ -63,6 +63,8 @@ The first demo should prove a narrow vertical slice:
     copy a redacted support trace export.
 13. Product owners can run canonical local quality evals before changing build
     logic.
+14. Catalog health reports whether the local snapshot is demo-ready for the
+    required full-build categories before generation or evals run.
 
 Current first-slice implementation reaches step 10 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, and mock
@@ -89,6 +91,12 @@ persisted build artifacts. It is a hackathon observability bridge before
 Langfuse/OpenTelemetry integration, not production telemetry.
 `US-013` adds 30 local canonical evaluation scenarios and a `pnpm eval:run`
 release gate before Langfuse datasets or hosted CI are available.
+`US-014` promotes `pnpm check` and `pnpm eval:run` into a GitHub Actions quality
+gate for pull requests and pushes to `main`.
+`US-015` captures overall and part-level build feedback tied to build,
+catalog, and rules versions, with low ratings marked for local review.
+`US-016` adds demo-readiness category coverage to catalog health so missing
+required full-build categories are caught as catalog validation failures.
 
 Out of first-slice scope unless a later story selects it:
 
