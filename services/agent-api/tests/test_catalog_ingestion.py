@@ -7,11 +7,13 @@ from pc_build_copilot.catalog_capture_cli import (
     sanitize_next_data_html,
 )
 from pc_build_copilot.catalog_cli import (
+    filter_source_items,
     load_source_manifest,
     main as catalog_sync_main,
 )
 from pc_build_copilot.catalog_models import CatalogSnapshot, ComponentCategory
 from pc_build_copilot.catalog_parser import (
+    CatalogParseError,
     apply_overrides,
     extract_next_data_json,
     load_overrides,
@@ -347,6 +349,127 @@ def test_catalog_cli_skips_disabled_manifest_sources(tmp_path: Path) -> None:
     assert "cpu-staged-1" not in {item.sku for item in snapshot.items}
 
 
+def test_catalog_cli_promotes_only_included_manifest_skus(tmp_path: Path) -> None:
+    source = tmp_path / "mixed-cpu.html"
+    source.write_text(
+        """
+        <script id="__NEXT_DATA__" type="application/json">
+        {
+          "props": {
+            "pageProps": {
+              "serverProducts": [
+                {
+                  "sku": "cpu-promoted-1",
+                  "name": "CPU Intel Core i5-12400F LGA1700 6C 12T",
+                  "latestPrice": 4390000,
+                  "stockQuantity": 5,
+                  "slug": "cpu-intel-core-i5-12400f",
+                  "category": "cpu",
+                  "highlight": ["LGA1700", "6C 12T"]
+                },
+                {
+                  "sku": "cpu-still-staged-1",
+                  "name": "CPU Intel Core i7-14700F LGA1700 20C 28T",
+                  "latestPrice": 10790000,
+                  "stockQuantity": 5,
+                  "slug": "cpu-intel-core-i7-14700f",
+                  "category": "cpu",
+                  "highlight": ["LGA1700", "20C 28T"]
+                }
+              ]
+            }
+          }
+        }
+        </script>
+        """,
+        encoding="utf-8",
+    )
+    manifest = tmp_path / "catalog_sources.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "sources": [
+                    {"input": str(FIXTURE), "source": "test_existing_fixture"},
+                    {
+                        "input": "mixed-cpu.html",
+                        "source": "test_curated_cpu_fixture",
+                        "category_hint": "cpu",
+                        "include_skus": ["cpu-promoted-1"],
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    overrides = load_overrides(OVERRIDES)
+    overrides["cpu-promoted-1"] = {
+        "category": "cpu",
+        "specs_confidence": "verified",
+        "specs": {
+            "socket": "LGA1700",
+            "tdp_w": 65,
+            "cores": 6,
+            "threads": 12,
+        },
+    }
+    overrides_path = tmp_path / "overrides.json"
+    overrides_path.write_text(json.dumps(overrides), encoding="utf-8")
+    output = tmp_path / "catalog_snapshot.json"
+
+    sources = load_source_manifest(manifest)
+    exit_code = catalog_sync_main(
+        [
+            "--source-manifest",
+            str(manifest),
+            "--overrides",
+            str(overrides_path),
+            "--output",
+            str(output),
+            "--snapshot-at",
+            "2026-06-27T00:00:00Z",
+            "--snapshot-version",
+            "catalog_test_curated_subset",
+        ]
+    )
+
+    snapshot = CatalogSnapshot.model_validate_json(output.read_text(encoding="utf-8"))
+    snapshot_skus = {item.sku for item in snapshot.items}
+    assert exit_code == 0
+    assert sources[1].include_skus == frozenset({"cpu-promoted-1"})
+    assert len(snapshot.items) == 12
+    assert "cpu-promoted-1" in snapshot_skus
+    assert "cpu-still-staged-1" not in snapshot_skus
+    assert snapshot.validation is not None
+    assert snapshot.validation.category_counts[ComponentCategory.CPU] == 2
+    assert ComponentCategory.CPU not in snapshot.validation.thin_demo_categories
+
+
+def test_manifest_include_skus_must_exist_in_source(tmp_path: Path) -> None:
+    manifest = tmp_path / "catalog_sources.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "sources": [
+                    {
+                        "input": str(FIXTURE),
+                        "source": "test_missing_include_sku",
+                        "include_skus": ["missing-sku"],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    manifest_source = load_source_manifest(manifest)[0]
+
+    try:
+        filter_source_items(_items(), manifest_source)
+    except CatalogParseError as exc:
+        assert "include_skus not found" in str(exc)
+    else:
+        raise AssertionError("Expected missing include_skus to raise.")
+
+
 def test_catalog_capture_cli_sanitizes_payload_and_upserts_manifest(
     tmp_path: Path,
 ) -> None:
@@ -493,6 +616,74 @@ def test_catalog_source_report_counts_enabled_and_staged_candidates(
     assert report.enabled_candidate_count == 11
     assert report.staged_candidate_count == 1
     assert rendered["staged_category_counts"]["cpu"] == 1
+
+
+def test_catalog_source_report_counts_only_included_enabled_candidates(
+    tmp_path: Path,
+) -> None:
+    curated_source = tmp_path / "curated-cpu.html"
+    curated_source.write_text(
+        """
+        <script id="__NEXT_DATA__" type="application/json">
+        {
+          "props": {
+            "pageProps": {
+              "serverProducts": [
+                {
+                  "sku": "cpu-curated-1",
+                  "name": "CPU Intel Core i5-12400F LGA1700 6C 12T",
+                  "latestPrice": 4390000,
+                  "stockQuantity": 5,
+                  "slug": "cpu-intel-core-i5-12400f",
+                  "category": "cpu",
+                  "highlight": ["LGA1700", "6C 12T"]
+                },
+                {
+                  "sku": "cpu-unreviewed-1",
+                  "name": "CPU Intel Core i7-14700F LGA1700 20C 28T",
+                  "latestPrice": 10790000,
+                  "stockQuantity": 5,
+                  "slug": "cpu-intel-core-i7-14700f",
+                  "category": "cpu",
+                  "highlight": ["LGA1700", "20C 28T"]
+                }
+              ]
+            }
+          }
+        }
+        </script>
+        """,
+        encoding="utf-8",
+    )
+    manifest = tmp_path / "catalog_sources.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "sources": [
+                    {
+                        "input": "curated-cpu.html",
+                        "source": "test_curated_cpu_fixture",
+                        "category_hint": "cpu",
+                        "include_skus": ["cpu-curated-1"],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = build_source_report(
+        manifest_path=manifest,
+        snapshot_at=SNAPSHOT_AT,
+    )
+    rendered = source_report_to_dict(report)
+
+    assert report.source_count == 1
+    assert report.enabled_source_count == 1
+    assert report.candidate_count == 1
+    assert report.enabled_candidate_count == 1
+    assert report.unique_candidate_count == 1
+    assert rendered["enabled_category_counts"]["cpu"] == 1
 
 
 def test_catalog_source_report_counts_invalid_staged_candidates(

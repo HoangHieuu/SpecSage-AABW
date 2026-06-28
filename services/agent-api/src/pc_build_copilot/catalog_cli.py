@@ -7,7 +7,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Sequence
 
-from pc_build_copilot.catalog_models import CatalogSnapshot, ComponentCategory
+from pc_build_copilot.catalog_models import (
+    CatalogSku,
+    CatalogSnapshot,
+    ComponentCategory,
+)
 from pc_build_copilot.catalog_parser import (
     CatalogParseError,
     apply_overrides,
@@ -25,6 +29,7 @@ class CatalogSourceInput:
     source_url: str | None = None
     source: str = "phongvu_next_data_fixture"
     enabled: bool = True
+    include_skus: frozenset[str] | None = None
 
 
 def build_snapshot(
@@ -75,6 +80,7 @@ def build_snapshot_from_sources(
             source_url=source.source_url,
             source=source.source,
         )
+        normalized_items = filter_source_items(normalized_items, source)
         for item in normalized_items:
             items_by_sku.setdefault(item.sku, item)
 
@@ -130,6 +136,7 @@ def load_source_manifest(
         category_hint = _optional_category(raw_source.get("category_hint"), index)
         source_url = _optional_str(raw_source.get("source_url"), "source_url", index)
         source = _optional_str(raw_source.get("source"), "source", index)
+        include_skus = _optional_sku_set(raw_source.get("include_skus"), index)
 
         input_path = Path(input_value)
         if not input_path.is_absolute():
@@ -142,9 +149,27 @@ def load_source_manifest(
                 source_url=source_url,
                 source=source or "phongvu_next_data_fixture",
                 enabled=enabled,
+                include_skus=include_skus,
             )
         )
     return parsed_sources
+
+
+def filter_source_items(
+    items: list[CatalogSku], source: CatalogSourceInput
+) -> list[CatalogSku]:
+    if source.include_skus is None:
+        return items
+
+    filtered = [item for item in items if item.sku in source.include_skus]
+    found_skus = {item.sku for item in filtered}
+    missing_skus = sorted(source.include_skus - found_skus)
+    if missing_skus:
+        raise CatalogParseError(
+            f"Catalog source {source.source} include_skus not found: "
+            f"{', '.join(missing_skus)}."
+        )
+    return filtered
 
 
 def _optional_category(value: Any, index: int) -> ComponentCategory | None:
@@ -166,6 +191,28 @@ def _optional_str(value: Any, field: str, index: int) -> str | None:
     if not isinstance(value, str):
         raise CatalogParseError(f"Catalog source {index} {field} must be a string.")
     return value
+
+
+def _optional_sku_set(value: Any, index: int) -> frozenset[str] | None:
+    if value in (None, ""):
+        return None
+    if not isinstance(value, list):
+        raise CatalogParseError(f"Catalog source {index} include_skus must be a list.")
+
+    skus = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            raise CatalogParseError(
+                f"Catalog source {index} include_skus values must be non-empty strings."
+            )
+        skus.append(item.strip())
+    if not skus:
+        raise CatalogParseError(f"Catalog source {index} include_skus cannot be empty.")
+    if len(skus) != len(set(skus)):
+        raise CatalogParseError(
+            f"Catalog source {index} include_skus cannot contain duplicates."
+        )
+    return frozenset(skus)
 
 
 def _optional_bool(value: Any, index: int) -> bool:

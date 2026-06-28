@@ -9,7 +9,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Sequence
 
-from pc_build_copilot.catalog_cli import CatalogSourceInput, load_source_manifest
+from pc_build_copilot.catalog_cli import (
+    CatalogSourceInput,
+    filter_source_items,
+    load_source_manifest,
+)
 from pc_build_copilot.catalog_models import ComponentCategory
 from pc_build_copilot.catalog_parser import (
     CatalogParseError,
@@ -80,6 +84,7 @@ def build_source_report(
                 )
             except CatalogParseError:
                 invalid_product_count += 1
+        normalized_items = filter_source_items(normalized_items, source)
         candidate_count += len(normalized_items)
         if source.enabled:
             enabled_candidate_count += len(normalized_items)
