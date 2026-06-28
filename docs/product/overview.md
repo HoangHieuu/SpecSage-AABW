@@ -113,6 +113,9 @@ private catalog API integration.
 `US-020` adds staged source entries and a source coverage report so broad public
 category captures can be measured before verified overrides make any new SKU
 eligible for recommendation.
+`US-021` sanitizes committed catalog fixtures so public page-shell environment
+blocks are removed while the parseable `__NEXT_DATA__` product payload remains
+available to local catalog tooling.
 
 Out of first-slice scope unless a later story selects it:
 

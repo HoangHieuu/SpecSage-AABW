@@ -12,7 +12,11 @@ from typing import Any, Sequence
 from urllib.parse import urlparse
 
 from pc_build_copilot.catalog_models import ComponentCategory
-from pc_build_copilot.catalog_parser import CatalogParseError, parse_next_data_products
+from pc_build_copilot.catalog_parser import (
+    CatalogParseError,
+    extract_next_data_json,
+    parse_next_data_products,
+)
 
 
 DEFAULT_USER_AGENT = (
@@ -50,9 +54,10 @@ def capture_category_payload(
         else _fetch_url(url or "", timeout_seconds)
     )
     product_count = len(parse_next_data_products(html))
+    sanitized_html = sanitize_next_data_html(html)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(html, encoding="utf-8")
+    output_path.write_text(sanitized_html, encoding="utf-8")
 
     resolved_source_url = source_url or url
     if manifest_path is not None:
@@ -70,6 +75,19 @@ def capture_category_payload(
         product_count=product_count,
         manifest_path=manifest_path,
         enabled=enabled,
+    )
+
+
+def sanitize_next_data_html(html: str) -> str:
+    payload = extract_next_data_json(html)
+    rendered_payload = json.dumps(
+        payload, ensure_ascii=False, separators=(",", ":")
+    ).replace("</", "<\\/")
+    return (
+        "<!doctype html>\n"
+        '<script id="__NEXT_DATA__" type="application/json">'
+        f"{rendered_payload}"
+        "</script>\n"
     )
 
 

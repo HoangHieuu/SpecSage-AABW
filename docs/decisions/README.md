@@ -23,6 +23,7 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0019` | Catalog source manifest before live scraping |
 | `0020` | Public category capture before automated scraping |
 | `0021` | Staged catalog captures before recommendations |
+| `0022` | Sanitized catalog captures before committed fixtures |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:
