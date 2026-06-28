@@ -1,7 +1,7 @@
 {
   "snapshot_version": "catalog_v2026_06_27_fixture",
   "generated_at": "2026-06-27T00:00:00Z",
-  "source": "services/agent-api/fixtures/phongvu-category-components.html",
+  "source": "services/agent-api/catalog/catalog_sources.json",
   "items": [
     {
       "sku": "211208130",
@@ -31,7 +31,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "cpu"
     },
     {
@@ -68,7 +68,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "mainboard-bo-mach-chu"
     },
     {
@@ -98,7 +98,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "ram"
     },
     {
@@ -128,7 +128,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "ram"
     },
     {
@@ -157,7 +157,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "o-cung-ssd"
     },
     {
@@ -186,7 +186,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "o-cung-ssd"
     },
     {
@@ -221,7 +221,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "vga-card-man-hinh"
     },
     {
@@ -257,7 +257,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "vga-card-man-hinh"
     },
     {
@@ -286,7 +286,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "psu-nguon-may-tinh"
     },
     {
@@ -316,7 +316,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "psu-nguon-may-tinh"
     },
     {
@@ -349,7 +349,7 @@
       },
       "specs_confidence": "verified",
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
-      "source": "phongvu_next_data_fixture",
+      "source": "phongvu_public_category_components_fixture",
       "raw_category": "case-thung-may-tinh"
     }
   ],

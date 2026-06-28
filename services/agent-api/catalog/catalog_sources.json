@@ -1,0 +1,9 @@
+{
+  "sources": [
+    {
+      "input": "../fixtures/phongvu-category-components.html",
+      "source": "phongvu_public_category_components_fixture",
+      "source_url": "https://phongvu.vn/c/linh-kien-may-tinh"
+    }
+  ]
+}

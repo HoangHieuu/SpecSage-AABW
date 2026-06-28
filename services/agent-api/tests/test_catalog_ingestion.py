@@ -1,7 +1,9 @@
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pc_build_copilot.catalog_cli import main
+from pc_build_copilot.catalog_capture_cli import main as capture_main
+from pc_build_copilot.catalog_cli import main as catalog_sync_main
 from pc_build_copilot.catalog_models import CatalogSnapshot, ComponentCategory
 from pc_build_copilot.catalog_parser import (
     apply_overrides,
@@ -116,7 +118,7 @@ def test_validation_blocks_snapshots_missing_required_demo_categories() -> None:
 def test_catalog_cli_writes_snapshot_with_embedded_validation(tmp_path: Path) -> None:
     output = tmp_path / "catalog_snapshot.json"
 
-    exit_code = main(
+    exit_code = catalog_sync_main(
         [
             "--input",
             str(FIXTURE),
@@ -141,3 +143,162 @@ def test_catalog_cli_writes_snapshot_with_embedded_validation(tmp_path: Path) ->
     assert snapshot.validation.category_counts[ComponentCategory.CASE] == 1
     assert snapshot.validation.recommended_demo_category_counts[ComponentCategory.CASE] == 2
     assert ComponentCategory.CASE in snapshot.validation.thin_demo_categories
+
+
+def test_catalog_cli_merges_manifest_sources_with_dedupe_and_overrides(
+    tmp_path: Path,
+) -> None:
+    extra_source = tmp_path / "extra-cpu.html"
+    extra_source.write_text(
+        """
+        <script id="__NEXT_DATA__" type="application/json">
+        {
+          "props": {
+            "pageProps": {
+              "serverProducts": [
+                {
+                  "sku": "cpu-extra-1",
+                  "name": "CPU Intel Core i5-13400F LGA1700 10C 16T",
+                  "latestPrice": 4090000,
+                  "stockQuantity": 7,
+                  "slug": "cpu-intel-core-i5-13400f",
+                  "category": "cpu",
+                  "highlight": ["LGA1700", "10C 16T"]
+                }
+              ]
+            }
+          }
+        }
+        </script>
+        """,
+        encoding="utf-8",
+    )
+    manifest = tmp_path / "catalog_sources.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "sources": [
+                    {"input": str(FIXTURE), "source": "test_existing_fixture"},
+                    {
+                        "input": "extra-cpu.html",
+                        "source": "test_extra_cpu_fixture",
+                        "category_hint": "cpu",
+                    },
+                    {"input": str(FIXTURE), "source": "test_duplicate_fixture"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    overrides = load_overrides(OVERRIDES)
+    overrides["cpu-extra-1"] = {
+        "specs_confidence": "verified",
+        "specs": {
+            "socket": "LGA1700",
+            "tdp_w": 65,
+            "cores": 10,
+            "threads": 16,
+        },
+    }
+    overrides_path = tmp_path / "overrides.json"
+    overrides_path.write_text(json.dumps(overrides), encoding="utf-8")
+    output = tmp_path / "catalog_snapshot.json"
+
+    exit_code = catalog_sync_main(
+        [
+            "--source-manifest",
+            str(manifest),
+            "--overrides",
+            str(overrides_path),
+            "--output",
+            str(output),
+            "--snapshot-at",
+            "2026-06-27T00:00:00Z",
+            "--snapshot-version",
+            "catalog_test_manifest",
+        ]
+    )
+
+    snapshot = CatalogSnapshot.model_validate_json(output.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert snapshot.snapshot_version == "catalog_test_manifest"
+    assert snapshot.source == str(manifest)
+    assert len(snapshot.items) == 12
+    assert sum(1 for item in snapshot.items if item.sku == "260508255") == 1
+    assert snapshot.validation is not None
+    assert snapshot.validation.blocking_issue_count == 0
+    assert snapshot.validation.category_counts[ComponentCategory.CPU] == 2
+    assert ComponentCategory.CPU not in snapshot.validation.thin_demo_categories
+
+
+def test_catalog_capture_cli_copies_payload_and_upserts_manifest(tmp_path: Path) -> None:
+    output = tmp_path / "captures" / "vga.html"
+    manifest = tmp_path / "catalog" / "catalog_sources.json"
+
+    exit_code = capture_main(
+        [
+            "--input",
+            str(FIXTURE),
+            "--output",
+            str(output),
+            "--manifest",
+            str(manifest),
+            "--source",
+            "test_capture_fixture",
+            "--source-url",
+            "https://phongvu.vn/c/vga-card-man-hinh",
+            "--category-hint",
+            "vga",
+        ]
+    )
+    second_exit_code = capture_main(
+        [
+            "--input",
+            str(FIXTURE),
+            "--output",
+            str(output),
+            "--manifest",
+            str(manifest),
+            "--source",
+            "test_capture_fixture",
+            "--source-url",
+            "https://phongvu.vn/c/vga-card-man-hinh",
+            "--category-hint",
+            "vga",
+        ]
+    )
+
+    loaded_manifest = json.loads(manifest.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert second_exit_code == 0
+    assert output.read_text(encoding="utf-8") == FIXTURE.read_text(encoding="utf-8")
+    assert loaded_manifest == {
+        "sources": [
+            {
+                "input": "../captures/vga.html",
+                "source": "test_capture_fixture",
+                "source_url": "https://phongvu.vn/c/vga-card-man-hinh",
+                "category_hint": "vga",
+            }
+        ]
+    }
+
+
+def test_catalog_capture_cli_rejects_payload_without_next_data_products(
+    tmp_path: Path,
+) -> None:
+    input_path = tmp_path / "empty.html"
+    input_path.write_text("<html><body>No product payload.</body></html>", encoding="utf-8")
+    output = tmp_path / "captures" / "empty.html"
+
+    exit_code = capture_main(
+        [
+            "--input",
+            str(input_path),
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 1
+    assert not output.exists()
