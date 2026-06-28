@@ -158,6 +158,14 @@ generator applies creator RAM+SSD and AI GPU+RAM sequences while streaming stops
 after one eligible swap. Integration proof checks orchestration and SQLite
 persistence still store generated artifacts and traces after optimizer changes.
 
+`US-034` is verified by focused build generation and benchmark tests, `pnpm
+check`, `pnpm eval:run`, and Harness story verification. Unit proof checks the
+Cyberpunk 2077 1440p Ultra RTX 4060 alternative ranks first because exact
+benchmark evidence improves over the RX 7600 base, and that ranking reasons do
+not add raw numeric FPS text to generated explanations. Integration proof
+checks the existing generation guard still skips auto-apply when the base
+benchmark already meets the declared target.
+
 `US-010` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit and integration proof cover SQLite round-trips for sessions, intent
 revisions, builds, applied build versions, and idempotent cart handoffs by

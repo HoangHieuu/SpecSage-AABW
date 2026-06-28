@@ -129,6 +129,36 @@ def test_generator_applies_benchmark_preserving_gaming_gpu_optimizer_swap() -> N
     assert any("PERF_BELOW_TARGET" in warning for warning in artifact.performance_profile.warnings_vi)
 
 
+def test_alternative_generator_prioritizes_benchmark_delta_for_gaming_gpu_swap() -> None:
+    intent = BuildIntent(
+        raw_text="PC gaming 25 triệu chơi Cyberpunk 2077 1440p Ultra 144Hz",
+        use_case=UseCase.GAMING,
+        budget_max=25_000_000,
+        target_games=["Cyberpunk 2077"],
+        performance_targets=["1440p", "Ultra", "144Hz"],
+    )
+    base_artifact = generate_build_artifact(
+        build_session_id="bs_gaming_benchmark_rank",
+        intent=intent,
+        catalog=_snapshot(),
+        optimize=False,
+    )
+
+    response = generate_build_alternatives(
+        base_artifact=base_artifact,
+        catalog=_snapshot(),
+    )
+    top_alternative = response.alternatives[0]
+
+    assert top_alternative.kind == "nvidia_gpu"
+    assert top_alternative.ranking.priority == "recommended"
+    assert any(
+        "benchmark exact-match" in reason.casefold()
+        for reason in top_alternative.ranking.reasons_vi
+    )
+    assert all("fps" not in reason.casefold() for reason in top_alternative.ranking.reasons_vi)
+
+
 def test_generator_keeps_gaming_gpu_optimizer_off_without_candidate_benchmark() -> None:
     intent = BuildIntent(
         raw_text="PC gaming 25 triệu chơi Valorant 144Hz",

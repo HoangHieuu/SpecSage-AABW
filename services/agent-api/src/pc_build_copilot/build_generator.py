@@ -195,7 +195,7 @@ def _select_optimizer_alternative(
         if not _is_basic_optimizer_candidate(alternative):
             continue
         if artifact.intent_snapshot.use_case == UseCase.GAMING:
-            if _is_benchmark_preserving_gaming_candidate(alternative):
+            if _needs_gaming_optimizer(artifact) and _is_benchmark_preserving_gaming_candidate(alternative):
                 return alternative
             continue
         if alternative.ranking.priority == "recommended":
@@ -223,6 +223,13 @@ def _has_benchmark_evidence(alternative: BuildAlternative) -> bool:
     return any(
         evidence.source == "benchmark"
         for evidence in alternative.performance_profile.evidence
+    )
+
+
+def _needs_gaming_optimizer(artifact: BuildArtifact) -> bool:
+    return any(
+        "PERF_BELOW_TARGET" in warning
+        for warning in artifact.performance_profile.warnings_vi
     )
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 from uuid import uuid4
 
@@ -22,6 +23,9 @@ from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.compatibility_rules import validate_build_compatibility
 from pc_build_copilot.models import UseCase
 from pc_build_copilot.performance_profile import generate_performance_profile
+
+
+BENCHMARK_FPS_RE = re.compile(r"(?:(\d+)-)?(\d+)\s*FPS\b", re.IGNORECASE)
 
 
 def generate_build_alternatives(
@@ -373,6 +377,7 @@ def _score_alternative(
     score += _balance_delta_score(base_profile, alternative_profile, reasons)
     score += _fit_delta_score(base_profile, alternative_profile, reasons)
     score += _workload_delta_score(base_profile, alternative_profile, reasons)
+    score += _benchmark_delta_score(base_artifact, alternative, reasons)
     score += _use_case_bonus(base_artifact, alternative, reasons)
     score -= _new_warning_penalty(base_profile, alternative_profile, reasons)
 
@@ -439,6 +444,42 @@ def _workload_delta_score(
     return 0
 
 
+def _benchmark_delta_score(
+    base_artifact: BuildArtifact,
+    alternative: BuildAlternative,
+    reasons: list[str],
+) -> int:
+    if base_artifact.intent_snapshot.use_case != UseCase.GAMING:
+        return 0
+    if alternative.kind != BuildAlternativeKind.NVIDIA_GPU:
+        return 0
+
+    base_benchmarks = _benchmark_fps_by_target(base_artifact.performance_profile)
+    alternative_benchmarks = _benchmark_fps_by_target(alternative.performance_profile)
+    comparable = [
+        (target, base_fps, alternative_benchmarks[target])
+        for target, base_fps in base_benchmarks.items()
+        if target in alternative_benchmarks
+    ]
+    if not comparable:
+        return 0
+
+    target, base_fps, alternative_fps = max(
+        comparable,
+        key=lambda item: item[2] - item[1],
+    )
+    delta = alternative_fps - base_fps
+    if delta <= 0:
+        return 0
+
+    reasons.append(
+        f"Benchmark exact-match của {target} cao hơn build gốc theo nguồn đã lưu."
+    )
+    if _has_warning(base_artifact.performance_profile, "PERF_BELOW_TARGET"):
+        return min(24, 8 + delta)
+    return min(6, delta)
+
+
 def _use_case_bonus(
     base_artifact: BuildArtifact,
     alternative: BuildAlternative,
@@ -491,6 +532,27 @@ def _new_warning_penalty(
     if new_warning_count:
         reasons.append("Có thêm cảnh báo performance so với build gốc.")
     return min(15, new_warning_count * 5)
+
+
+def _benchmark_fps_by_target(profile: PerformanceProfile) -> dict[str, int]:
+    benchmarks: dict[str, int] = {}
+    for evidence in profile.evidence:
+        if evidence.source != "benchmark":
+            continue
+        target, separator, fps_text = evidence.value.partition(":")
+        if not separator:
+            continue
+        fps_high = _benchmark_fps_high(fps_text)
+        if fps_high is not None:
+            benchmarks[target.strip()] = fps_high
+    return benchmarks
+
+
+def _benchmark_fps_high(value: str) -> int | None:
+    match = BENCHMARK_FPS_RE.search(value)
+    if not match:
+        return None
+    return int(match.group(2))
 
 
 def _fit_value(fit_level: PerformanceFitLevel) -> int:

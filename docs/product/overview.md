@@ -91,8 +91,10 @@ The first demo should prove a narrow vertical slice:
     and target combinations without interpolation.
 27. Generated builds can apply up to two eligible budget-safe optimizer swaps
     before returning, while rebuilding the artifact after each swap.
+28. Gaming alternatives can rank GPU swaps by exact source-backed benchmark
+    delta when base and candidate evidence match the same target.
 
-Current first-slice implementation reaches step 27 with a deterministic
+Current first-slice implementation reaches step 28 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, mock
 cart handoff, replayable agent traces, local quality gates, feedback capture,
 and curated catalog subset promotion. It produces one build from the local
@@ -107,10 +109,11 @@ suitability and multi-monitor validation gaps, returns ranked deterministic
 upgrade alternatives from the same catalog snapshot, applies one recommended
 budget-safe optimizer swap for streaming builds, applies up to two eligible
 budget-safe optimizer swaps for creator and local LLM builds, allows gaming GPU
-auto-swaps only when exact benchmark evidence is preserved, applies a selected
-alternative as a new active build version, and creates a mock cart-ready handoff
-only after approval gates pass. `US-006` adds an advisory OpenRouter LLM layer to
-the intent step.
+auto-swaps only when exact benchmark evidence is preserved, ranks gaming GPU
+alternatives by exact benchmark delta when comparable evidence exists, applies a
+selected alternative as a new active build version, and creates a mock cart-ready
+handoff only after approval gates pass. `US-006` adds an advisory OpenRouter LLM
+layer to the intent step.
 That layer summarizes customer needs and suggests clarifying questions in
 Vietnamese, but it does not choose SKUs, prices, compatibility outcomes, budget
 gates, approval, alternatives, applied builds, performance claims, or cart
@@ -160,6 +163,9 @@ benchmark evidence and warning provenance.
 unsupported targets unsupported.
 `US-033` expands generation from one eligible optimizer swap to a bounded
 two-swap pass, rebuilding the artifact after each swap.
+`US-034` adds benchmark-delta scoring so source-backed GPU improvements outrank
+generic gaming alternatives when both builds have exact evidence for the same
+target.
 
 Out of first-slice scope unless a later story selects it:
 

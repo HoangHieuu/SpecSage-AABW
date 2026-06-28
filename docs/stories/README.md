@@ -41,6 +41,7 @@ Initial PC Build Copilot story packets:
 | `US-031` | Benchmark-preserving gaming GPU optimizer guard | implemented | normal |
 | `US-032` | Broader gaming benchmark coverage | implemented | normal |
 | `US-033` | Bounded multi-swap optimizer search | implemented | normal |
+| `US-034` | Benchmark-delta gaming alternative ranking | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

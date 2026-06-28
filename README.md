@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-033` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-034` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -70,7 +70,9 @@ Benchmark coverage now includes RTX 4060 Cyberpunk 2077 1440p Ultra evidence so
 gaming GPU swaps can preserve below-target warning provenance, plus RX 7600
 Cyberpunk 2077 1080p Ultra evidence for exact 1080p requests. The optimizer can
 apply up to two eligible swaps, and gaming GPU swaps require exact benchmark
-evidence before auto-apply.
+evidence before auto-apply. Gaming alternatives now rank GPU swaps by exact
+source-backed benchmark delta when both the base and candidate have comparable
+benchmark evidence.
 
 Accepted product direction:
 
@@ -143,6 +145,7 @@ The initial implementation backlog is intentionally small:
 31. `US-031` - benchmark-preserving gaming GPU optimizer guard. Implemented.
 32. `US-032` - broader gaming benchmark coverage. Implemented.
 33. `US-033` - bounded multi-swap optimizer search. Implemented.
+34. `US-034` - benchmark-delta gaming alternative ranking. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -229,6 +232,7 @@ scripts/bin/harness-cli story verify US-030
 scripts/bin/harness-cli story verify US-031
 scripts/bin/harness-cli story verify US-032
 scripts/bin/harness-cli story verify US-033
+scripts/bin/harness-cli story verify US-034
 pnpm eval:run
 ```
 

@@ -217,6 +217,12 @@ budget, performance, warnings, explanations, and mock cart payload path. Office
 and student builds remain unchanged in this slice so office efficiency guidance
 is not hidden by under-proven swaps.
 
+`US-034` adds benchmark-delta scoring to ranked gaming alternatives. The scorer
+compares only benchmark evidence already emitted by `PerformanceProfile` for
+the same exact target. A source-backed GPU lift can move the GPU variant above
+generic capacity/headroom alternatives, while generated build explanations still
+avoid raw numeric FPS text outside benchmark evidence.
+
 ## Current Commerce Handoff Slice
 
 `US-005` adds mock approval and cart-ready handoff without introducing checkout,

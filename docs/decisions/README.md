@@ -36,6 +36,7 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0032` | Benchmark-preserving gaming optimizer guard |
 | `0033` | Source-backed benchmark coverage before broader FPS claims |
 | `0034` | Bounded two-swap optimizer before full search |
+| `0035` | Benchmark delta ranking before broader gaming search |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:
