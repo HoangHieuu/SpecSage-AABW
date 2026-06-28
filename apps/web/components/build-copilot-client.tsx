@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
+import { BackgroundAnimation } from "@/components/background-animation";
 import {
   BuildAlternative,
   BuildAlternativesResponse,
@@ -246,24 +247,72 @@ export function BuildCopilotClient() {
   }
 
   return (
-    <main className="app-shell">
-      <section className="hero-panel">
-        <div className="hero-copy">
-          <h1>PC Build Copilot</h1>
-          <p>
-            Tư vấn cấu hình từ nhu cầu thật, dùng dữ liệu SKU Phong Vu và kiểm tra
-            tương thích bằng luật trước khi tạo build.
-          </p>
-        </div>
-        <div className="rig-visual" aria-hidden="true">
-          <div className="rig-frame">
-            <span className="fan fan-one" />
-            <span className="fan fan-two" />
-            <span className="gpu-bar" />
-            <span className="ram-stick" />
+    <>
+      <BackgroundAnimation />
+      <main className={`app-shell${isLoading ? " is-loading" : ""}`}>
+        <header className="site-header">
+          <div className="brand-lockup">
+            <span className="brand-mark" aria-hidden="true">
+              PV
+            </span>
+            <div>
+              <strong>PC Build Copilot</strong>
+              <span>Phong Vu · Agentic AI</span>
+            </div>
           </div>
-        </div>
-      </section>
+          <div className="header-meta">
+            <span className="header-pill">SKU thật</span>
+            <span className="header-pill">Rule deterministic</span>
+            <span className="header-pill accent">LangGraph</span>
+          </div>
+        </header>
+
+        <FlowProgress
+          hasSession={Boolean(session)}
+          isConfirmed={isConfirmed}
+          hasBuild={Boolean(buildArtifact)}
+          isCartReady={Boolean(cartHandoff)}
+        />
+
+        <section className="hero-panel">
+          <div className="hero-copy">
+            <span className="hero-eyebrow">Tư vấn cấu hình thông minh</span>
+            <h1>
+              Xây PC đúng nhu cầu,
+              <em> đúng ngân sách</em>
+            </h1>
+            <p>
+              Tư vấn cấu hình từ nhu cầu thật, dùng dữ liệu SKU Phong Vu và kiểm tra
+              tương thích bằng luật trước khi tạo build.
+            </p>
+            <div className="hero-stats">
+              <div className="hero-stat">
+                <strong>7+</strong>
+                <span>slot linh kiện</span>
+              </div>
+              <div className="hero-stat">
+                <strong>SKU</strong>
+                <span>từ snapshot</span>
+              </div>
+              <div className="hero-stat">
+                <strong>0</strong>
+                <span>đoán tương thích</span>
+              </div>
+            </div>
+          </div>
+          <div className="rig-visual" aria-hidden="true">
+            <div className="rig-glow" />
+            <div className="rig-frame">
+              <span className="fan fan-one" />
+              <span className="fan fan-two" />
+              <span className="gpu-bar" />
+              <span className="ram-stick" />
+              <span className="led led-one" />
+              <span className="led led-two" />
+              <span className="led led-three" />
+            </div>
+          </div>
+        </section>
 
       <section className="workspace-grid">
         <form className="panel composer" onSubmit={handleSubmit}>
@@ -535,7 +584,43 @@ export function BuildCopilotClient() {
           </p>
         )}
       </section>
-    </main>
+      </main>
+    </>
+  );
+}
+
+function FlowProgress({
+  hasSession,
+  isConfirmed,
+  hasBuild,
+  isCartReady
+}: {
+  hasSession: boolean;
+  isConfirmed: boolean;
+  hasBuild: boolean;
+  isCartReady: boolean;
+}) {
+  const steps = [
+    { label: "Phiên", active: hasSession, done: hasSession },
+    { label: "Intent", active: hasSession && !isConfirmed, done: isConfirmed },
+    { label: "Build", active: isConfirmed && !hasBuild, done: hasBuild },
+    { label: "Giỏ mock", active: hasBuild && !isCartReady, done: isCartReady }
+  ];
+
+  return (
+    <nav className="flow-progress" aria-label="Tiến trình tư vấn">
+      {steps.map((step, index) => (
+        <div
+          key={step.label}
+          className={
+            step.done ? "flow-step done" : step.active ? "flow-step active" : "flow-step"
+          }
+        >
+          <span className="flow-step-dot">{step.done ? "✓" : index + 1}</span>
+          <span className="flow-step-label">{step.label}</span>
+        </div>
+      ))}
+    </nav>
   );
 }
 
