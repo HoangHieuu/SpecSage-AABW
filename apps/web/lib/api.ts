@@ -57,6 +57,7 @@ export type BuildIntent = {
   target_games: string[];
   target_apps: string[];
   performance_targets: string[];
+  monitor_count: number | null;
   form_factor: string | null;
   brand_preferences: string[];
   noise_preferences: string | null;
@@ -140,7 +141,31 @@ export type PerformanceProfile = {
   evidence: Array<{
     label: string;
     value: string;
-    source: "catalog_spec" | "intent" | "rule";
+    source: "catalog_spec" | "intent" | "rule" | "benchmark";
+    source_label: string | null;
+    source_url: string | null;
+  }>;
+  balance: {
+    score: number;
+    interpretation_vi: string;
+    limiting_component: "cpu" | "gpu" | "ram" | "storage" | "unknown";
+    suggestions_vi: string[];
+    factors: Record<string, number>;
+  } | null;
+  workload_profiles: Array<{
+    name: string;
+    category: "video_editing" | "three_d" | "photo_editing" | "streaming" | "local_llm";
+    fit_level: PerformanceProfile["fit_level"];
+    bottlenecks: Array<
+      | "cpu_bound"
+      | "gpu_bound"
+      | "ram_limited"
+      | "storage_limited"
+      | "vram_limited"
+      | "cuda_preferred"
+    >;
+    requirement_summary_vi: string;
+    recommendation_vi: string;
   }>;
 };
 
@@ -234,11 +259,19 @@ export type BuildAlternativeChangedSlot = {
   reason_vi: string;
 };
 
+export type BuildAlternativeRanking = {
+  rank: number;
+  score: number;
+  priority: "recommended" | "good_fit" | "situational" | "low_priority";
+  reasons_vi: string[];
+};
+
 export type BuildAlternative = {
   variant_id: string;
   kind: "ram_upgrade" | "storage_upgrade" | "nvidia_gpu" | "psu_headroom";
   label_vi: string;
   summary_vi: string;
+  ranking: BuildAlternativeRanking;
   total_price_vnd: number;
   price_delta_vnd: number;
   budget_status: "within_budget" | "over_budget" | "unknown_budget";

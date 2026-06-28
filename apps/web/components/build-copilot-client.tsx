@@ -1022,6 +1022,10 @@ function BuildAlternativesPanel({
             </div>
 
             <div className="alternative-metrics">
+              <Metric
+                label="Ưu tiên"
+                value={`#${alternative.ranking.rank} · ${alternative.ranking.score}/100`}
+              />
               <Metric label="Tổng giá" value={formatVnd(alternative.total_price_vnd)} />
               <Metric label="Chênh lệch" value={formatDeltaVnd(alternative.price_delta_vnd)} />
               <Metric label="Fit" value={fitLevelLabel(alternative.performance_profile.fit_level)} />
@@ -1043,6 +1047,11 @@ function BuildAlternativesPanel({
             </div>
 
             <ul className="alternative-reasons">
+              {alternative.ranking.reasons_vi.map((reason) => (
+                <li key={`${alternative.variant_id}-ranking-${reason}`}>
+                  {reason}
+                </li>
+              ))}
               {alternative.changed_slots.map((change) => (
                 <li key={`${alternative.variant_id}-${change.slot}-reason`}>
                   {change.reason_vi}
@@ -1109,6 +1118,50 @@ function PerformanceProfilePanel({ profile }: { profile: PerformanceProfile }) {
             <div key={`${fact.label}-${fact.value}`}>
               <span>{fact.label}</span>
               <strong>{fact.value}</strong>
+              {fact.source_url ? (
+                <a href={fact.source_url} target="_blank" rel="noreferrer">
+                  {fact.source_label ?? "Nguồn benchmark"}
+                </a>
+              ) : fact.source_label ? (
+                <small>{fact.source_label}</small>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {profile.balance ? (
+        <div className="performance-balance" aria-label="Balance score">
+          <div>
+            <span>Balance</span>
+            <strong>{profile.balance.score}/100</strong>
+          </div>
+          <p>{profile.balance.interpretation_vi}</p>
+          <small>Giới hạn: {balanceComponentLabel(profile.balance.limiting_component)}</small>
+          {profile.balance.suggestions_vi.length ? (
+            <ul>
+              {profile.balance.suggestions_vi.map((suggestion) => (
+                <li key={suggestion}>{suggestion}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      {profile.workload_profiles.length ? (
+        <div className="workload-profiles" aria-label="App workload fit">
+          <h4>App fit</h4>
+          {profile.workload_profiles.map((workload) => (
+            <div key={`${workload.name}-${workload.category}`}>
+              <div>
+                <span>{workloadCategoryLabel(workload.category)}</span>
+                <strong>{workload.name}</strong>
+              </div>
+              <span className={`workload-fit-level ${workload.fit_level}`}>
+                {fitLabel[workload.fit_level]}
+              </span>
+              <p>{workload.recommendation_vi}</p>
+              <small>{workload.requirement_summary_vi}</small>
             </div>
           ))}
         </div>
@@ -1148,6 +1201,28 @@ function PerformanceProfilePanel({ profile }: { profile: PerformanceProfile }) {
       </div>
     </section>
   );
+}
+
+function balanceComponentLabel(component: NonNullable<PerformanceProfile["balance"]>["limiting_component"]) {
+  const labels: Record<NonNullable<PerformanceProfile["balance"]>["limiting_component"], string> = {
+    cpu: "CPU",
+    gpu: "GPU",
+    ram: "RAM",
+    storage: "SSD",
+    unknown: "Chưa rõ"
+  };
+  return labels[component];
+}
+
+function workloadCategoryLabel(category: PerformanceProfile["workload_profiles"][number]["category"]) {
+  const labels: Record<PerformanceProfile["workload_profiles"][number]["category"], string> = {
+    video_editing: "Video",
+    three_d: "3D",
+    photo_editing: "Photo",
+    streaming: "Stream",
+    local_llm: "Local LLM"
+  };
+  return labels[category];
 }
 
 function LlmAgentPanel({ analysis }: { analysis: IntentAgentAnalysis }) {
