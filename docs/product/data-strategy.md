@@ -73,7 +73,8 @@ Customer-facing output must include:
 - Fallback path to human consultation.
 
 The system may say data is missing. It must not invent prices, stock, specs, or
-FPS numbers.
+FPS numbers. Numeric FPS may appear only from a maintained benchmark row with a
+source label and URL.
 
 ## Current Implementation
 
@@ -139,6 +140,32 @@ category fixtures but admit only reviewed SKUs into the active snapshot. The
 first promoted subset adds one CPU, one mainboard, and one case SKU with
 compatibility overrides, bringing every required full-build demo category to at
 least two active SKUs while keeping the full category pages staged.
+
+`US-023` adds the first local gaming benchmark matrix:
+`services/agent-api/benchmarks/gaming_benchmark_matrix.json`. Rows are curated
+from public benchmark sources and include game/GPU aliases, resolution, preset,
+render mode, FPS value or range, source label, source URL, matrix version, and
+Vietnamese disclaimer. Benchmark rows are not catalog SKUs and do not affect
+selection; they only allow the performance profile to display FPS evidence when
+the generated build and user target match exactly.
+
+`US-024` uses that benchmark evidence to warn about monitor overspec requests.
+Because active monitor SKUs are not yet curated, the system may warn that a
+requested 144Hz/240Hz display target exceeds the source-backed FPS estimate,
+but it must not recommend a monitor SKU until monitor rows are promoted from
+staged captures with verified `resolution` and `refresh_rate_hz` fields.
+
+`US-030` expands the same matrix with RTX 4060 coverage for Cyberpunk 2077
+1440p Ultra native. `US-031` uses that coverage to allow only
+benchmark-preserving gaming GPU optimizer swaps, and `US-032` adds RX 7600
+Cyberpunk 2077 1080p Ultra native evidence while keeping unsupported targets
+unsupported.
+
+`US-027` extends monitor handling for office and student requests by parsing
+explicit monitor counts. Because the active catalog still lacks verified
+GPU/mainboard output-port fields, multi-monitor office builds warn with
+`OFFICE_MULTI_MONITOR_OUTPUTS_UNKNOWN` instead of inventing HDMI/DisplayPort
+support or recommending staged monitor SKUs.
 
 ## Commerce Adapter Boundary
 

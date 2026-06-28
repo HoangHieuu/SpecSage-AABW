@@ -30,6 +30,17 @@ Initial PC Build Copilot story packets:
 | `US-020` | Staged catalog source coverage report | implemented | normal |
 | `US-021` | Sanitized catalog fixtures | implemented | high-risk |
 | `US-022` | Curated catalog subset promotion | implemented | normal |
+| `US-023` | Benchmark-backed gaming performance foundation | implemented | normal |
+| `US-024` | Monitor overspec warning foundation | implemented | normal |
+| `US-025` | Balance score foundation | implemented | normal |
+| `US-026` | Creator and productivity workload fit | implemented | normal |
+| `US-027` | Office and general-use adequacy | implemented | normal |
+| `US-028` | Performance-aware alternative ranking | implemented | normal |
+| `US-029` | Budget-aware optimizer improvement pass | implemented | normal |
+| `US-030` | Benchmark coverage for optimizer-safe gaming swaps | implemented | normal |
+| `US-031` | Benchmark-preserving gaming GPU optimizer guard | implemented | normal |
+| `US-032` | Broader gaming benchmark coverage | implemented | normal |
+| `US-033` | Bounded multi-swap optimizer search | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

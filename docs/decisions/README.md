@@ -25,6 +25,17 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0021` | Staged catalog captures before recommendations |
 | `0022` | Sanitized catalog captures before committed fixtures |
 | `0023` | Curated catalog subsets before source enablement |
+| `0024` | Local benchmark matrix before performance claims |
+| `0025` | Monitor overspec warning before monitor SKU recommendations |
+| `0026` | Balance score before optimizer weighting |
+| `0027` | Config-driven workload profiles before app benchmarks |
+| `0028` | Office monitor guidance before monitor SKU recommendations |
+| `0029` | Deterministic alternative ranking before autonomous optimization |
+| `0030` | One-swap budget optimizer before full search |
+| `0031` | Benchmark coverage before gaming GPU auto-swaps |
+| `0032` | Benchmark-preserving gaming optimizer guard |
+| `0033` | Source-backed benchmark coverage before broader FPS claims |
+| `0034` | Bounded two-swap optimizer before full search |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:

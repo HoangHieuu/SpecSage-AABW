@@ -16,16 +16,17 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-022` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-033` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
 first build generation, a mock cart-ready approval handoff, and an advisory
 OpenRouter LLM intent analysis layer. Generated builds now also include a
-deterministic qualitative workload fit profile grounded in catalog facts, with
-no FPS or benchmark claims, plus deterministic catalog-grounded alternatives
-with slot deltas and compatibility proof. A selected alternative can be applied
-as a new active build version, then approved through the existing handoff gate.
+deterministic workload fit profile grounded in catalog facts, with FPS evidence
+only from exact-match source-backed benchmark matrix rows, plus deterministic
+catalog-grounded alternatives with slot deltas and compatibility proof. A
+selected alternative can be applied as a new active build version, then approved
+through the existing handoff gate.
 Sessions, intent revisions, build artifacts, applied build versions, and mock
 cart handoffs persist in a local SQLite store for restart-safe demos.
 Build generation now runs through a bounded LangGraph orchestration layer with
@@ -50,6 +51,26 @@ page HTML so page-shell environment keys are not checked in.
 Curated manifest entries can now promote reviewed SKUs from staged captures
 with `include_skus`, so the active catalog has two choices in every required
 full-build category while full category pages remain staged.
+Gaming benchmark evidence now comes from
+`services/agent-api/benchmarks/gaming_benchmark_matrix.json`; unsupported FPS
+claims remain blocked by the local eval gate. Monitor-targeted gaming requests
+now warn with `PERF_MONITOR_OVERSPEC` when matched benchmark FPS is below the
+requested display refresh target, without recommending monitor SKUs before
+monitor catalog curation. Generated builds also include a deterministic
+CPU/GPU/RAM/storage balance score and `PERF_IMBALANCE` warning for severe
+mismatch. Creator, streaming, and local LLM requests now show deterministic
+app-fit rows for RAM, VRAM, CPU threads, storage, and CUDA preference. Office
+and student requests now explain iGPU/discrete GPU suitability, quiet/power
+guidance, and multi-monitor validation gaps without recommending monitor SKUs.
+Alternatives now include deterministic ranking metadata so the most
+workload-relevant variant appears first. Creator, AI, streaming, and guarded
+gaming builds now run a bounded budget-aware improvement pass before the build
+is returned.
+Benchmark coverage now includes RTX 4060 Cyberpunk 2077 1440p Ultra evidence so
+gaming GPU swaps can preserve below-target warning provenance, plus RX 7600
+Cyberpunk 2077 1080p Ultra evidence for exact 1080p requests. The optimizer can
+apply up to two eligible swaps, and gaming GPU swaps require exact benchmark
+evidence before auto-apply.
 
 Accepted product direction:
 
@@ -111,6 +132,17 @@ The initial implementation backlog is intentionally small:
 20. `US-020` - staged catalog source coverage report. Implemented.
 21. `US-021` - sanitized catalog fixtures. Implemented.
 22. `US-022` - curated catalog subset promotion. Implemented.
+23. `US-023` - benchmark-backed gaming performance foundation. Implemented.
+24. `US-024` - monitor overspec warning foundation. Implemented.
+25. `US-025` - balance score foundation. Implemented.
+26. `US-026` - creator and productivity workload fit. Implemented.
+27. `US-027` - office and general-use adequacy. Implemented.
+28. `US-028` - performance-aware alternative ranking. Implemented.
+29. `US-029` - budget-aware optimizer improvement pass. Implemented.
+30. `US-030` - benchmark coverage for optimizer-safe gaming swaps. Implemented.
+31. `US-031` - benchmark-preserving gaming GPU optimizer guard. Implemented.
+32. `US-032` - broader gaming benchmark coverage. Implemented.
+33. `US-033` - bounded multi-swap optimizer search. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -186,6 +218,17 @@ scripts/bin/harness-cli story verify US-019
 scripts/bin/harness-cli story verify US-020
 scripts/bin/harness-cli story verify US-021
 scripts/bin/harness-cli story verify US-022
+scripts/bin/harness-cli story verify US-023
+scripts/bin/harness-cli story verify US-024
+scripts/bin/harness-cli story verify US-025
+scripts/bin/harness-cli story verify US-026
+scripts/bin/harness-cli story verify US-027
+scripts/bin/harness-cli story verify US-028
+scripts/bin/harness-cli story verify US-029
+scripts/bin/harness-cli story verify US-030
+scripts/bin/harness-cli story verify US-031
+scripts/bin/harness-cli story verify US-032
+scripts/bin/harness-cli story verify US-033
 pnpm eval:run
 ```
 

@@ -65,7 +65,62 @@ deterministic flow still works if the LLM panel is available or degraded.
 Unit proof covers deterministic fit thresholds for gaming, creator, AI/local
 LLM, and office builds. Integration proof checks the generate endpoint returns
 `performance_profile`. Browser proof must show the generated build view renders
-the `Workload fit` panel and must not rely on numeric FPS or benchmark claims.
+the `Workload fit` panel. Unsupported numeric FPS claims remain blocked.
+
+`US-023` is verified by focused benchmark lookup tests, build generation tests,
+`pnpm check`, `pnpm eval:run`, and Harness story verification. Unit proof covers
+local matrix loading, exact-match lookup, and FPS target parsing. Integration
+proof checks that a matching Cyberpunk/RX 7600/1440p/Ultra request emits
+`source="benchmark"` evidence with provenance and raises `PERF_BELOW_TARGET`
+when the row is below a declared high-refresh target. Eval proof must still
+reject unsupported numeric FPS claims while allowing FPS only in benchmark
+evidence with source label and URL.
+
+`US-024` is verified by focused parser and build generation tests, `pnpm
+check`, `pnpm eval:run`, and Harness story verification. Unit proof checks
+Vietnamese monitor mentions are captured in `BuildIntent.mentioned_components`.
+Integration proof checks that a monitor-targeted Cyberpunk/RX
+7600/1440p/Ultra/144Hz request raises `PERF_MONITOR_OVERSPEC` from matched
+benchmark evidence and does not add monitor SKUs.
+
+`US-030` is verified by focused benchmark/build generation tests, `pnpm check`,
+`pnpm eval:run`, and Harness story verification. Unit proof checks RTX 4060
+Cyberpunk 2077 1440p Ultra exact lookup returns source-backed evidence.
+Integration proof checks a generated RTX 4060 Cyberpunk 1440p Ultra 144Hz build
+raises `PERF_BELOW_TARGET` instead of dropping benchmark provenance.
+
+`US-031` is verified by focused build generation tests, `pnpm check`, `pnpm
+eval:run`, and Harness story verification. Unit proof checks Cyberpunk 2077
+1440p Ultra can auto-swap from RX 7600 to RTX 4060 only when the candidate has
+exact benchmark evidence, while Valorant and already-sufficient benchmark
+targets do not auto-swap. Integration proof checks the optimized artifact still
+reruns compatibility, budget, performance profile, warnings, and explanations.
+
+`US-032` is verified by focused benchmark/build generation tests, `pnpm check`,
+`pnpm eval:run`, and Harness story verification. Unit proof checks the matrix
+loads RX 7600 Cyberpunk 2077 1080p Ultra source-backed evidence and unsupported
+resolutions still return no estimates. Integration proof checks exact matching
+requests can surface the new benchmark evidence without interpolation.
+
+`US-025` is verified by focused build generation/orchestration tests, `pnpm
+check`, `pnpm eval:run`, and Harness story verification. Unit proof checks
+normal builds expose a balance score and intentionally imbalanced CPU/GPU/RAM
+facts raise `PERF_IMBALANCE`. Integration proof checks the generate endpoint
+returns `performance_profile.balance`; trace proof checks the performance agent
+exports the score in its outputs.
+
+`US-026` is verified by focused parser/build generation tests, `pnpm check`,
+`pnpm eval:run`, and Harness story verification. Unit proof checks OBS/streaming
+apps and local LLM model classes are parsed. Integration proof checks Premiere,
+After Effects, Photoshop, OBS/streaming, and Local LLM 13B return app-fit rows
+with bottleneck labels and workload warnings when thresholds are missed.
+
+`US-027` is verified by focused parser/build generation tests, `pnpm check`,
+`pnpm eval:run`, and Harness story verification. Unit proof checks explicit
+monitor counts and office quiet preference parsing. Integration proof checks
+office profiles explain no-iGPU discrete GPU requirements, iGPU office
+suitability, and `OFFICE_MULTI_MONITOR_OUTPUTS_UNKNOWN` warnings without adding
+monitor SKUs.
 
 `US-008` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit proof covers deterministic alternative generation from catalog SKUs,
@@ -82,6 +137,26 @@ preserves the original build, rejects missing variants, and allows approval when
 the applied build remains eligible. Browser proof must apply a visible variant,
 show the main build table updated, and approve the applied build through the
 existing handoff gate.
+
+`US-028` is verified by focused build generation tests, `pnpm check`,
+`pnpm eval:run`, and Harness story verification. Unit proof checks alternatives
+are sorted by rank/score and AI workload alternatives prioritize CUDA/NVIDIA
+when the deterministic performance profile indicates CUDA relevance.
+Integration proof checks the alternatives endpoint returns rank, score,
+priority, and ranking reasons for stored builds.
+
+`US-029` is verified by focused build/orchestration/persistence tests, `pnpm
+check`, `pnpm eval:run`, and Harness story verification. Unit proof checks the
+generator applies recommended creator RAM and streaming NVIDIA swaps while raw
+profile tests can disable the optimizer. Integration proof checks generated
+artifacts remain stored, approvable, budget-gated, and replayable through the
+existing orchestration and SQLite paths.
+
+`US-033` is verified by focused build/orchestration/persistence tests, `pnpm
+check`, `pnpm eval:run`, and Harness story verification. Unit proof checks the
+generator applies creator RAM+SSD and AI GPU+RAM sequences while streaming stops
+after one eligible swap. Integration proof checks orchestration and SQLite
+persistence still store generated artifacts and traces after optimizer changes.
 
 `US-010` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit and integration proof cover SQLite round-trips for sessions, intent
@@ -177,4 +252,4 @@ recommended two-SKU coverage for every required full-build category.
 - Do not claim LLM output is authoritative for SKU, price, budget, stock,
   compatibility, approval, or cart readiness.
 - Do not claim FPS, benchmark deltas, or game-specific performance numbers
-  without a maintained benchmark source.
+  without a maintained benchmark source with source label and URL.

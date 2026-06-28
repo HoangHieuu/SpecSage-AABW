@@ -200,6 +200,23 @@ runs the compatibility report, computes total price and budget gap, and returns
 grounded Vietnamese explanations. It does not invent FPS, prices, specs, or
 parts outside the snapshot.
 
+`US-029` adds a bounded budget-aware improvement pass to generation for creator,
+AI, and streaming use cases. `US-031` enables gaming GPU auto-swaps only when
+the candidate preserves exact benchmark evidence, and `US-033` expands the pass
+to at most two eligible swaps. The generator still starts from the cheapest
+compatible build, then reuses ranked alternatives from the same catalog
+snapshot. Each selected variant must be:
+
+- within budget
+- compatibility-approved
+- ranked `recommended` for non-gaming use cases
+- benchmark-preserving and GPU-kind for gaming use cases
+
+The optimized build is rebuilt after each swap through the same compatibility,
+budget, performance, warnings, explanations, and mock cart payload path. Office
+and student builds remain unchanged in this slice so office efficiency guidance
+is not hidden by under-proven swaps.
+
 ## Current Commerce Handoff Slice
 
 `US-005` adds mock approval and cart-ready handoff without introducing checkout,
@@ -236,8 +253,7 @@ blocking the session.
 
 ## Current Performance Fit Slice
 
-`US-007` adds a deterministic qualitative profile to generated builds without
-introducing benchmark tables, LLM scoring, or numeric performance promises:
+`US-007` adds a deterministic qualitative profile to generated builds:
 
 - `services/agent-api/src/pc_build_copilot/performance_profile.py`
 - `BuildArtifact.performance_profile`
@@ -248,7 +264,70 @@ The profile is generated from selected SKU facts plus the confirmed
 warnings for gaming, creator, AI/local LLM, office, and student use cases. It
 may mention facts such as RAM capacity, CPU core/thread counts, storage type,
 and GPU VRAM, but it must not invent FPS, benchmark deltas, or game-specific
-numeric outcomes until a maintained benchmark source is added.
+numeric outcomes.
+
+`US-023` adds the first maintained benchmark source:
+
+- `services/agent-api/benchmarks/gaming_benchmark_matrix.json`
+- `services/agent-api/src/pc_build_copilot/performance_benchmarks.py`
+- Optional `source_label` and `source_url` on `PerformanceEvidence`
+
+Gaming FPS evidence is emitted only when the selected GPU chipset, target game,
+resolution, and preset match a matrix row exactly. The profile raises
+`PERF_BELOW_TARGET` when a matched benchmark row is below the declared
+high-refresh target. If no row matches, the build stays qualitative and shows a
+no-benchmark warning for demanding requests rather than interpolating or asking
+an LLM to estimate performance.
+
+`US-030` adds an exact RTX 4060 Cyberpunk 2077 1440p Ultra native row to the
+same matrix. This keeps future gaming optimizer work from swapping to the
+second active GPU SKU and losing warning provenance for that target. `US-031`
+then enables gaming GPU auto-swaps only when candidate GPUs can preserve exact
+benchmark evidence for the requested game, resolution, and preset.
+
+`US-032` adds an exact RX 7600 Cyberpunk 2077 1080p Ultra native row. This
+extends benchmark-backed evidence for a common lower-resolution target while
+preserving the exact-match rule. Unsupported resolutions still return no
+benchmark evidence rather than falling back to nearby rows.
+
+`US-024` adds monitor overspec warning logic without monitor SKU
+recommendations. The intent parser records monitor/display mentions in
+`BuildIntent.mentioned_components`. If the user mentions a monitor target and a
+matched benchmark estimate is below the requested refresh rate, the performance
+profile raises `PERF_MONITOR_OVERSPEC`. This deliberately does not add monitor
+items to builds because active monitor SKUs have not been curated yet.
+
+`US-025` adds deterministic balance scoring to the same profile. The scorer
+uses selected SKU facts only: CPU cores/threads, GPU chipset/VRAM, RAM
+capacity, and storage interface/capacity. `PerformanceProfile.balance` carries a
+0-100 score, Vietnamese interpretation, first limiting component, factor values,
+and upgrade suggestions. Severe imbalance adds `PERF_IMBALANCE` to warnings.
+The field is explanatory in this slice and does not change optimizer decisions,
+alternatives ranking, or approval gates.
+
+`US-026` adds app-level workload profiles to `PerformanceProfile`:
+
+- `PerformanceProfile.workload_profiles`
+- Parser support for OBS/streaming apps and local LLM model classes such as
+  `7B`, `13B`, and `70B`
+- UI `App fit` rows in the existing workload fit panel
+
+Profiles are deterministic threshold checks for Premiere, After Effects,
+Photoshop, Blender, OBS/streaming, and local LLM. They report fit level,
+bottleneck labels, requirement summary, and recommendation text from selected
+SKU facts. They do not claim app benchmark throughput, render time, or tokens
+per second.
+
+`US-027` adds office/general-use adequacy to the same profile surface:
+
+- `BuildIntent.monitor_count`
+- office/student iGPU versus discrete GPU suitability notes
+- qualitative quiet/power guidance for office requests
+- `OFFICE_MULTI_MONITOR_OUTPUTS_UNKNOWN` when the user asks for two or more
+  monitors but output-port specs are absent
+
+This remains a deterministic profile rule. It does not add monitor SKUs to
+builds and does not infer HDMI/DisplayPort support from product names.
 
 ## Current Build Alternatives Slice
 
@@ -265,6 +344,19 @@ catalog snapshot, swaps one supported slot at a time, reruns deterministic
 compatibility rules, recomputes budget status, and regenerates the qualitative
 performance profile. Current curated variants cover RAM upgrade, larger SSD,
 NVIDIA GPU, and PSU headroom when matching SKUs exist in the snapshot.
+
+`US-028` adds ranking metadata to each returned alternative:
+
+- `rank`
+- `score`
+- `priority`
+- `reasons_vi`
+
+The ranking score is computed from existing deterministic facts: compatibility
+and budget eligibility, performance fit deltas, balance score deltas, app
+workload fit deltas, warning deltas, and use-case relevance. The API returns
+alternatives sorted by score. Ranking does not add SKUs, skip validation, or
+auto-apply variants.
 
 This follows the `techstack.md` Phase 5 recommendation for alternatives and
 slot-level diffs, but keeps the hackathon implementation narrow: no autonomous

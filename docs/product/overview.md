@@ -49,8 +49,8 @@ The first demo should prove a narrow vertical slice:
 4. Deterministic rules block invalid hardware combinations.
 5. The optimizer produces one compatible build under or near budget.
 6. The UI shows parts, total, compatibility status, and grounded explanations.
-7. The generated build shows a qualitative workload fit profile grounded in
-   catalog facts, without FPS or benchmark claims.
+7. The generated build shows a workload fit profile grounded in catalog facts,
+   with FPS evidence only when a local benchmark matrix row matches exactly.
 8. The user can inspect validated alternative variants with slot-level deltas
    and price trade-offs.
 9. The user can apply a selected alternative as the active build version.
@@ -73,16 +73,44 @@ The first demo should prove a narrow vertical slice:
     coverage without making unverified SKUs recommendation-eligible.
 18. Engineers can promote a reviewed subset from staged category captures into
     the active catalog without enabling the full unverified source.
+19. Gaming customers who mention a monitor target get a warning when benchmark
+    evidence shows the PC is unlikely to sustain the requested refresh rate.
+20. Generated builds include a deterministic balance score so customers can see
+    the first limiting component before approving or upgrading.
+21. Creator, streaming, and local LLM requests show app-level fit rows with RAM,
+    VRAM, CPU, storage, and CUDA guidance.
+22. Office and student requests explain iGPU/discrete GPU suitability,
+    quiet/power guidance, and multi-monitor validation gaps.
+23. Alternatives are ranked by deterministic performance, budget,
+    compatibility, and workload signals before the user applies one.
+24. Creator, AI, and streaming generated builds can apply a recommended
+    budget-safe optimizer improvement before returning the base recommendation.
+25. Gaming generated builds can auto-apply a GPU swap only when the candidate
+    preserves exact benchmark evidence and warning provenance.
+26. The benchmark matrix can grow with source-backed exact rows for active GPU
+    and target combinations without interpolation.
+27. Generated builds can apply up to two eligible budget-safe optimizer swaps
+    before returning, while rebuilding the artifact after each swap.
 
-Current first-slice implementation reaches step 10 with a deterministic
-fixture-backed generator, performance fit profile, alternatives panel, and mock
-cart handoff. It produces one build from the local catalog snapshot, validates
-it through the compatibility rule engine, reports explicit budget gaps when the
-current snapshot cannot satisfy a low budget, summarizes qualitative workload
-fit from CPU/GPU/RAM/storage facts, returns deterministic upgrade alternatives
-from the same catalog snapshot, applies a selected alternative as a new active
-build version, and creates a mock cart-ready handoff only after approval gates
-pass. `US-006` adds an advisory OpenRouter LLM layer to the intent step.
+Current first-slice implementation reaches step 27 with a deterministic
+fixture-backed generator, performance fit profile, alternatives panel, mock
+cart handoff, replayable agent traces, local quality gates, feedback capture,
+and curated catalog subset promotion. It produces one build from the local
+catalog snapshot, validates it through the compatibility rule engine, reports
+explicit budget gaps when the current snapshot cannot satisfy a low budget,
+summarizes workload fit from CPU/GPU/RAM/storage facts, adds benchmark-backed
+FPS evidence only for exact matrix matches, warns when a requested monitor
+refresh target exceeds matched benchmark FPS, explains CPU/GPU/RAM/storage
+balance with a 0-100 score, shows app-level workload fit for creator,
+streaming, and local LLM workflows, explains office iGPU/discrete GPU
+suitability and multi-monitor validation gaps, returns ranked deterministic
+upgrade alternatives from the same catalog snapshot, applies one recommended
+budget-safe optimizer swap for streaming builds, applies up to two eligible
+budget-safe optimizer swaps for creator and local LLM builds, allows gaming GPU
+auto-swaps only when exact benchmark evidence is preserved, applies a selected
+alternative as a new active build version, and creates a mock cart-ready handoff
+only after approval gates pass. `US-006` adds an advisory OpenRouter LLM layer to
+the intent step.
 That layer summarizes customer needs and suggests clarifying questions in
 Vietnamese, but it does not choose SKUs, prices, compatibility outcomes, budget
 gates, approval, alternatives, applied builds, performance claims, or cart
@@ -121,6 +149,17 @@ available to local catalog tooling.
 `US-022` promotes three reviewed SKUs from staged CPU, mainboard, and case
 captures via `include_skus`, so the active local snapshot has two choices in
 every required full-build category without enabling full category pages.
+`US-023` through `US-030` add benchmark-backed gaming evidence, monitor
+overspec warnings, balance scoring, creator/AI/streaming app-fit rows, office
+adequacy guidance, deterministic alternative ranking, a first one-swap
+optimizer pass, and benchmark coverage needed for safe RTX 4060 Cyberpunk
+1440p swaps.
+`US-031` enables gaming GPU auto-swaps only when the candidate preserves exact
+benchmark evidence and warning provenance.
+`US-032` adds RX 7600 Cyberpunk 2077 1080p Ultra evidence while keeping
+unsupported targets unsupported.
+`US-033` expands generation from one eligible optimizer swap to a bounded
+two-swap pass, rebuilding the artifact after each swap.
 
 Out of first-slice scope unless a later story selects it:
 
@@ -138,8 +177,8 @@ Out of first-slice scope unless a later story selects it:
 | 1 | Session foundation and intent capture | First build slice |
 | 2 | Catalog intelligence and product grounding | First build slice |
 | 3 | Compatibility and safety engine | First build slice |
-| 4 | Performance modeling and workload fit | Qualitative profile first; benchmark table later |
-| 5 | Build optimization and iteration | First vertical slice |
+| 4 | Performance modeling and workload fit | Qualitative by default; source-backed benchmark seed, monitor warnings, balance scoring, app-fit thresholds, and office adequacy guidance |
+| 5 | Build optimization and iteration | Deterministic alternatives, apply flow, performance-aware ranking, benchmark-gated gaming optimization, and bounded two-swap generation |
 | 6 | Explanation and education | First vertical slice |
 | 7 | Upgrade planning | Later |
 | 8 | Commerce actions and checkout handoff | Mock first, real adapter later |
