@@ -150,9 +150,9 @@ Phase 2 moving toward broader coverage without requiring live scraping or
 private APIs.
 
 `US-019` adds `pnpm catalog:capture` as the preceding capture step. It validates
-public Phong Vu category HTML before writing a fixture or upserting a manifest
-entry. Tests use local input files so the normal quality gate does not depend
-on live Phong Vu availability.
+public Phong Vu category HTML before writing a sanitized `__NEXT_DATA__`-only
+fixture or upserting a manifest entry. Tests use local input files so the
+normal quality gate does not depend on live Phong Vu availability.
 
 `US-020` adds staged manifest entries with `enabled=false`. Staged sources are
 excluded from `catalog:sync` and active recommendations, but

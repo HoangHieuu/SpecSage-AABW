@@ -2,7 +2,10 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pc_build_copilot.catalog_capture_cli import main as capture_main
+from pc_build_copilot.catalog_capture_cli import (
+    main as capture_main,
+    sanitize_next_data_html,
+)
 from pc_build_copilot.catalog_cli import (
     load_source_manifest,
     main as catalog_sync_main,
@@ -10,6 +13,7 @@ from pc_build_copilot.catalog_cli import (
 from pc_build_copilot.catalog_models import CatalogSnapshot, ComponentCategory
 from pc_build_copilot.catalog_parser import (
     apply_overrides,
+    extract_next_data_json,
     load_overrides,
     normalize_products,
     parse_next_data_products,
@@ -343,7 +347,9 @@ def test_catalog_cli_skips_disabled_manifest_sources(tmp_path: Path) -> None:
     assert "cpu-staged-1" not in {item.sku for item in snapshot.items}
 
 
-def test_catalog_capture_cli_copies_payload_and_upserts_manifest(tmp_path: Path) -> None:
+def test_catalog_capture_cli_sanitizes_payload_and_upserts_manifest(
+    tmp_path: Path,
+) -> None:
     output = tmp_path / "captures" / "vga.html"
     manifest = tmp_path / "catalog" / "catalog_sources.json"
 
@@ -383,7 +389,10 @@ def test_catalog_capture_cli_copies_payload_and_upserts_manifest(tmp_path: Path)
     loaded_manifest = json.loads(manifest.read_text(encoding="utf-8"))
     assert exit_code == 0
     assert second_exit_code == 0
-    assert output.read_text(encoding="utf-8") == FIXTURE.read_text(encoding="utf-8")
+    captured = output.read_text(encoding="utf-8")
+    assert parse_next_data_products(captured)
+    assert "window.env" not in captured
+    assert "FIREBASE_API_KEY" not in captured
     assert loaded_manifest == {
         "sources": [
             {
@@ -567,3 +576,35 @@ def test_catalog_capture_cli_rejects_payload_without_next_data_products(
 
     assert exit_code == 1
     assert not output.exists()
+
+
+def test_catalog_capture_sanitizes_page_env_before_writing() -> None:
+    raw = """
+    <script>window.env = {"FIREBASE_API_KEY":"SHOULD_NOT_SURVIVE"};</script>
+    <script id="__NEXT_DATA__" type="application/json">
+    {
+      "props": {
+        "pageProps": {
+          "serverProducts": [
+            {
+              "sku": "cpu-safe-1",
+              "name": "CPU Safe Fixture",
+              "latestPrice": 1000000,
+              "stockQuantity": 1,
+              "slug": "cpu-safe-fixture",
+              "category": "cpu"
+            }
+          ]
+        }
+      }
+    }
+    </script>
+    """
+
+    sanitized = sanitize_next_data_html(raw)
+
+    assert "SHOULD_NOT_SURVIVE" not in sanitized
+    assert "window.env" not in sanitized
+    assert extract_next_data_json(sanitized)["props"]["pageProps"]["serverProducts"][0][
+        "sku"
+    ] == "cpu-safe-1"

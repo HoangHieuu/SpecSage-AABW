@@ -120,11 +120,11 @@ Vu payloads to `services/agent-api/fixtures/`, list them in
 
 `US-019` adds `pnpm catalog:capture` as the local source acquisition command.
 It can fetch a public category URL or copy a saved HTML file, validates that the
-payload contains parseable `__NEXT_DATA__` products, writes the fixture, and
-upserts a manifest entry with relative path, source label, optional source URL,
-and optional category hint. It does not make the snapshot live or complete:
-captured SKUs still need compatibility-critical overrides before they should be
-used in recommendations.
+payload contains parseable `__NEXT_DATA__` products, writes a sanitized fixture
+containing only the Next.js data payload, and upserts a manifest entry with
+relative path, source label, optional source URL, and optional category hint. It
+does not make the snapshot live or complete: captured SKUs still need
+compatibility-critical overrides before they should be used in recommendations.
 
 `US-020` adds staged catalog sources and `pnpm catalog:source-report`. Manifest
 entries default to enabled; entries with `enabled=false` are skipped by

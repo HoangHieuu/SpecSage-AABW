@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-020` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-021` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -44,7 +44,9 @@ across multiple saved Phong Vu public payloads while preserving deterministic
 validation. A local capture command now validates public category payloads
 before writing fixtures and upserting manifest entries. Captured public
 category pages can now be staged and counted without becoming
-recommendation-eligible until compatibility overrides are verified.
+recommendation-eligible until compatibility overrides are verified. Committed
+catalog fixtures now store sanitized `__NEXT_DATA__` payloads instead of full
+page HTML so page-shell environment keys are not checked in.
 
 Accepted product direction:
 
@@ -104,6 +106,7 @@ The initial implementation backlog is intentionally small:
 18. `US-018` - multi-source catalog ingestion foundation. Implemented.
 19. `US-019` - public catalog payload capture CLI. Implemented.
 20. `US-020` - staged catalog source coverage report. Implemented.
+21. `US-021` - sanitized catalog fixtures. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -177,12 +180,14 @@ scripts/bin/harness-cli story verify US-017
 scripts/bin/harness-cli story verify US-018
 scripts/bin/harness-cli story verify US-019
 scripts/bin/harness-cli story verify US-020
+scripts/bin/harness-cli story verify US-021
 pnpm eval:run
 ```
 
 To add future catalog sources from public Phong Vu category pages, capture the
-raw page first, review the fixture and manifest diff, then run `pnpm
-catalog:sync`:
+page first. The capture command writes a sanitized `__NEXT_DATA__` fixture, not
+the full HTML page, so public page environment keys are not committed. Review
+the fixture and manifest diff, then run `pnpm catalog:sync`:
 
 ```bash
 pnpm catalog:capture -- --url https://phongvu.vn/c/vga-card-man-hinh --output services/agent-api/fixtures/phongvu-vga-card-man-hinh.html --manifest services/agent-api/catalog/catalog_sources.json --category-hint vga --source phongvu_public_category_vga

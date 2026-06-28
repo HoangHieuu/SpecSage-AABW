@@ -157,6 +157,11 @@ manifest entries, current Teko listing normalization, source report counts, and
 invalid staged rows. Integration proof checks broad staged captures are counted
 without changing the active validation-clean snapshot.
 
+`US-021` is verified by focused capture sanitization tests, local secret-pattern
+scans, `pnpm catalog:source-report`, `pnpm catalog:sync`, `pnpm check`, `pnpm
+eval:run`, and Harness trace evidence. Unit proof covers removing page-shell
+environment data while preserving parseable `__NEXT_DATA__` products.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.
