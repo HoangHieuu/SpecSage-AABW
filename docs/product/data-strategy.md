@@ -85,6 +85,10 @@ FPS numbers.
   `services/agent-api/catalog/sku_specs_overrides.json`
 - Generated local snapshot:
   `services/agent-api/catalog/catalog_snapshot.json`
+- Source manifest:
+  `services/agent-api/catalog/catalog_sources.json`
+- Capture command:
+  `pnpm catalog:capture`
 - Sync command:
   `pnpm catalog:sync`
 - Read-only API:
@@ -105,6 +109,20 @@ recommended minimum is two SKUs for each required full-build category. A
 category with at least one SKU but fewer than the recommended count remains
 demo-ready, but the report marks it as thin coverage so future SKU curation can
 target the weakest slots first.
+
+`US-018` moves snapshot generation from a hard-coded single fixture to a
+multi-source manifest. Future catalog expansion should add saved public Phong
+Vu payloads to `services/agent-api/fixtures/`, list them in
+`catalog_sources.json`, enrich compatibility-critical fields in
+`sku_specs_overrides.json`, then run `pnpm catalog:sync` and the quality gate.
+
+`US-019` adds `pnpm catalog:capture` as the local source acquisition command.
+It can fetch a public category URL or copy a saved HTML file, validates that the
+payload contains parseable `__NEXT_DATA__` products, writes the fixture, and
+upserts a manifest entry with relative path, source label, optional source URL,
+and optional category hint. It does not make the snapshot live or complete:
+captured SKUs still need compatibility-critical overrides before they should be
+used in recommendations.
 
 ## Commerce Adapter Boundary
 

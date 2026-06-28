@@ -132,6 +132,27 @@ warning issues, not blockers; the current recommended minimum is two SKUs for
 each required category. This does not add live scraping, external catalog APIs,
 Typesense, Postgres, or admin catalog editing.
 
+## Current Catalog Ingestion Slice
+
+`US-018` makes the local mirror expandable through a source manifest:
+
+- `services/agent-api/catalog/catalog_sources.json`
+- `services/agent-api/src/pc_build_copilot/catalog_cli.py`
+- `services/agent-api/src/pc_build_copilot/catalog_capture_cli.py`
+- `services/agent-api/catalog/catalog_snapshot.json`
+
+The manifest lists saved public Phong Vu payloads in deterministic order. The
+sync command merges all products, deduplicates by SKU before applying curated
+overrides, records source provenance, validates the final snapshot, and leaves
+the existing single-input CLI mode available for focused debugging. This keeps
+Phase 2 moving toward broader coverage without requiring live scraping or
+private APIs.
+
+`US-019` adds `pnpm catalog:capture` as the preceding capture step. It validates
+public Phong Vu category HTML before writing a fixture or upserting a manifest
+entry. Tests use local input files so the normal quality gate does not depend
+on live Phong Vu availability.
+
 ## API Boundary
 
 First public endpoints should be introduced with OpenAPI contracts:

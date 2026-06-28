@@ -67,6 +67,8 @@ The first demo should prove a narrow vertical slice:
     required full-build categories before generation or evals run.
 15. Catalog health reports thin required categories as non-blocking variety
     warnings before broader SKU expansion.
+16. Engineers can capture saved public Phong Vu category payloads into fixtures
+    and manifest entries before broadening the local catalog snapshot.
 
 Current first-slice implementation reaches step 10 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, and mock
@@ -101,6 +103,11 @@ catalog, and rules versions, with low ratings marked for local review.
 required full-build categories are caught as catalog validation failures.
 `US-017` adds non-blocking variety warnings so present-but-thin required
 categories remain visible without blocking the current demo flow.
+`US-018` adds a multi-source catalog manifest so broader saved Phong Vu payload
+coverage can be added without changing parser code for each category.
+`US-019` adds a local capture command for public category payloads so fixture
+creation and manifest updates are repeatable before any scheduled scraping or
+private catalog API integration.
 
 Out of first-slice scope unless a later story selects it:
 

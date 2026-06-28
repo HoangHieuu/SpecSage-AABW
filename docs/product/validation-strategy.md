@@ -138,6 +138,18 @@ Integration proof checks `GET /catalog/health` exposes recommended demo counts,
 thin demo categories, and warning issues without making the current snapshot
 not demo-ready.
 
+`US-018` is verified by `pnpm catalog:sync`, `pnpm check`, `pnpm eval:run`,
+and Harness story verification. Unit proof covers manifest parsing, relative
+source paths, source merging, SKU deduplication, and override application.
+Integration proof checks the real `pnpm catalog:sync` command uses
+`catalog_sources.json` and still writes a validation-clean local snapshot.
+
+`US-019` is verified by focused capture tests, a local `pnpm catalog:capture`
+smoke command, `pnpm catalog:sync`, `pnpm check`, `pnpm eval:run`, and Harness
+story verification. Unit proof covers local input capture, invalid payload
+rejection, and manifest upsert idempotency. Integration proof uses a saved
+fixture so normal validation does not depend on live Phong Vu availability.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.

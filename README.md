@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-017` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-019` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -39,6 +39,10 @@ regressions.
 Catalog health now also reports demo-readiness category coverage for the local
 snapshot before build generation or evals run, plus non-blocking variety
 warnings when required demo categories have too little fallback choice.
+Catalog sync now reads an auditable source manifest so the local mirror can grow
+across multiple saved Phong Vu public payloads while preserving deterministic
+validation. A local capture command now validates public category payloads
+before writing fixtures and upserting manifest entries.
 
 Accepted product direction:
 
@@ -95,6 +99,8 @@ The initial implementation backlog is intentionally small:
 15. `US-015` - user feedback loop foundation. Implemented.
 16. `US-016` - catalog demo readiness health. Implemented.
 17. `US-017` - catalog demo variety health. Implemented.
+18. `US-018` - multi-source catalog ingestion foundation. Implemented.
+19. `US-019` - public catalog payload capture CLI. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -145,6 +151,7 @@ Validate the current slice:
 
 ```bash
 pnpm catalog:sync
+pnpm catalog:capture -- --input services/agent-api/fixtures/phongvu-category-components.html --output /tmp/pc-build-copilot-capture-smoke.html --manifest /tmp/pc-build-copilot-catalog-sources.json --source test_capture_smoke --category-hint vga --source-url https://phongvu.vn/c/vga-card-man-hinh
 pnpm check
 scripts/bin/harness-cli story verify US-001
 scripts/bin/harness-cli story verify US-002
@@ -163,7 +170,18 @@ scripts/bin/harness-cli story verify US-014
 scripts/bin/harness-cli story verify US-015
 scripts/bin/harness-cli story verify US-016
 scripts/bin/harness-cli story verify US-017
+scripts/bin/harness-cli story verify US-018
+scripts/bin/harness-cli story verify US-019
 pnpm eval:run
+```
+
+To add future catalog sources from public Phong Vu category pages, capture the
+raw page first, review the fixture and manifest diff, then run `pnpm
+catalog:sync`:
+
+```bash
+pnpm catalog:capture -- --url https://phongvu.vn/c/vga-card-man-hinh --output services/agent-api/fixtures/phongvu-vga-card-man-hinh.html --manifest services/agent-api/catalog/catalog_sources.json --category-hint vga --source phongvu_public_category_vga
+pnpm catalog:sync
 ```
 
 Catalog endpoints after `pnpm catalog:sync`:

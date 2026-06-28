@@ -20,6 +20,8 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0016` | Feedback capture before admin console |
 | `0017` | Catalog demo readiness before live scraping |
 | `0018` | Catalog variety health before broad SKU expansion |
+| `0019` | Catalog source manifest before live scraping |
+| `0020` | Public category capture before automated scraping |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:
