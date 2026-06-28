@@ -102,7 +102,9 @@ def normalize_products(
     for raw in raw_products:
         sku = _first_str(raw, "sku", "skuId", "productId", "product_id", "id")
         name = _first_str(raw, "name", "productName", "displayName")
-        price = _first_int(raw, "latestPrice", "salePrice", "price", "finalPrice")
+        price = _first_int(raw, "latestPrice", "salePrice", "finalPrice")
+        if price is None:
+            price = _nested_price_int(raw, "latestPrice", "salePrice", "finalPrice", "min")
         if not sku or not name or price is None:
             raise CatalogParseError("Product is missing required sku, name, or price.")
 
@@ -119,8 +121,14 @@ def normalize_products(
                 name=name,
                 category=category,
                 price_vnd=price,
-                list_price_vnd=_first_int(raw, "listPrice", "originalPrice", "marketPrice"),
-                discount_amount_vnd=_first_int(raw, "discountAmount", "discount"),
+                list_price_vnd=_first_int(
+                    raw, "listPrice", "originalPrice", "marketPrice"
+                )
+                or _nested_price_int(
+                    raw, "supplierRetailPrice", "listPrice", "originalPrice", "max"
+                ),
+                discount_amount_vnd=_first_int(raw, "discountAmount", "discount")
+                or _nested_price_int(raw, "discountAmount", "discount"),
                 stock_quantity=stock_quantity,
                 stock_status=_stock_status(raw, stock_quantity),
                 url=url,
@@ -274,6 +282,13 @@ def _first_int(raw: dict[str, Any], *keys: str) -> int | None:
     return None
 
 
+def _nested_price_int(raw: dict[str, Any], *keys: str) -> int | None:
+    value = raw.get("price")
+    if not isinstance(value, dict):
+        return None
+    return _first_int(value, *keys)
+
+
 def _raw_category(raw: dict[str, Any]) -> str | None:
     category = raw.get("category") or raw.get("primaryCategory") or raw.get("categorySlug")
     if isinstance(category, dict):
@@ -342,6 +357,13 @@ def _product_url(raw: dict[str, Any], sku: str, source_url: str | None) -> str:
         if url.startswith("http"):
             return url.split("?")[0]
         return f"https://phongvu.vn/{url.lstrip('/')}"
+    link = raw.get("link")
+    if isinstance(link, dict):
+        link_as = link.get("as")
+        if isinstance(link_as, dict):
+            pathname = _first_str(link_as, "pathname")
+            if pathname:
+                return f"https://phongvu.vn/{pathname.lstrip('/')}"
     slug = _first_str(raw, "slug")
     if slug:
         path = slug.strip("/")
