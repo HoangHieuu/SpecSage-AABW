@@ -351,22 +351,113 @@
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
       "source": "phongvu_public_category_components_fixture",
       "raw_category": "case-thung-may-tinh"
+    },
+    {
+      "sku": "251204776",
+      "name": "Bộ vi xử lý/ CPU Intel Core i5-12400F (6C - 12T | Up to 4.4 GHz | 18MB | No iGPU | LGA1700)",
+      "category": "cpu",
+      "price_vnd": 4390000,
+      "list_price_vnd": 5490000,
+      "discount_amount_vnd": 1100000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/cpu-intel-core-i5-12400f-tray--s251204776",
+      "image_url": "https://lh3.googleusercontent.com/NuqyPqXyDLOsJMMi1QCuJbrxLJk7fn3CHEKkY5O-UBCC4S5NQygj7MiCKniMhoZeSp06LvVzaw_GhyEe9Z_M3q7B_TiZktiK",
+      "brand": "Intel",
+      "warranty_text": null,
+      "highlights": [
+        "Socket 1700 6 nhân / 12 luồng"
+      ],
+      "specs": {
+        "socket": "LGA1700",
+        "cores": 6,
+        "threads": 12,
+        "tdp_w": 65,
+        "integrated_graphics": false
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_cpu_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "241105117",
+      "name": "Mainboard Msi B760M Gaming Plus WIFI DDR4",
+      "category": "mainboard",
+      "price_vnd": 3490000,
+      "list_price_vnd": 3900000,
+      "discount_amount_vnd": 410000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/bo-mach-chinh-mainboard-msi-b760m-gaming-plus-wifi-ddr4--s241105117",
+      "image_url": "https://lh3.googleusercontent.com/k1OD7sSjnM7qFCPxvCbqB1uFqRASV0ym65B2-oDXvHUov-gxdTdtgGo5or29GprKeHZpf557P-G8xcMFaK7d25Uyx3RyBROm",
+      "brand": "Msi",
+      "warranty_text": null,
+      "highlights": [
+        "Socket 1700 Micro-ATX 4 khe RAM - DDR4"
+      ],
+      "specs": {
+        "socket": "LGA1700",
+        "chipset": "B760",
+        "memory_type": "DDR4",
+        "form_factor": "mATX",
+        "supported_cpu_generations": [
+          "Intel 12th Gen",
+          "Intel 13th Gen",
+          "Intel 14th Gen"
+        ],
+        "max_memory_gb": 128,
+        "m2_slots": 2
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_mainboard_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "260302526",
+      "name": "Thùng máy/ Case Jonsbo D400 (ATX)",
+      "category": "case",
+      "price_vnd": 1590000,
+      "list_price_vnd": 1890000,
+      "discount_amount_vnd": 300000,
+      "stock_quantity": 1,
+      "stock_status": "low_stock",
+      "url": "https://phongvu.vn/thung-may-case-jonsbo-d400-white-atx--s260302526",
+      "image_url": "https://lh3.googleusercontent.com/TlkOyIdZ-xjx8OsMF6QfVEarIBDDXNwMVXypkUTpnJ66V6YaQ1hvnqa7XzDsnbmJrAmpK9f8scS314Jg_09tWNxE_-ZFJno",
+      "brand": "Jonsbo",
+      "warranty_text": null,
+      "highlights": [],
+      "specs": {
+        "motherboard_support": [
+          "ATX",
+          "mATX",
+          "Mini-ITX"
+        ],
+        "gpu_clearance_mm": 450,
+        "psu_support": "ATX",
+        "max_cooler_height_mm": 169
+      },
+      "specs_confidence": "verified",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_case_2026_06_28",
+      "raw_category": "NH03"
     }
   ],
   "validation": {
     "snapshot_version": "catalog_v2026_06_27_fixture",
     "generated_at": "2026-06-27T00:00:00Z",
-    "sku_count": 11,
-    "issue_count": 3,
+    "sku_count": 14,
+    "issue_count": 0,
     "blocking_issue_count": 0,
     "category_counts": {
-      "cpu": 1,
-      "mainboard": 1,
+      "cpu": 2,
+      "mainboard": 2,
       "ram": 2,
       "vga": 2,
       "storage": 2,
       "psu": 2,
-      "case": 1,
+      "case": 2,
       "cooler": 0,
       "monitor": 0
     },
@@ -389,34 +480,8 @@
       "case"
     ],
     "missing_required_demo_categories": [],
-    "thin_demo_categories": [
-      "cpu",
-      "mainboard",
-      "case"
-    ],
+    "thin_demo_categories": [],
     "demo_ready": true,
-    "issues": [
-      {
-        "severity": "warn",
-        "code": "CATALOG_THIN_DEMO_CATEGORY",
-        "sku": null,
-        "field": "category_counts.cpu",
-        "message": "Catalog snapshot has 1 cpu SKU(s); recommended demo coverage is 2."
-      },
-      {
-        "severity": "warn",
-        "code": "CATALOG_THIN_DEMO_CATEGORY",
-        "sku": null,
-        "field": "category_counts.mainboard",
-        "message": "Catalog snapshot has 1 mainboard SKU(s); recommended demo coverage is 2."
-      },
-      {
-        "severity": "warn",
-        "code": "CATALOG_THIN_DEMO_CATEGORY",
-        "sku": null,
-        "field": "category_counts.case",
-        "message": "Catalog snapshot has 1 case SKU(s); recommended demo coverage is 2."
-      }
-    ]
+    "issues": []
   }
 }
