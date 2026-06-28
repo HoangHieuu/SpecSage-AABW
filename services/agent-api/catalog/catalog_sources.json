@@ -4,6 +4,69 @@
       "input": "../fixtures/phongvu-category-components.html",
       "source": "phongvu_public_category_components_fixture",
       "source_url": "https://phongvu.vn/c/linh-kien-may-tinh"
+    },
+    {
+      "input": "../fixtures/phongvu-category-cpu-2026-06-28.html",
+      "source": "phongvu_public_category_cpu_2026_06_28",
+      "source_url": "https://phongvu.vn/c/cpu",
+      "category_hint": "cpu",
+      "enabled": false
+    },
+    {
+      "input": "../fixtures/phongvu-category-mainboard-2026-06-28.html",
+      "source": "phongvu_public_category_mainboard_2026_06_28",
+      "source_url": "https://phongvu.vn/c/mainboard-bo-mach-chu",
+      "category_hint": "mainboard",
+      "enabled": false
+    },
+    {
+      "input": "../fixtures/phongvu-category-storage-2026-06-28.html",
+      "source": "phongvu_public_category_storage_2026_06_28",
+      "source_url": "https://phongvu.vn/c/o-cung-ssd",
+      "category_hint": "storage",
+      "enabled": false
+    },
+    {
+      "input": "../fixtures/phongvu-category-vga-2026-06-28.html",
+      "source": "phongvu_public_category_vga_2026_06_28",
+      "source_url": "https://phongvu.vn/c/vga-card-man-hinh",
+      "category_hint": "vga",
+      "enabled": false
+    },
+    {
+      "input": "../fixtures/phongvu-category-psu-2026-06-28.html",
+      "source": "phongvu_public_category_psu_2026_06_28",
+      "source_url": "https://phongvu.vn/c/psu-nguon-may-tinh",
+      "category_hint": "psu",
+      "enabled": false
+    },
+    {
+      "input": "../fixtures/phongvu-category-case-2026-06-28.html",
+      "source": "phongvu_public_category_case_2026_06_28",
+      "source_url": "https://phongvu.vn/c/case",
+      "category_hint": "case",
+      "enabled": false
+    },
+    {
+      "input": "../fixtures/phongvu-category-cooler-2026-06-28.html",
+      "source": "phongvu_public_category_cooler_2026_06_28",
+      "source_url": "https://phongvu.vn/c/tan-nhiet",
+      "category_hint": "cooler",
+      "enabled": false
+    },
+    {
+      "input": "../fixtures/phongvu-category-monitor-2026-06-28.html",
+      "source": "phongvu_public_category_monitor_2026_06_28",
+      "source_url": "https://phongvu.vn/c/man-hinh-may-tinh",
+      "category_hint": "monitor",
+      "enabled": false
+    },
+    {
+      "input": "../fixtures/phongvu-category-ram-2026-06-28.html",
+      "source": "phongvu_public_category_ram_2026_06_28",
+      "source_url": "https://phongvu.vn/c/ram",
+      "category_hint": "ram",
+      "enabled": false
     }
   ]
 }
