@@ -179,6 +179,15 @@ must show the Cyberpunk 2077 prompt, optimizer loop panel, benchmark-backed
 warning, alternatives panel, applied build, mock cart handoff, saved feedback,
 and no page-wide horizontal overflow on mobile.
 
+`US-037` is verified by focused parser, API, generation, and trace replay
+tests, `pnpm check`, `pnpm eval:run`, Harness story verification, and browser
+proof. Unit proof checks command parsing and deterministic rejection behavior.
+Integration proof checks `POST /builds/{id}/iterate` creates a versioned build,
+keeps unsupported commands from guessing, preserves budget/compatibility gates,
+and appends iteration decisions to `optimizer_trace`. Browser proof must show a
+generated Cyberpunk build, the `Điều chỉnh build` panel, an applied SSD command,
+and the resulting build v2 state.
+
 `US-010` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit and integration proof cover SQLite round-trips for sessions, intent
 revisions, builds, applied build versions, and idempotent cart handoffs by

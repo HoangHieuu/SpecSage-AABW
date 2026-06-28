@@ -240,6 +240,23 @@ benchmark-preserving gaming auto-swaps. `US-036` uses this visible trace in the
 browser demo; it does not add a new endpoint, storage table, checkout adapter,
 or staff/admin surface.
 
+`US-037` adds the first natural-language iteration endpoint:
+
+- `POST /builds/{build_id}/iterate`
+- `services/agent-api/src/pc_build_copilot/build_iteration.py`
+- `BuildIterationRequest`
+- `BuildIterationResponse`
+- `ParsedBuildIterationCommand`
+
+The endpoint parses a bounded Vietnamese command set for cheaper/under-budget,
+quieter, more FPS/NVIDIA, more SSD/storage, and more RAM. It reuses ranked
+alternatives, compatibility checks, budget checks, performance profile
+generation, and the versioned apply path. Budget-saver downgrade variants are
+only generated for the iterate endpoint, so the public alternatives panel keeps
+its existing upgrade-oriented surface by default. The applied build appends the
+accepted and rejected command decisions to `optimizer_trace` and stores a
+single optimizer trace event for replay.
+
 ## Current Commerce Handoff Slice
 
 `US-005` adds mock approval and cart-ready handoff without introducing checkout,

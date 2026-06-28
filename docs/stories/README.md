@@ -44,6 +44,7 @@ Initial PC Build Copilot story packets:
 | `US-034` | Benchmark-delta gaming alternative ranking | implemented | normal |
 | `US-035` | Phase 5 multi-agent optimizer loop foundation | implemented | normal |
 | `US-036` | Polished end-to-end demo proof | implemented | normal |
+| `US-037` | Natural-language build iteration commands | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

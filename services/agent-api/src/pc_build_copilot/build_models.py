@@ -75,6 +75,7 @@ class BuildAlternativeKind(str, Enum):
     STORAGE_UPGRADE = "storage_upgrade"
     NVIDIA_GPU = "nvidia_gpu"
     PSU_HEADROOM = "psu_headroom"
+    BUDGET_SAVER = "budget_saver"
 
 
 class PerformanceFitLevel(str, Enum):
@@ -302,6 +303,35 @@ class BuildAlternativesResponse(BaseModel):
     rules_version: str
     base_total_price_vnd: int
     alternatives: list[BuildAlternative] = Field(default_factory=list)
+
+
+class BuildIterationRequest(BaseModel):
+    command_vi: str = Field(min_length=2, max_length=300)
+
+
+class ParsedBuildIterationCommand(BaseModel):
+    command_vi: str
+    command_type: Literal[
+        "cheaper",
+        "quieter",
+        "more_performance",
+        "more_storage",
+        "more_memory",
+        "nvidia_gpu",
+        "unknown",
+    ]
+    target_budget_max_vnd: int | None = None
+    priority_label_vi: str
+    summary_vi: str
+
+
+class BuildIterationResponse(BaseModel):
+    source_build_id: str
+    source_build_version: int
+    command: ParsedBuildIterationCommand
+    selected_alternative: BuildAlternative
+    applied_build: BuildArtifact
+    rejected_candidates: list[OptimizerIterationDecision] = Field(default_factory=list)
 
 
 class BuildApproval(BaseModel):

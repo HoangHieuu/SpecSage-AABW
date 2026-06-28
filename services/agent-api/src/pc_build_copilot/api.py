@@ -6,11 +6,14 @@ from pc_build_copilot.build_alternatives import (
     generate_build_alternatives,
 )
 from pc_build_copilot.build_orchestrator import generate_build_with_orchestration
+from pc_build_copilot.build_iteration import iterate_build_from_command
 from pc_build_copilot.build_models import (
     BuildAlternativesResponse,
     BuildArtifact,
     BuildFeedback,
     BuildFeedbackRequest,
+    BuildIterationRequest,
+    BuildIterationResponse,
     BuildTraceReplay,
     CartReadyHandoff,
     SessionTraceReplay,
@@ -156,6 +159,20 @@ def create_app(
         builds.save(artifact)
         session_store.mark_generated(artifact.build_session_id)
         return artifact
+
+    @app.post("/builds/{build_id}/iterate", response_model=BuildIterationResponse)
+    def iterate_build(
+        build_id: str,
+        payload: BuildIterationRequest,
+    ) -> BuildIterationResponse:
+        response = iterate_build_from_command(
+            base_artifact=builds.get(build_id),
+            payload=payload,
+            catalog=catalog_store.snapshot(),
+        )
+        builds.save(response.applied_build)
+        session_store.mark_generated(response.applied_build.build_session_id)
+        return response
 
     @app.post("/builds/{build_id}/approve", response_model=CartReadyHandoff)
     def approve_build(build_id: str) -> CartReadyHandoff:

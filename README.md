@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-036` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-037` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -76,7 +76,11 @@ benchmark evidence. Generated builds now expose a config-driven optimizer loop
 trace with use-case budget allocation, priority overrides, and accepted or
 rejected candidate decisions. The web demo starts on a Cyberpunk 2077 1440p
 Ultra 144Hz prompt and renders the optimizer loop, benchmark-backed warning,
-alternatives, mock cart handoff, and feedback path.
+alternatives, mock cart handoff, and feedback path. Generated builds can also
+accept bounded Vietnamese iteration commands such as "Tăng SSD nhưng giữ dưới
+20 triệu" or "Giảm xuống dưới 18 triệu", producing a new validated build
+version through the existing alternatives, budget, compatibility, performance,
+and trace gates.
 
 Accepted product direction:
 
@@ -152,6 +156,7 @@ The initial implementation backlog is intentionally small:
 34. `US-034` - benchmark-delta gaming alternative ranking. Implemented.
 35. `US-035` - Phase 5 multi-agent optimizer loop foundation. Implemented.
 36. `US-036` - polished end-to-end demo proof. Implemented.
+37. `US-037` - natural-language build iteration commands. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -241,6 +246,7 @@ scripts/bin/harness-cli story verify US-033
 scripts/bin/harness-cli story verify US-034
 scripts/bin/harness-cli story verify US-035
 scripts/bin/harness-cli story verify US-036
+scripts/bin/harness-cli story verify US-037
 pnpm eval:run
 ```
 

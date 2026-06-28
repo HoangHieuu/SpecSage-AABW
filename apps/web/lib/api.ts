@@ -297,7 +297,7 @@ export type BuildAlternativeRanking = {
 
 export type BuildAlternative = {
   variant_id: string;
-  kind: "ram_upgrade" | "storage_upgrade" | "nvidia_gpu" | "psu_headroom";
+  kind: "ram_upgrade" | "storage_upgrade" | "nvidia_gpu" | "psu_headroom" | "budget_saver";
   label_vi: string;
   summary_vi: string;
   ranking: BuildAlternativeRanking;
@@ -322,6 +322,30 @@ export type BuildAlternativesResponse = {
   rules_version: string;
   base_total_price_vnd: number;
   alternatives: BuildAlternative[];
+};
+
+export type ParsedBuildIterationCommand = {
+  command_vi: string;
+  command_type:
+    | "cheaper"
+    | "quieter"
+    | "more_performance"
+    | "more_storage"
+    | "more_memory"
+    | "nvidia_gpu"
+    | "unknown";
+  target_budget_max_vnd: number | null;
+  priority_label_vi: string;
+  summary_vi: string;
+};
+
+export type BuildIterationResponse = {
+  source_build_id: string;
+  source_build_version: number;
+  command: ParsedBuildIterationCommand;
+  selected_alternative: BuildAlternative;
+  applied_build: BuildArtifact;
+  rejected_candidates: OptimizerTrace["iterations"];
 };
 
 export type BuildApproval = {
@@ -457,6 +481,13 @@ export function applyBuildAlternative(buildId: string, variantId: string): Promi
   return request<BuildArtifact>(`/builds/${buildId}/alternatives/${variantId}/apply`, {
     method: "POST",
     body: JSON.stringify({})
+  });
+}
+
+export function iterateBuild(buildId: string, commandVi: string): Promise<BuildIterationResponse> {
+  return request<BuildIterationResponse>(`/builds/${buildId}/iterate`, {
+    method: "POST",
+    body: JSON.stringify({ command_vi: commandVi })
   });
 }
 

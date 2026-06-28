@@ -1724,6 +1724,102 @@ textarea:focus {
   margin-top: 14px;
 }
 
+/* ── Iteration command ── */
+
+.iteration-panel {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+}
+
+.iteration-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.iteration-heading h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.iteration-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.iteration-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.iteration-preset-row button {
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.iteration-preset-row button:hover:not(:disabled) {
+  border-color: rgba(201, 21, 34, 0.2);
+  color: var(--accent);
+}
+
+.iteration-command-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.iteration-command-row input {
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.iteration-command-row input:focus {
+  outline: 2px solid rgba(201, 21, 34, 0.18);
+  border-color: rgba(201, 21, 34, 0.3);
+}
+
+.iteration-command-row button {
+  min-height: 42px;
+  border-radius: var(--radius-sm);
+}
+
+.iteration-result {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.iteration-result > div {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  background: var(--surface);
+}
+
 /* ── Table ── */
 
 .table-wrap {
@@ -2118,6 +2214,8 @@ td a:hover {
   .optimizer-weights,
   .alternatives-grid,
   .alternative-metrics,
+  .iteration-command-row,
+  .iteration-result,
   .build-metrics.compact,
   .flow-progress {
     grid-template-columns: 1fr;
@@ -2161,6 +2259,7 @@ td a:hover {
   .alternatives-heading,
   .agent-trace-heading,
   .optimizer-trace-heading,
+  .iteration-heading,
   .trace-replay-heading,
   .trace-build-card-heading,
   .trace-event-title,

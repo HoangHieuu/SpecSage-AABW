@@ -98,8 +98,10 @@ The first demo should prove a narrow vertical slice:
 30. The running web demo proves the Cyberpunk 2077 optimizer path end to end:
     intent, build, trace, benchmark warning, alternative apply, mock cart, and
     feedback.
+31. Customers can submit bounded Vietnamese iteration commands after generation
+    and receive a new validated build version without restarting the session.
 
-Current first-slice implementation reaches step 30 with a deterministic
+Current first-slice implementation reaches step 31 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, mock
 cart handoff, replayable agent traces, local quality gates, feedback capture,
 and curated catalog subset promotion. It produces one build from the local
@@ -119,7 +121,10 @@ alternatives by exact benchmark delta when comparable evidence exists, applies a
 selected alternative as a new active build version, and creates a mock cart-ready
 handoff only after approval gates pass. The optimizer loop now records
 config-driven budget allocation, recognized priority overrides, and why each
-candidate was accepted, rejected, or skipped. `US-006` adds an advisory
+candidate was accepted, rejected, or skipped. Bounded natural-language
+iteration commands now parse supported Vietnamese adjustments, reuse the
+validated alternatives path, create a new build version, and append the command
+decision to the optimizer trace. `US-006` adds an advisory
 OpenRouter LLM layer to the intent step.
 That layer summarizes customer needs and suggests clarifying questions in
 Vietnamese, but it does not choose SKUs, prices, compatibility outcomes, budget
@@ -176,6 +181,8 @@ target.
 `US-035` adds the visible optimizer-loop trace foundation for allocation,
 priority overrides, and candidate decisions.
 `US-036` proves the polished customer demo path through the running web app.
+`US-037` adds deterministic natural-language build iteration commands before
+full Pareto variants.
 
 Out of first-slice scope unless a later story selects it:
 
@@ -194,7 +201,7 @@ Out of first-slice scope unless a later story selects it:
 | 2 | Catalog intelligence and product grounding | First build slice |
 | 3 | Compatibility and safety engine | First build slice |
 | 4 | Performance modeling and workload fit | Qualitative by default; source-backed benchmark seed, monitor warnings, balance scoring, app-fit thresholds, and office adequacy guidance |
-| 5 | Build optimization and iteration | Deterministic alternatives, apply flow, performance-aware ranking, benchmark-gated gaming optimization, bounded two-swap generation, and optimizer-loop trace foundation |
+| 5 | Build optimization and iteration | Deterministic alternatives, apply flow, performance-aware ranking, benchmark-gated gaming optimization, bounded two-swap generation, optimizer-loop trace foundation, and bounded natural-language iteration commands |
 | 6 | Explanation and education | First vertical slice |
 | 7 | Upgrade planning | Later |
 | 8 | Commerce actions and checkout handoff | Mock first, real adapter later |

@@ -12,6 +12,7 @@ import {
   BuildFeedbackReason,
   BuildFeedbackRequest,
   BuildItem,
+  BuildIterationResponse,
   BuildOrchestrationStep,
   BuildSession,
   CartReadyHandoff,
@@ -29,6 +30,7 @@ import {
   generateBuild,
   getBuildAlternatives,
   getSessionTrace,
+  iterateBuild,
   submitBuildFeedback,
   submitIntent
 } from "@/lib/api";
@@ -79,6 +81,8 @@ export function BuildCopilotClient() {
   const [cartHandoff, setCartHandoff] = useState<CartReadyHandoff | null>(null);
   const [buildFeedback, setBuildFeedback] = useState<BuildFeedback | null>(null);
   const [appliedAlternativeLabel, setAppliedAlternativeLabel] = useState<string | null>(null);
+  const [iterationCommand, setIterationCommand] = useState("Tăng SSD nhưng giữ dưới 20 triệu");
+  const [lastIteration, setLastIteration] = useState<BuildIterationResponse | null>(null);
   const [traceCopyState, setTraceCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
@@ -118,6 +122,7 @@ export function BuildCopilotClient() {
       setCartHandoff(null);
       setBuildFeedback(null);
       setAppliedAlternativeLabel(null);
+      setLastIteration(null);
       setTraceCopyState("idle");
     } catch (err) {
       setError(toErrorMessage(err));
@@ -150,6 +155,7 @@ export function BuildCopilotClient() {
       setCartHandoff(null);
       setBuildFeedback(null);
       setAppliedAlternativeLabel(null);
+      setLastIteration(null);
       setTraceCopyState("idle");
     } catch (err) {
       setError(toErrorMessage(err));
@@ -174,6 +180,7 @@ export function BuildCopilotClient() {
       setCartHandoff(null);
       setBuildFeedback(null);
       setAppliedAlternativeLabel(null);
+      setLastIteration(null);
       setTraceCopyState("idle");
       setSession((current) => (current ? { ...current, state: "generated" } : current));
     } catch (err) {
@@ -199,6 +206,7 @@ export function BuildCopilotClient() {
       setCartHandoff(null);
       setBuildFeedback(null);
       setAppliedAlternativeLabel(alternative.label_vi);
+      setLastIteration(null);
       setTraceCopyState("idle");
       setSession((current) => (current ? { ...current, state: "generated" } : current));
     } catch (err) {
@@ -215,6 +223,35 @@ export function BuildCopilotClient() {
       setTraceCopyState("copied");
     } catch {
       setTraceCopyState("failed");
+    }
+  }
+
+  async function handleIterateBuild(commandOverride?: string) {
+    if (!buildArtifact) return;
+    const command = (commandOverride ?? iterationCommand).trim();
+    if (!command) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await iterateBuild(buildArtifact.build_id, command);
+      const [alternatives, trace] = await Promise.all([
+        getBuildAlternatives(response.applied_build.build_id),
+        getSessionTrace(response.applied_build.build_session_id)
+      ]);
+      setBuildArtifact(response.applied_build);
+      setBuildAlternatives(alternatives);
+      setSessionTrace(trace);
+      setCartHandoff(null);
+      setBuildFeedback(null);
+      setAppliedAlternativeLabel(null);
+      setLastIteration(response);
+      setIterationCommand(command);
+      setTraceCopyState("idle");
+      setSession((current) => (current ? { ...current, state: "generated" } : current));
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -527,6 +564,14 @@ export function BuildCopilotClient() {
                 onApplyAlternative={handleApplyAlternative}
               />
             ) : null}
+
+            <BuildIterationPanel
+              command={iterationCommand}
+              isLoading={isLoading}
+              lastIteration={lastIteration}
+              onCommandChange={setIterationCommand}
+              onSubmitCommand={handleIterateBuild}
+            />
 
             <div className="build-notes">
               <div>
@@ -1149,6 +1194,87 @@ function BuildAlternativesPanel({
           </article>
         ))}
       </div>
+    </section>
+  );
+}
+
+function BuildIterationPanel({
+  command,
+  isLoading,
+  lastIteration,
+  onCommandChange,
+  onSubmitCommand
+}: {
+  command: string;
+  isLoading: boolean;
+  lastIteration: BuildIterationResponse | null;
+  onCommandChange: (command: string) => void;
+  onSubmitCommand: (commandOverride?: string) => void;
+}) {
+  const presets = [
+    "Tăng SSD nhưng giữ dưới 20 triệu",
+    "Giảm xuống dưới 18 triệu",
+    "Êm hơn",
+    "Ưu tiên NVIDIA"
+  ];
+
+  return (
+    <section className="iteration-panel" data-testid="iteration-panel">
+      <div className="iteration-heading">
+        <div>
+          <h3>Điều chỉnh build</h3>
+          <p>Yêu cầu được parse thành lệnh deterministic rồi chạy lại validation.</p>
+        </div>
+        {lastIteration ? (
+          <span className="status confirmed">Build v{lastIteration.applied_build.build_version}</span>
+        ) : (
+          <span className="status">Sẵn sàng</span>
+        )}
+      </div>
+
+      <div className="iteration-preset-row" aria-label="Lệnh mẫu">
+        {presets.map((item) => (
+          <button
+            key={item}
+            type="button"
+            disabled={isLoading}
+            onClick={() => {
+              onCommandChange(item);
+              onSubmitCommand(item);
+            }}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+
+      <div className="iteration-command-row">
+        <input
+          aria-label="Yêu cầu điều chỉnh"
+          data-testid="iteration-command-input"
+          value={command}
+          onChange={(event) => onCommandChange(event.target.value)}
+        />
+        <button
+          type="button"
+          data-testid="iterate-build"
+          disabled={isLoading || !command.trim()}
+          onClick={() => onSubmitCommand()}
+        >
+          Áp dụng
+        </button>
+      </div>
+
+      {lastIteration ? (
+        <div className="iteration-result" data-testid="iteration-result">
+          <Metric label="Lệnh" value={lastIteration.command.priority_label_vi} />
+          <Metric label="Biến thể" value={lastIteration.selected_alternative.label_vi} />
+          <Metric
+            label="Chênh lệch"
+            value={formatDeltaVnd(lastIteration.selected_alternative.price_delta_vnd)}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

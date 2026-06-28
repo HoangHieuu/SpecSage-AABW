@@ -33,12 +33,17 @@ def generate_build_alternatives(
     *,
     base_artifact: BuildArtifact,
     catalog: CatalogSnapshot,
+    include_budget_savers: bool = False,
 ) -> BuildAlternativesResponse:
     catalog_by_sku = {item.sku: item for item in catalog.items}
     selected = _selected_catalog_items(base_artifact, catalog_by_sku)
     alternatives: list[BuildAlternative] = []
 
-    for candidate in _candidate_swaps(selected, catalog.items):
+    for candidate in _candidate_swaps(
+        selected,
+        catalog.items,
+        include_budget_savers=include_budget_savers,
+    ):
         alternative = _build_alternative(
             base_artifact=base_artifact,
             selected={**selected, candidate.slot: candidate.item},
@@ -64,8 +69,13 @@ def apply_build_alternative(
     base_artifact: BuildArtifact,
     variant_id: str,
     catalog: CatalogSnapshot,
+    include_budget_savers: bool = False,
 ) -> BuildArtifact | None:
-    response = generate_build_alternatives(base_artifact=base_artifact, catalog=catalog)
+    response = generate_build_alternatives(
+        base_artifact=base_artifact,
+        catalog=catalog,
+        include_budget_savers=include_budget_savers,
+    )
     alternative = next(
         (item for item in response.alternatives if item.variant_id == variant_id),
         None,
@@ -179,6 +189,8 @@ def _selected_catalog_items_from_build_items(
 def _candidate_swaps(
     selected: dict[BuildSlot, CatalogSku],
     catalog_items: Iterable[CatalogSku],
+    *,
+    include_budget_savers: bool = False,
 ) -> list[_CandidateSwap]:
     candidates = []
     ram = _next_higher_capacity(
@@ -251,7 +263,60 @@ def _candidate_swaps(
             )
         )
 
+    if include_budget_savers:
+        budget_saver = _budget_saver_candidate(selected, catalog_items)
+        if budget_saver is not None:
+            candidates.append(budget_saver)
+
     return candidates
+
+
+def _budget_saver_candidate(
+    selected: dict[BuildSlot, CatalogSku],
+    catalog_items: Iterable[CatalogSku],
+) -> _CandidateSwap | None:
+    candidates: list[tuple[int, _CandidateSwap]] = []
+    category_by_slot = {
+        BuildSlot.RAM: ComponentCategory.RAM,
+        BuildSlot.STORAGE: ComponentCategory.STORAGE,
+        BuildSlot.VGA: ComponentCategory.VGA,
+        BuildSlot.PSU: ComponentCategory.PSU,
+    }
+    for slot, category in category_by_slot.items():
+        current = selected.get(slot)
+        if current is None:
+            continue
+        cheaper = [
+            item
+            for item in catalog_items
+            if item.category == category
+            and item.stock_quantity > 0
+            and item.price_vnd < current.price_vnd
+            and item.sku != current.sku
+        ]
+        if not cheaper:
+            continue
+        candidate = min(cheaper, key=lambda item: (item.price_vnd, item.sku))
+        savings = current.price_vnd - candidate.price_vnd
+        candidates.append(
+            (
+                savings,
+                _CandidateSwap(
+                    kind=BuildAlternativeKind.BUDGET_SAVER,
+                    slot=slot,
+                    item=candidate,
+                    label_vi="Giảm chi phí",
+                    summary_vi="Hạ một linh kiện về SKU rẻ hơn trong catalog để giảm tổng giá.",
+                    reason_vi=(
+                        "Giảm chi phí theo yêu cầu người dùng; cấu hình vẫn phải chạy lại "
+                        "budget, compatibility và performance gates."
+                    ),
+                ),
+            )
+        )
+    if not candidates:
+        return None
+    return max(candidates, key=lambda item: item[0])[1]
 
 
 def _build_alternative(
@@ -520,6 +585,10 @@ def _use_case_bonus(
         if intent.use_case in {UseCase.GAMING, UseCase.CREATOR, UseCase.AI}:
             bonus += 4
             reasons.append("PSU dư tải hữu ích hơn nếu dự kiến nâng GPU sau này.")
+    elif alternative.kind == BuildAlternativeKind.BUDGET_SAVER:
+        bonus += 8
+        if alternative.price_delta_vnd < 0:
+            reasons.append("Giảm tổng giá trong khi vẫn giữ biến thể qua các gate deterministic.")
     return bonus
 
 
