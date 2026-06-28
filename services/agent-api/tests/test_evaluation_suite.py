@@ -65,5 +65,6 @@ def test_quality_evaluation_records_required_core_checks() -> None:
         "required_slots",
         "no_hallucinated_skus",
         "no_numeric_fps_claims",
+        "benchmark_fps_claims_source_backed",
         "explanation_rubric_minimum",
     } <= check_names

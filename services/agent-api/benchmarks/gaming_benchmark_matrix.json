@@ -1,0 +1,63 @@
+{
+  "matrix_version": "gaming_benchmark_seed_v2026_06_28",
+  "generated_at": "2026-06-28T00:00:00+07:00",
+  "disclaimer_vi": "Benchmark seed dùng để hiển thị FPS tham khảo khi game, GPU, độ phân giải và preset khớp chính xác; không phải cam kết hiệu năng.",
+  "rows": [
+    {
+      "game": "Cyberpunk 2077",
+      "game_aliases": ["cyberpunk"],
+      "gpu_chipset": "RX 7600",
+      "gpu_aliases": ["Radeon RX 7600", "AMD Radeon RX 7600"],
+      "resolution": "1440p",
+      "preset": "Ultra",
+      "render_mode": "native",
+      "fps_low": 30,
+      "fps_high": 35,
+      "source_label": "EveZone RX 7600 Cyberpunk 2077 FPS test",
+      "source_url": "https://www.evezone.co.za/amd-radeon-rx-7600-8gb-cyberpunk-2077-fps-test-with-and-without-frame-generation-and-ai-boost/",
+      "methodology": "Public article-reported native 1440p Ultra range, curated into local seed matrix."
+    },
+    {
+      "game": "Cyberpunk 2077",
+      "game_aliases": ["cyberpunk"],
+      "gpu_chipset": "RX 7600",
+      "gpu_aliases": ["Radeon RX 7600", "AMD Radeon RX 7600"],
+      "resolution": "1080p",
+      "preset": "Ultra",
+      "render_mode": "native",
+      "fps_low": 77,
+      "fps_high": 77,
+      "source_label": "TechSpot Cyberpunk 2077 Phantom Liberty GPU benchmark",
+      "source_url": "https://www.techspot.com/review/2743-cyberpunk-phantom-liberty-benchmark/",
+      "methodology": "Public article-reported 1080p Ultra native average with upscaling manually disabled, curated into local seed matrix."
+    },
+    {
+      "game": "Cyberpunk 2077",
+      "game_aliases": ["cyberpunk"],
+      "gpu_chipset": "RTX 4060",
+      "gpu_aliases": ["GeForce RTX 4060", "NVIDIA GeForce RTX 4060"],
+      "resolution": "1080p",
+      "preset": "Ultra",
+      "render_mode": "native",
+      "fps_low": 81,
+      "fps_high": 81,
+      "source_label": "Notebookcheck RTX 4060 Cyberpunk 2077 preliminary test",
+      "source_url": "https://www.notebookcheck.net/Preliminary-RTX-4060-Cyberpunk-2077-performance-test-depicts-up-to-27-uplift-vs-RTX-3060-at-1080p-without-DLSS.728641.0.html",
+      "methodology": "Public article-reported 1080p native result, curated into local seed matrix."
+    },
+    {
+      "game": "Cyberpunk 2077",
+      "game_aliases": ["cyberpunk"],
+      "gpu_chipset": "RTX 4060",
+      "gpu_aliases": ["GeForce RTX 4060", "NVIDIA GeForce RTX 4060"],
+      "resolution": "1440p",
+      "preset": "Ultra",
+      "render_mode": "native",
+      "fps_low": 43,
+      "fps_high": 43,
+      "source_label": "TechSpot Cyberpunk 2077 Phantom Liberty GPU benchmark",
+      "source_url": "https://www.techspot.com/review/2743-cyberpunk-phantom-liberty-benchmark/",
+      "methodology": "Public article-reported 1440p Ultra native average with upscaling manually disabled, curated into local seed matrix."
+    }
+  ]
+}

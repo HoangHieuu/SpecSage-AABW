@@ -204,7 +204,13 @@ def evaluate_scenario(
         checks,
         "no_numeric_fps_claims",
         not NUMERIC_FPS_RE.search(_artifact_text(artifact)),
-        "checked artifact text for numeric FPS claims",
+        "checked non-benchmark artifact text for numeric FPS claims",
+    )
+    _add_check(
+        checks,
+        "benchmark_fps_claims_source_backed",
+        _benchmark_fps_claims_source_backed(artifact),
+        "checked benchmark FPS evidence carries source provenance",
     )
 
     rubric = score_explanation_rubric(artifact)
@@ -342,4 +348,16 @@ def _artifact_text(artifact: BuildArtifact) -> str:
             *artifact.performance_profile.warnings_vi,
             *(item.explanation_vi for item in artifact.items),
         ]
+    )
+
+
+def _benchmark_fps_claims_source_backed(artifact: BuildArtifact) -> bool:
+    fps_evidence = [
+        evidence
+        for evidence in artifact.performance_profile.evidence
+        if NUMERIC_FPS_RE.search(evidence.value)
+    ]
+    return all(
+        evidence.source == "benchmark" and evidence.source_label and evidence.source_url
+        for evidence in fps_evidence
     )
