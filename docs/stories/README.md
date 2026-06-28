@@ -42,6 +42,8 @@ Initial PC Build Copilot story packets:
 | `US-032` | Broader gaming benchmark coverage | implemented | normal |
 | `US-033` | Bounded multi-swap optimizer search | implemented | normal |
 | `US-034` | Benchmark-delta gaming alternative ranking | implemented | normal |
+| `US-035` | Phase 5 multi-agent optimizer loop foundation | implemented | normal |
+| `US-036` | Polished end-to-end demo proof | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

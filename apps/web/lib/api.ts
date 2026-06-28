@@ -188,6 +188,34 @@ export type BuildOrchestrationStep = {
   completed_at: string;
 };
 
+export type OptimizerTrace = {
+  max_iterations: number;
+  applied_iteration_count: number;
+  rejected_iteration_count: number;
+  priority_overrides: string[];
+  budget_allocation: {
+    use_case: string;
+    budget_max_vnd: number | null;
+    weights: Record<string, number>;
+    target_amounts_vnd: Record<string, number>;
+    reserved_peripherals_vnd: number;
+    reserved_services_vnd: number;
+    notes_vi: string[];
+  };
+  iterations: Array<{
+    iteration: number;
+    candidate_kind: string | null;
+    candidate_label_vi: string | null;
+    decision: "accepted" | "rejected" | "skipped";
+    score: number | null;
+    priority: string | null;
+    price_delta_vnd: number | null;
+    total_price_vnd: number | null;
+    changed_slots: string[];
+    reason_vi: string;
+  }>;
+};
+
 export type TraceReplayEvent = {
   event_id: string;
   sequence: number;
@@ -239,6 +267,7 @@ export type BuildArtifact = {
   items: BuildItem[];
   compatibility_report: CompatibilityReport;
   performance_profile: PerformanceProfile;
+  optimizer_trace: OptimizerTrace | null;
   explanations_vi: string[];
   warnings_vi: string[];
   orchestration_trace: BuildOrchestrationStep[];

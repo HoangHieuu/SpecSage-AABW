@@ -93,8 +93,13 @@ The first demo should prove a narrow vertical slice:
     before returning, while rebuilding the artifact after each swap.
 28. Gaming alternatives can rank GPU swaps by exact source-backed benchmark
     delta when base and candidate evidence match the same target.
+29. Generated builds expose a Phase 5 optimizer loop trace with budget
+    allocation, priority overrides, and accepted/rejected candidate decisions.
+30. The running web demo proves the Cyberpunk 2077 optimizer path end to end:
+    intent, build, trace, benchmark warning, alternative apply, mock cart, and
+    feedback.
 
-Current first-slice implementation reaches step 28 with a deterministic
+Current first-slice implementation reaches step 30 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, mock
 cart handoff, replayable agent traces, local quality gates, feedback capture,
 and curated catalog subset promotion. It produces one build from the local
@@ -112,8 +117,10 @@ budget-safe optimizer swaps for creator and local LLM builds, allows gaming GPU
 auto-swaps only when exact benchmark evidence is preserved, ranks gaming GPU
 alternatives by exact benchmark delta when comparable evidence exists, applies a
 selected alternative as a new active build version, and creates a mock cart-ready
-handoff only after approval gates pass. `US-006` adds an advisory OpenRouter LLM
-layer to the intent step.
+handoff only after approval gates pass. The optimizer loop now records
+config-driven budget allocation, recognized priority overrides, and why each
+candidate was accepted, rejected, or skipped. `US-006` adds an advisory
+OpenRouter LLM layer to the intent step.
 That layer summarizes customer needs and suggests clarifying questions in
 Vietnamese, but it does not choose SKUs, prices, compatibility outcomes, budget
 gates, approval, alternatives, applied builds, performance claims, or cart
@@ -166,6 +173,9 @@ two-swap pass, rebuilding the artifact after each swap.
 `US-034` adds benchmark-delta scoring so source-backed GPU improvements outrank
 generic gaming alternatives when both builds have exact evidence for the same
 target.
+`US-035` adds the visible optimizer-loop trace foundation for allocation,
+priority overrides, and candidate decisions.
+`US-036` proves the polished customer demo path through the running web app.
 
 Out of first-slice scope unless a later story selects it:
 
@@ -184,13 +194,13 @@ Out of first-slice scope unless a later story selects it:
 | 2 | Catalog intelligence and product grounding | First build slice |
 | 3 | Compatibility and safety engine | First build slice |
 | 4 | Performance modeling and workload fit | Qualitative by default; source-backed benchmark seed, monitor warnings, balance scoring, app-fit thresholds, and office adequacy guidance |
-| 5 | Build optimization and iteration | Deterministic alternatives, apply flow, performance-aware ranking, benchmark-gated gaming optimization, and bounded two-swap generation |
+| 5 | Build optimization and iteration | Deterministic alternatives, apply flow, performance-aware ranking, benchmark-gated gaming optimization, bounded two-swap generation, and optimizer-loop trace foundation |
 | 6 | Explanation and education | First vertical slice |
 | 7 | Upgrade planning | Later |
 | 8 | Commerce actions and checkout handoff | Mock first, real adapter later |
 | 9 | Staff copilot and showroom operations | Later high-risk |
 | 10 | Administration and rules CMS | Later high-risk |
-| 11 | Observability, quality, governance | Start with Langfuse traces and evals |
+| 11 | Observability, quality, governance | Local trace replay, evals, CI, feedback, and demo-flow proof before Langfuse |
 | 12 | API and embeddable integration | Later public contract |
 
 ## Source Hierarchy

@@ -17,6 +17,7 @@ import {
   CartReadyHandoff,
   IntentAgentAnalysis,
   IntentResponse,
+  OptimizerTrace,
   PartFeedbackRequest,
   PerformanceProfile,
   SessionTraceReplay,
@@ -36,7 +37,7 @@ const presets: Array<{ value: UseCase; label: string; sample: string }> = [
   {
     value: "gaming",
     label: "Gaming",
-    sample: "PC gaming 25 triệu chơi Valorant và LMHT 144Hz"
+    sample: "PC gaming 25 triệu chơi Cyberpunk 2077 1440p Ultra 144Hz, ưu tiên VGA"
   },
   {
     value: "creator",
@@ -481,6 +482,10 @@ export function BuildCopilotClient() {
               />
             ) : buildArtifact.orchestration_trace.length ? (
               <AgentTracePanel steps={buildArtifact.orchestration_trace} />
+            ) : null}
+
+            {buildArtifact.optimizer_trace ? (
+              <OptimizerTracePanel trace={buildArtifact.optimizer_trace} />
             ) : null}
 
             <PerformanceProfilePanel profile={buildArtifact.performance_profile} />
@@ -984,6 +989,76 @@ function AgentTracePanel({ steps }: { steps: BuildOrchestrationStep[] }) {
   );
 }
 
+function OptimizerTracePanel({ trace }: { trace: OptimizerTrace }) {
+  const weights = Object.entries(trace.budget_allocation.weights);
+  const decisions = trace.iterations.slice(0, 8);
+
+  return (
+    <section className="optimizer-trace" data-testid="optimizer-trace-panel">
+      <div className="optimizer-trace-heading">
+        <div>
+          <h3>Optimizer loop</h3>
+          <p>Phase 5 agent dùng allocation config, priority override và gate deterministic.</p>
+        </div>
+        <span className="status">
+          {trace.applied_iteration_count}/{trace.max_iterations} vòng áp dụng
+        </span>
+      </div>
+
+      <div className="optimizer-summary-grid">
+        <Metric label="Use case" value={trace.budget_allocation.use_case} />
+        <Metric
+          label="Priority"
+          value={trace.priority_overrides.length ? trace.priority_overrides.join(", ") : "Không có"}
+        />
+        <Metric label="Rejected" value={`${trace.rejected_iteration_count}`} />
+      </div>
+
+      <div className="optimizer-weights" aria-label="Budget allocation">
+        {weights.map(([slot, weight]) => (
+          <div key={slot}>
+            <span>{slotLabel(slot as BuildItem["slot"])}</span>
+            <strong>{weight}%</strong>
+          </div>
+        ))}
+      </div>
+
+      <ul className="optimizer-notes">
+        {trace.budget_allocation.notes_vi.map((note) => (
+          <li key={note}>{note}</li>
+        ))}
+      </ul>
+
+      {decisions.length ? (
+        <ol className="optimizer-decisions">
+          {decisions.map((decision, index) => (
+            <li key={`${decision.iteration}-${decision.candidate_kind ?? "skip"}-${index}`}>
+              <span className={`decision-badge ${decision.decision}`}>{decisionLabel(decision.decision)}</span>
+              <div>
+                <strong>
+                  Vòng {decision.iteration}
+                  {decision.candidate_label_vi ? ` · ${decision.candidate_label_vi}` : ""}
+                </strong>
+                <p>{decision.reason_vi}</p>
+                {decision.score !== null ? (
+                  <small>
+                    Score {decision.score}/100
+                    {decision.price_delta_vnd !== null
+                      ? ` · ${formatDeltaVnd(decision.price_delta_vnd)}`
+                      : ""}
+                  </small>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="optimizer-empty">Optimizer chưa cần thử biến thể trong lượt này.</p>
+      )}
+    </section>
+  );
+}
+
 function BuildAlternativesPanel({
   response,
   isApplying,
@@ -1387,6 +1462,15 @@ function fitLevelLabel(level: PerformanceProfile["fit_level"]) {
     unknown: "Chưa rõ"
   };
   return labels[level];
+}
+
+function decisionLabel(decision: OptimizerTrace["iterations"][number]["decision"]) {
+  const labels: Record<OptimizerTrace["iterations"][number]["decision"], string> = {
+    accepted: "Chọn",
+    rejected: "Loại",
+    skipped: "Bỏ qua"
+  };
+  return labels[decision];
 }
 
 function buildStatusLabel(artifact: BuildArtifact) {

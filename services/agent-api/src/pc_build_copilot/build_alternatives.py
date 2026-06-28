@@ -22,6 +22,7 @@ from pc_build_copilot.catalog_models import CatalogSku, CatalogSnapshot, Compone
 from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.compatibility_rules import validate_build_compatibility
 from pc_build_copilot.models import UseCase
+from pc_build_copilot.optimizer_policy import priority_overrides_for_intent
 from pc_build_copilot.performance_profile import generate_performance_profile
 
 
@@ -116,6 +117,7 @@ def apply_build_alternative(
         items=alternative.items,
         compatibility_report=compatibility_report,
         performance_profile=performance_profile,
+        optimizer_trace=base_artifact.optimizer_trace,
         explanations_vi=[
             *alternative.explanations_vi,
             (
@@ -378,6 +380,7 @@ def _score_alternative(
     score += _fit_delta_score(base_profile, alternative_profile, reasons)
     score += _workload_delta_score(base_profile, alternative_profile, reasons)
     score += _benchmark_delta_score(base_artifact, alternative, reasons)
+    score += _priority_override_score(base_artifact, alternative, reasons)
     score += _use_case_bonus(base_artifact, alternative, reasons)
     score -= _new_warning_penalty(base_profile, alternative_profile, reasons)
 
@@ -518,6 +521,21 @@ def _use_case_bonus(
             bonus += 4
             reasons.append("PSU dư tải hữu ích hơn nếu dự kiến nâng GPU sau này.")
     return bonus
+
+
+def _priority_override_score(
+    base_artifact: BuildArtifact,
+    alternative: BuildAlternative,
+    reasons: list[str],
+) -> int:
+    overrides = priority_overrides_for_intent(base_artifact.intent_snapshot)
+    if "gpu" in overrides and alternative.kind == BuildAlternativeKind.NVIDIA_GPU:
+        reasons.append("Khớp override ưu tiên GPU/VGA từ intent đã xác nhận.")
+        return 8
+    if "quiet" in overrides and alternative.kind == BuildAlternativeKind.PSU_HEADROOM:
+        reasons.append("Khớp override ưu tiên vận hành êm bằng PSU headroom tốt hơn.")
+        return 6
+    return 0
 
 
 def _new_warning_penalty(

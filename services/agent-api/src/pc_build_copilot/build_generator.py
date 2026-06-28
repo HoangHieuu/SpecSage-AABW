@@ -11,11 +11,18 @@ from pc_build_copilot.build_models import (
     BuildItem,
     BuildStatus,
     MockCartPayload,
+    OptimizerIterationDecision,
+    OptimizerTrace,
 )
 from pc_build_copilot.catalog_models import CatalogSku, CatalogSnapshot, ComponentCategory
 from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.compatibility_rules import validate_build_compatibility
 from pc_build_copilot.models import BuildIntent, UseCase
+from pc_build_copilot.optimizer_policy import (
+    build_budget_allocation,
+    priority_labels_vi,
+    priority_overrides_for_intent,
+)
 from pc_build_copilot.performance_profile import generate_performance_profile
 
 
@@ -41,6 +48,10 @@ def generate_build_artifact(
 ) -> BuildArtifact:
     selected = _select_skus(intent, catalog.items)
     build_id = f"build_{uuid4().hex}"
+    optimizer_trace = _new_optimizer_trace(
+        intent=intent,
+        max_iterations=OPTIMIZER_MAX_SWAPS if optimize else 0,
+    )
     artifact = _build_artifact_from_selected(
         build_id=build_id,
         build_session_id=build_session_id,
@@ -48,16 +59,17 @@ def generate_build_artifact(
         catalog=catalog,
         selected=selected,
         optimizer_notes=[],
+        optimizer_trace=optimizer_trace,
     )
     if not optimize:
         return artifact
 
-    optimized_selected, optimizer_notes = _budget_aware_improvement_pass(
+    optimized_selected, optimizer_notes, optimizer_trace = _budget_aware_improvement_pass(
         artifact=artifact,
         catalog=catalog,
     )
     if not optimizer_notes:
-        return artifact
+        return artifact.model_copy(update={"optimizer_trace": optimizer_trace})
     return _build_artifact_from_selected(
         build_id=build_id,
         build_session_id=build_session_id,
@@ -65,6 +77,7 @@ def generate_build_artifact(
         catalog=catalog,
         selected=optimized_selected,
         optimizer_notes=optimizer_notes,
+        optimizer_trace=optimizer_trace,
     )
 
 
@@ -76,6 +89,7 @@ def _build_artifact_from_selected(
     catalog: CatalogSnapshot,
     selected: dict[BuildSlot, CatalogSku],
     optimizer_notes: list[str],
+    optimizer_trace: OptimizerTrace,
 ) -> BuildArtifact:
     compatibility_report = validate_build_compatibility(
         build_id=build_id,
@@ -125,6 +139,7 @@ def _build_artifact_from_selected(
         items=items,
         compatibility_report=compatibility_report,
         performance_profile=performance_profile,
+        optimizer_trace=optimizer_trace,
         explanations_vi=_build_explanations(
             intent,
             total_price,
@@ -143,28 +158,60 @@ def _budget_aware_improvement_pass(
     *,
     artifact: BuildArtifact,
     catalog: CatalogSnapshot,
-) -> tuple[dict[BuildSlot, CatalogSku], list[str]]:
+) -> tuple[dict[BuildSlot, CatalogSku], list[str], OptimizerTrace]:
+    optimizer_trace = artifact.optimizer_trace or _new_optimizer_trace(
+        intent=artifact.intent_snapshot,
+        max_iterations=OPTIMIZER_MAX_SWAPS,
+    )
     if artifact.intent_snapshot.use_case not in OPTIMIZER_USE_CASES:
-        return _selected_from_artifact(artifact, catalog), []
+        optimizer_trace = _append_optimizer_decision(
+            optimizer_trace,
+            _skipped_decision(
+                "Use case này chưa thuộc phạm vi optimizer tự động của Phase 5.",
+            ),
+        )
+        return _selected_from_artifact(artifact, catalog), [], optimizer_trace
     if artifact.budget_status != BudgetStatus.WITHIN_BUDGET or not artifact.can_approve:
-        return _selected_from_artifact(artifact, catalog), []
+        optimizer_trace = _append_optimizer_decision(
+            optimizer_trace,
+            _skipped_decision(
+                "Optimizer không chạy vì build cơ sở chưa qua budget hoặc approval gate.",
+            ),
+        )
+        return _selected_from_artifact(artifact, catalog), [], optimizer_trace
     if artifact.budget_max_vnd is None:
-        return _selected_from_artifact(artifact, catalog), []
+        optimizer_trace = _append_optimizer_decision(
+            optimizer_trace,
+            _skipped_decision("Optimizer cần budget_max để chứng minh phương án nằm trong ngân sách."),
+        )
+        return _selected_from_artifact(artifact, catalog), [], optimizer_trace
 
     from pc_build_copilot.build_alternatives import generate_build_alternatives
 
     current_artifact = artifact
     optimizer_notes: list[str] = []
     applied_kinds: set[BuildAlternativeKind] = set()
+    priority_overrides = priority_overrides_for_intent(artifact.intent_snapshot)
 
-    for _ in range(OPTIMIZER_MAX_SWAPS):
+    for iteration in range(1, OPTIMIZER_MAX_SWAPS + 1):
         response = generate_build_alternatives(base_artifact=current_artifact, catalog=catalog)
-        selected_alternative = _select_optimizer_alternative(
+        selected_alternative, decisions = _select_optimizer_alternative(
             artifact=current_artifact,
             alternatives=response.alternatives,
             applied_kinds=applied_kinds,
+            priority_overrides=priority_overrides,
+            iteration=iteration,
         )
+        optimizer_trace = _append_optimizer_decisions(optimizer_trace, decisions)
         if selected_alternative is None:
+            if not decisions:
+                optimizer_trace = _append_optimizer_decision(
+                    optimizer_trace,
+                    _skipped_decision(
+                        "Không còn biến thể hợp lệ để optimizer xem xét.",
+                        iteration=iteration,
+                    ),
+                )
             break
 
         applied_kinds.add(selected_alternative.kind)
@@ -176,11 +223,12 @@ def _budget_aware_improvement_pass(
             catalog=catalog,
             selected=_selected_from_build_items(selected_alternative.items, catalog),
             optimizer_notes=optimizer_notes,
+            optimizer_trace=optimizer_trace,
         )
 
     if not optimizer_notes:
-        return _selected_from_artifact(artifact, catalog), []
-    return _selected_from_artifact(current_artifact, catalog), optimizer_notes
+        return _selected_from_artifact(artifact, catalog), [], optimizer_trace
+    return _selected_from_artifact(current_artifact, catalog), optimizer_notes, optimizer_trace
 
 
 def _select_optimizer_alternative(
@@ -188,19 +236,80 @@ def _select_optimizer_alternative(
     artifact: BuildArtifact,
     alternatives: list[BuildAlternative],
     applied_kinds: set[BuildAlternativeKind],
-) -> BuildAlternative | None:
+    priority_overrides: list[str],
+    iteration: int,
+) -> tuple[BuildAlternative | None, list[OptimizerIterationDecision]]:
+    decisions: list[OptimizerIterationDecision] = []
     for alternative in alternatives:
         if alternative.kind in applied_kinds:
+            decisions.append(
+                _optimizer_decision(
+                    iteration=iteration,
+                    alternative=alternative,
+                    decision="rejected",
+                    reason_vi="Đã áp dụng loại biến thể này trong vòng trước nên bỏ qua để tránh lặp.",
+                )
+            )
             continue
         if not _is_basic_optimizer_candidate(alternative):
+            decisions.append(
+                _optimizer_decision(
+                    iteration=iteration,
+                    alternative=alternative,
+                    decision="rejected",
+                    reason_vi="Biến thể bị loại vì không đạt budget hoặc approval gate.",
+                )
+            )
             continue
         if artifact.intent_snapshot.use_case == UseCase.GAMING:
             if _needs_gaming_optimizer(artifact) and _is_benchmark_preserving_gaming_candidate(alternative):
-                return alternative
+                decisions.append(
+                    _optimizer_decision(
+                        iteration=iteration,
+                        alternative=alternative,
+                        decision="accepted",
+                        reason_vi="Chọn vì gaming build đang dưới target và biến thể giữ được benchmark evidence.",
+                    )
+                )
+                return alternative, decisions
+            decisions.append(
+                _optimizer_decision(
+                    iteration=iteration,
+                    alternative=alternative,
+                    decision="rejected",
+                    reason_vi="Gaming auto-swap bị chặn vì chưa có PERF_BELOW_TARGET hoặc chưa đủ benchmark evidence.",
+                )
+            )
             continue
         if alternative.ranking.priority == "recommended":
-            return alternative
-    return None
+            decisions.append(
+                _optimizer_decision(
+                    iteration=iteration,
+                    alternative=alternative,
+                    decision="accepted",
+                    reason_vi="Chọn biến thể recommended trong budget cho use case hiện tại.",
+                )
+            )
+            return alternative, decisions
+        if _matches_priority_override(alternative, priority_overrides):
+            decisions.append(
+                _optimizer_decision(
+                    iteration=iteration,
+                    alternative=alternative,
+                    decision="accepted",
+                    reason_vi="Chọn vì khớp priority override từ intent và vẫn đạt các gate deterministic.",
+                )
+            )
+            return alternative, decisions
+        decisions.append(
+            _optimizer_decision(
+                iteration=iteration,
+                alternative=alternative,
+                decision="rejected",
+                reason_vi="Biến thể hợp lệ nhưng chưa đủ ưu tiên để auto-apply.",
+            )
+        )
+    return None, decisions
 
 
 def _is_basic_optimizer_candidate(alternative: BuildAlternative) -> bool:
@@ -241,6 +350,85 @@ def _optimizer_notes_for_alternative(selected_alternative: BuildAlternative) -> 
         ),
         *selected_alternative.ranking.reasons_vi[:2],
     ]
+
+
+def _matches_priority_override(
+    alternative: BuildAlternative,
+    priority_overrides: list[str],
+) -> bool:
+    if alternative.ranking.priority not in {"recommended", "good_fit"}:
+        return False
+    if "gpu" in priority_overrides and alternative.kind == BuildAlternativeKind.NVIDIA_GPU:
+        return True
+    if "quiet" in priority_overrides and alternative.kind == BuildAlternativeKind.PSU_HEADROOM:
+        return True
+    return False
+
+
+def _new_optimizer_trace(
+    *,
+    intent: BuildIntent,
+    max_iterations: int,
+) -> OptimizerTrace:
+    overrides = priority_overrides_for_intent(intent)
+    return OptimizerTrace(
+        max_iterations=max_iterations,
+        priority_overrides=priority_labels_vi(overrides),
+        budget_allocation=build_budget_allocation(intent),
+    )
+
+
+def _append_optimizer_decisions(
+    optimizer_trace: OptimizerTrace,
+    decisions: list[OptimizerIterationDecision],
+) -> OptimizerTrace:
+    updated = optimizer_trace
+    for decision in decisions:
+        updated = _append_optimizer_decision(updated, decision)
+    return updated
+
+
+def _append_optimizer_decision(
+    optimizer_trace: OptimizerTrace,
+    decision: OptimizerIterationDecision,
+) -> OptimizerTrace:
+    iterations = [*optimizer_trace.iterations, decision]
+    return optimizer_trace.model_copy(
+        update={
+            "iterations": iterations,
+            "applied_iteration_count": sum(1 for item in iterations if item.decision == "accepted"),
+            "rejected_iteration_count": sum(1 for item in iterations if item.decision == "rejected"),
+        }
+    )
+
+
+def _optimizer_decision(
+    *,
+    iteration: int,
+    alternative: BuildAlternative,
+    decision: str,
+    reason_vi: str,
+) -> OptimizerIterationDecision:
+    return OptimizerIterationDecision(
+        iteration=iteration,
+        candidate_kind=alternative.kind.value,
+        candidate_label_vi=alternative.label_vi,
+        decision=decision,
+        score=alternative.ranking.score,
+        priority=alternative.ranking.priority,
+        price_delta_vnd=alternative.price_delta_vnd,
+        total_price_vnd=alternative.total_price_vnd,
+        changed_slots=[slot.slot.value for slot in alternative.changed_slots],
+        reason_vi=reason_vi,
+    )
+
+
+def _skipped_decision(reason_vi: str, iteration: int = 0) -> OptimizerIterationDecision:
+    return OptimizerIterationDecision(
+        iteration=iteration,
+        decision="skipped",
+        reason_vi=reason_vi,
+    )
 
 
 def _selected_from_artifact(

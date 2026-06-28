@@ -127,6 +127,14 @@ def test_generator_applies_benchmark_preserving_gaming_gpu_optimizer_swap() -> N
     assert benchmark_evidence[0].source_label == "TechSpot Cyberpunk 2077 Phantom Liberty GPU benchmark"
     assert any("Optimizer" in explanation for explanation in artifact.explanations_vi)
     assert any("PERF_BELOW_TARGET" in warning for warning in artifact.performance_profile.warnings_vi)
+    assert artifact.optimizer_trace is not None
+    assert artifact.optimizer_trace.max_iterations == 2
+    assert artifact.optimizer_trace.applied_iteration_count == 1
+    assert any(
+        decision.decision == "accepted" and decision.candidate_kind == "nvidia_gpu"
+        for decision in artifact.optimizer_trace.iterations
+    )
+    assert artifact.optimizer_trace.budget_allocation.weights["vga"] >= 40
 
 
 def test_alternative_generator_prioritizes_benchmark_delta_for_gaming_gpu_swap() -> None:
@@ -157,6 +165,37 @@ def test_alternative_generator_prioritizes_benchmark_delta_for_gaming_gpu_swap()
         for reason in top_alternative.ranking.reasons_vi
     )
     assert all("fps" not in reason.casefold() for reason in top_alternative.ranking.reasons_vi)
+
+
+def test_optimizer_trace_records_priority_overrides_without_bypassing_gaming_gate() -> None:
+    intent = BuildIntent(
+        raw_text="PC gaming 25 triệu chơi Valorant 144Hz, ưu tiên VGA và im lặng",
+        use_case=UseCase.GAMING,
+        budget_max=25_000_000,
+        target_games=["Valorant"],
+        performance_targets=["144Hz"],
+        noise_preferences="quiet",
+    )
+
+    artifact = generate_build_artifact(
+        build_session_id="bs_priority_trace",
+        intent=intent,
+        catalog=_snapshot(),
+    )
+
+    assert artifact.optimizer_trace is not None
+    assert artifact.total_price_vnd == 17_190_000
+    assert any(item.slot == BuildSlot.VGA and item.sku == "260508255" for item in artifact.items)
+    assert "ưu tiên GPU/VGA" in artifact.optimizer_trace.priority_overrides
+    assert "ưu tiên vận hành êm" in artifact.optimizer_trace.priority_overrides
+    assert artifact.optimizer_trace.budget_allocation.weights["vga"] > 45
+    assert artifact.optimizer_trace.rejected_iteration_count > 0
+    assert any(
+        decision.decision == "rejected"
+        and "Gaming auto-swap bị chặn" in decision.reason_vi
+        for decision in artifact.optimizer_trace.iterations
+    )
+    assert not any("Optimizer" in explanation for explanation in artifact.explanations_vi)
 
 
 def test_generator_keeps_gaming_gpu_optimizer_off_without_candidate_benchmark() -> None:

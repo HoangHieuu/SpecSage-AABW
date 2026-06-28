@@ -166,6 +166,19 @@ not add raw numeric FPS text to generated explanations. Integration proof
 checks the existing generation guard still skips auto-apply when the base
 benchmark already meets the declared target.
 
+`US-035` is verified by focused build generation and orchestration tests, `pnpm
+check`, `pnpm eval:run`, and Harness story verification. Unit proof checks
+config-driven budget allocation, priority overrides, accepted/rejected
+optimizer decisions, and preservation of the benchmark gate for gaming
+auto-swaps. Integration proof checks the LangGraph optimizer step exports
+optimizer-loop counts and tool calls.
+
+`US-036` is verified by the API demo-flow test, browser desktop/mobile proof,
+`pnpm check`, `pnpm eval:run`, and Harness story verification. The demo proof
+must show the Cyberpunk 2077 prompt, optimizer loop panel, benchmark-backed
+warning, alternatives panel, applied build, mock cart handoff, saved feedback,
+and no page-wide horizontal overflow on mobile.
+
 `US-010` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit and integration proof cover SQLite round-trips for sessions, intent
 revisions, builds, applied build versions, and idempotent cart handoffs by

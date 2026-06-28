@@ -168,6 +168,38 @@ class BuildOrchestrationStep(BaseModel):
     completed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class OptimizerBudgetAllocation(BaseModel):
+    use_case: str
+    budget_max_vnd: int | None = None
+    weights: dict[str, int] = Field(default_factory=dict)
+    target_amounts_vnd: dict[str, int] = Field(default_factory=dict)
+    reserved_peripherals_vnd: int = Field(default=0, ge=0)
+    reserved_services_vnd: int = Field(default=0, ge=0)
+    notes_vi: list[str] = Field(default_factory=list)
+
+
+class OptimizerIterationDecision(BaseModel):
+    iteration: int = Field(ge=0)
+    candidate_kind: str | None = None
+    candidate_label_vi: str | None = None
+    decision: Literal["accepted", "rejected", "skipped"]
+    score: int | None = Field(default=None, ge=0, le=100)
+    priority: str | None = None
+    price_delta_vnd: int | None = None
+    total_price_vnd: int | None = None
+    changed_slots: list[str] = Field(default_factory=list)
+    reason_vi: str
+
+
+class OptimizerTrace(BaseModel):
+    max_iterations: int = Field(ge=0)
+    applied_iteration_count: int = Field(default=0, ge=0)
+    rejected_iteration_count: int = Field(default=0, ge=0)
+    priority_overrides: list[str] = Field(default_factory=list)
+    budget_allocation: OptimizerBudgetAllocation
+    iterations: list[OptimizerIterationDecision] = Field(default_factory=list)
+
+
 class TraceReplayEvent(BaseModel):
     event_id: str
     sequence: int
@@ -219,6 +251,7 @@ class BuildArtifact(BaseModel):
     items: list[BuildItem]
     compatibility_report: CompatibilityReport
     performance_profile: PerformanceProfile
+    optimizer_trace: OptimizerTrace | None = None
     explanations_vi: list[str] = Field(default_factory=list)
     warnings_vi: list[str] = Field(default_factory=list)
     orchestration_trace: list[BuildOrchestrationStep] = Field(default_factory=list)

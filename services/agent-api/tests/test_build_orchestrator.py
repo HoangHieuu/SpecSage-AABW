@@ -49,8 +49,35 @@ def test_langgraph_orchestrator_runs_agent_sequence_and_preserves_build_output()
     assert all(step.status == "completed" for step in artifact.orchestration_trace)
     assert artifact.orchestration_trace[0].outputs["catalog_version"] == "catalog_test_orchestrator"
     assert artifact.orchestration_trace[1].outputs["selected_sku_count"] == len(artifact.items)
+    assert artifact.orchestration_trace[1].outputs["max_iterations"] == 2
+    assert artifact.orchestration_trace[1].outputs["priority_override_count"] == 0
     assert artifact.orchestration_trace[-1].outputs["can_approve"] is True
     assert {item.sku for item in artifact.items}.issubset({item.sku for item in _items()})
+
+
+def test_langgraph_orchestrator_exports_optimizer_loop_counts() -> None:
+    intent = BuildIntent(
+        raw_text="PC gaming 25 triệu chơi Cyberpunk 2077 1440p Ultra 144Hz, ưu tiên VGA",
+        use_case=UseCase.GAMING,
+        budget_max=25_000_000,
+        target_games=["Cyberpunk 2077"],
+        performance_targets=["1440p", "Ultra", "144Hz"],
+    )
+
+    artifact = generate_build_with_orchestration(
+        build_session_id="bs_orchestrated_optimizer_loop",
+        intent=intent,
+        catalog=_snapshot(),
+    )
+    optimizer_step = artifact.orchestration_trace[1]
+
+    assert artifact.optimizer_trace is not None
+    assert artifact.optimizer_trace.applied_iteration_count == 1
+    assert "ưu tiên GPU/VGA" in artifact.optimizer_trace.priority_overrides
+    assert optimizer_step.agent == "optimizer"
+    assert optimizer_step.outputs["accepted_iterations"] == 1
+    assert optimizer_step.outputs["priority_override_count"] == 1
+    assert "optimizer_policy.build_budget_allocation" in optimizer_step.tool_calls
 
 
 def test_langgraph_orchestrator_marks_validator_blocked_for_over_budget_build() -> None:

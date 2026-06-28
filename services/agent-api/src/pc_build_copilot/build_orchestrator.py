@@ -79,14 +79,15 @@ def _optimizer_agent(state: BuildOrchestrationState) -> dict[str, object]:
         intent=state["intent"],
         catalog=state["catalog"],
     )
+    optimizer_trace = artifact.optimizer_trace
     return {
         "artifact": artifact,
         "steps": [
             _step(
                 OrchestrationAgent.OPTIMIZER,
                 (
-                    "Optimizer Agent chọn build cơ sở rồi thử tối đa hai biến thể đủ điều kiện "
-                    "trong ngân sách."
+                    "Optimizer Agent dùng chiến lược ngân sách theo use case, đọc priority override "
+                    "và ghi lại các quyết định vòng lặp."
                 ),
                 inputs={
                     "budget_max_vnd": state["intent"].budget_max,
@@ -101,9 +102,23 @@ def _optimizer_agent(state: BuildOrchestrationState) -> dict[str, object]:
                     "optimizer_note_count": sum(
                         1 for explanation in artifact.explanations_vi if "Optimizer" in explanation
                     ),
+                    "max_iterations": optimizer_trace.max_iterations if optimizer_trace else 0,
+                    "accepted_iterations": (
+                        optimizer_trace.applied_iteration_count if optimizer_trace else 0
+                    ),
+                    "rejected_candidates": (
+                        optimizer_trace.rejected_iteration_count if optimizer_trace else 0
+                    ),
+                    "priority_override_count": (
+                        len(optimizer_trace.priority_overrides) if optimizer_trace else 0
+                    ),
                 },
-                tool_calls=["build_generator.generate_build_artifact"],
-                model_version="budget-aware-build-generator-v3",
+                tool_calls=[
+                    "optimizer_policy.build_budget_allocation",
+                    "build_generator.generate_build_artifact",
+                    "build_alternatives.generate_build_alternatives",
+                ],
+                model_version="config-driven-optimizer-loop-v1",
                 started_at=started_at,
                 latency_ms=_elapsed_ms(start),
             )

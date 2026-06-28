@@ -223,6 +223,23 @@ the same exact target. A source-backed GPU lift can move the GPU variant above
 generic capacity/headroom alternatives, while generated build explanations still
 avoid raw numeric FPS text outside benchmark evidence.
 
+`US-035` adds `BuildArtifact.optimizer_trace` as the first inspectable Phase 5
+optimizer loop contract:
+
+- `services/agent-api/src/pc_build_copilot/optimizer_policy.py`
+- `OptimizerBudgetAllocation`
+- `OptimizerIterationDecision`
+- `OptimizerTrace`
+- `apps/web/components/build-copilot-client.tsx`
+
+The loop computes use-case allocation weights, applies priority overrides for
+GPU/VGA, quiet operation, and RGB/aesthetic intent, then records candidate
+decisions as accepted, rejected, or skipped. The existing safety gates still
+own final behavior: catalog-only SKUs, compatibility rules, budget status, and
+benchmark-preserving gaming auto-swaps. `US-036` uses this visible trace in the
+browser demo; it does not add a new endpoint, storage table, checkout adapter,
+or staff/admin surface.
+
 ## Current Commerce Handoff Slice
 
 `US-005` adds mock approval and cart-ready handoff without introducing checkout,
