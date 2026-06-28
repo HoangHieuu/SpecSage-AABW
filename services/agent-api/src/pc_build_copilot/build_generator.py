@@ -5,6 +5,8 @@ from uuid import uuid4
 
 from pc_build_copilot.build_models import (
     BudgetStatus,
+    BuildAlternative,
+    BuildAlternativeKind,
     BuildArtifact,
     BuildItem,
     BuildStatus,
@@ -25,6 +27,9 @@ REQUIRED_BASE_SLOTS = (
     BuildSlot.PSU,
     BuildSlot.CASE,
 )
+OPTIMIZER_MAX_SWAPS = 2
+OPTIMIZER_USE_CASES = {UseCase.CREATOR, UseCase.AI, UseCase.STREAMING, UseCase.GAMING}
+GAMING_OPTIMIZER_MIN_SCORE = 70
 
 
 def generate_build_artifact(
@@ -32,9 +37,46 @@ def generate_build_artifact(
     build_session_id: str,
     intent: BuildIntent,
     catalog: CatalogSnapshot,
+    optimize: bool = True,
 ) -> BuildArtifact:
     selected = _select_skus(intent, catalog.items)
     build_id = f"build_{uuid4().hex}"
+    artifact = _build_artifact_from_selected(
+        build_id=build_id,
+        build_session_id=build_session_id,
+        intent=intent,
+        catalog=catalog,
+        selected=selected,
+        optimizer_notes=[],
+    )
+    if not optimize:
+        return artifact
+
+    optimized_selected, optimizer_notes = _budget_aware_improvement_pass(
+        artifact=artifact,
+        catalog=catalog,
+    )
+    if not optimizer_notes:
+        return artifact
+    return _build_artifact_from_selected(
+        build_id=build_id,
+        build_session_id=build_session_id,
+        intent=intent,
+        catalog=catalog,
+        selected=optimized_selected,
+        optimizer_notes=optimizer_notes,
+    )
+
+
+def _build_artifact_from_selected(
+    *,
+    build_id: str,
+    build_session_id: str,
+    intent: BuildIntent,
+    catalog: CatalogSnapshot,
+    selected: dict[BuildSlot, CatalogSku],
+    optimizer_notes: list[str],
+) -> BuildArtifact:
     compatibility_report = validate_build_compatibility(
         build_id=build_id,
         selected_skus={slot: sku.sku for slot, sku in selected.items()},
@@ -83,12 +125,135 @@ def generate_build_artifact(
         items=items,
         compatibility_report=compatibility_report,
         performance_profile=performance_profile,
-        explanations_vi=_build_explanations(intent, total_price, budget_status, catalog),
+        explanations_vi=_build_explanations(
+            intent,
+            total_price,
+            budget_status,
+            catalog,
+            optimizer_notes,
+        ),
         warnings_vi=warnings,
         mock_cart_payload=MockCartPayload(
             items=[{"sku": item.sku, "url": item.url} for item in selected.values()]
         ),
     )
+
+
+def _budget_aware_improvement_pass(
+    *,
+    artifact: BuildArtifact,
+    catalog: CatalogSnapshot,
+) -> tuple[dict[BuildSlot, CatalogSku], list[str]]:
+    if artifact.intent_snapshot.use_case not in OPTIMIZER_USE_CASES:
+        return _selected_from_artifact(artifact, catalog), []
+    if artifact.budget_status != BudgetStatus.WITHIN_BUDGET or not artifact.can_approve:
+        return _selected_from_artifact(artifact, catalog), []
+    if artifact.budget_max_vnd is None:
+        return _selected_from_artifact(artifact, catalog), []
+
+    from pc_build_copilot.build_alternatives import generate_build_alternatives
+
+    current_artifact = artifact
+    optimizer_notes: list[str] = []
+    applied_kinds: set[BuildAlternativeKind] = set()
+
+    for _ in range(OPTIMIZER_MAX_SWAPS):
+        response = generate_build_alternatives(base_artifact=current_artifact, catalog=catalog)
+        selected_alternative = _select_optimizer_alternative(
+            artifact=current_artifact,
+            alternatives=response.alternatives,
+            applied_kinds=applied_kinds,
+        )
+        if selected_alternative is None:
+            break
+
+        applied_kinds.add(selected_alternative.kind)
+        optimizer_notes.extend(_optimizer_notes_for_alternative(selected_alternative))
+        current_artifact = _build_artifact_from_selected(
+            build_id=artifact.build_id,
+            build_session_id=artifact.build_session_id,
+            intent=artifact.intent_snapshot,
+            catalog=catalog,
+            selected=_selected_from_build_items(selected_alternative.items, catalog),
+            optimizer_notes=optimizer_notes,
+        )
+
+    if not optimizer_notes:
+        return _selected_from_artifact(artifact, catalog), []
+    return _selected_from_artifact(current_artifact, catalog), optimizer_notes
+
+
+def _select_optimizer_alternative(
+    *,
+    artifact: BuildArtifact,
+    alternatives: list[BuildAlternative],
+    applied_kinds: set[BuildAlternativeKind],
+) -> BuildAlternative | None:
+    for alternative in alternatives:
+        if alternative.kind in applied_kinds:
+            continue
+        if not _is_basic_optimizer_candidate(alternative):
+            continue
+        if artifact.intent_snapshot.use_case == UseCase.GAMING:
+            if _is_benchmark_preserving_gaming_candidate(alternative):
+                return alternative
+            continue
+        if alternative.ranking.priority == "recommended":
+            return alternative
+    return None
+
+
+def _is_basic_optimizer_candidate(alternative: BuildAlternative) -> bool:
+    return (
+        alternative.can_approve
+        and alternative.budget_status == BudgetStatus.WITHIN_BUDGET
+    )
+
+
+def _is_benchmark_preserving_gaming_candidate(alternative: BuildAlternative) -> bool:
+    return (
+        alternative.kind == BuildAlternativeKind.NVIDIA_GPU
+        and alternative.ranking.priority in {"recommended", "good_fit"}
+        and alternative.ranking.score >= GAMING_OPTIMIZER_MIN_SCORE
+        and _has_benchmark_evidence(alternative)
+    )
+
+
+def _has_benchmark_evidence(alternative: BuildAlternative) -> bool:
+    return any(
+        evidence.source == "benchmark"
+        for evidence in alternative.performance_profile.evidence
+    )
+
+
+def _optimizer_notes_for_alternative(selected_alternative: BuildAlternative) -> list[str]:
+    return [
+        (
+            f"Optimizer đã thử các biến thể trong ngân sách và chọn {selected_alternative.label_vi} "
+            f"vì đạt ưu tiên {selected_alternative.ranking.score}/100."
+        ),
+        *selected_alternative.ranking.reasons_vi[:2],
+    ]
+
+
+def _selected_from_artifact(
+    artifact: BuildArtifact,
+    catalog: CatalogSnapshot,
+) -> dict[BuildSlot, CatalogSku]:
+    return _selected_from_build_items(artifact.items, catalog)
+
+
+def _selected_from_build_items(
+    build_items: Iterable[BuildItem],
+    catalog: CatalogSnapshot,
+) -> dict[BuildSlot, CatalogSku]:
+    catalog_by_sku = {item.sku: item for item in catalog.items}
+    selected = {}
+    for item in build_items:
+        catalog_item = catalog_by_sku.get(item.sku)
+        if catalog_item is not None:
+            selected[item.slot] = catalog_item
+    return selected
 
 
 def _select_skus(
@@ -149,6 +314,7 @@ def _build_explanations(
     total_price: int,
     budget_status: BudgetStatus,
     catalog: CatalogSnapshot,
+    optimizer_notes: list[str],
 ) -> list[str]:
     use_case = _use_case_label(intent.use_case)
     explanation = [
@@ -166,6 +332,7 @@ def _build_explanations(
     ]
     if budget_status == BudgetStatus.WITHIN_BUDGET:
         explanation.append(f"Tổng giá snapshot là {_format_vnd(total_price)}, nằm trong ngân sách.")
+        explanation.extend(optimizer_notes)
     if budget_status == BudgetStatus.OVER_BUDGET:
         explanation.append(
             "Snapshot hiện tại không có phương án rẻ hơn đủ slot, nên hệ thống trả về "
@@ -192,7 +359,9 @@ def _budget_warnings(
 
 def _item_explanation(slot: BuildSlot, item: CatalogSku, intent: BuildIntent) -> str:
     if slot == BuildSlot.VGA:
-        return "GPU được chọn để ưu tiên workload gaming/creator mà không dùng FPS phỏng đoán."
+        if intent.use_case in {UseCase.OFFICE, UseCase.STUDENT}:
+            return "GPU được chọn để xuất hình vì CPU trong snapshot không có iGPU; không phải cam kết tăng FPS."
+        return "GPU được chọn để ưu tiên workload gaming/creator; FPS chỉ hiển thị khi có benchmark matrix khớp."
     if slot == BuildSlot.PSU:
         return "PSU được chọn vì rule engine cần công suất và đầu cấp nguồn đủ cho cấu hình."
     if slot == BuildSlot.CASE:

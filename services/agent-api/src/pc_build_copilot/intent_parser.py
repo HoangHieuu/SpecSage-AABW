@@ -25,6 +25,9 @@ APP_ALIASES = {
     "after effects": "Adobe After Effects",
     "photoshop": "Adobe Photoshop",
     "blender": "Blender",
+    "obs": "OBS Studio",
+    "streaming": "Streaming",
+    "stream": "Streaming",
     "autocad": "AutoCAD",
     "solidworks": "SolidWorks",
     "local llm": "Local LLM",
@@ -51,6 +54,7 @@ def parse_intent(message: str, preset: UseCase | None = None) -> tuple[BuildInte
         target_games=_find_aliases(normalized, GAME_ALIASES),
         target_apps=_find_aliases(normalized, APP_ALIASES),
         performance_targets=_parse_performance_targets(message),
+        monitor_count=_parse_monitor_count(normalized),
         form_factor=_parse_form_factor(normalized),
         brand_preferences=_parse_brands(message),
         noise_preferences=_parse_noise_preference(normalized),
@@ -149,10 +153,44 @@ def _parse_performance_targets(message: str) -> list[str]:
     targets = []
     for match in re.finditer(r"\b(?:\d{3,4}p|[1248]k|\d{2,3}\s*(?:fps|hz))\b", message, re.IGNORECASE):
         targets.append(re.sub(r"\s+", "", match.group(0)))
+    for match in re.finditer(r"\b(?:7|13|70)\s*b\b", message, re.IGNORECASE):
+        targets.append(re.sub(r"\s+", "", match.group(0)).upper())
     for quality in ["Low", "Medium", "High", "Ultra"]:
         if re.search(rf"\b{quality}\b", message, re.IGNORECASE):
             targets.append(quality)
     return list(dict.fromkeys(targets))
+
+
+def _parse_monitor_count(text: str) -> int | None:
+    monitor_terms = r"(?:màn hình|man hinh|monitor|monitors|display|displays)"
+    if not re.search(monitor_terms, text):
+        return None
+
+    explicit_count = re.search(rf"\b([1-4])\s*{monitor_terms}\b", text)
+    if explicit_count:
+        return int(explicit_count.group(1))
+
+    trailing_count = re.search(rf"\b{monitor_terms}\s*(?:x|:)?\s*([1-4])\b", text)
+    if trailing_count:
+        return int(trailing_count.group(1))
+
+    word_counts = {
+        "một": 1,
+        "mot": 1,
+        "one": 1,
+        "hai": 2,
+        "dual": 2,
+        "two": 2,
+        "ba": 3,
+        "three": 3,
+        "bốn": 4,
+        "bon": 4,
+        "four": 4,
+    }
+    for word, count in word_counts.items():
+        if re.search(rf"\b{re.escape(word)}(?:[-\s]+){monitor_terms}\b", text):
+            return count
+    return None
 
 
 def _parse_form_factor(text: str) -> str | None:
@@ -193,6 +231,9 @@ def _parse_aesthetic_preference(text: str) -> str | None:
 
 def _parse_components(message: str) -> list[str]:
     components = [match.group(0).strip() for match in COMPONENT_PATTERN.finditer(message)]
+    normalized = _normalize(message)
+    if any(token in normalized for token in ["monitor", "màn hình", "man hinh"]):
+        components.append("monitor")
     return list(dict.fromkeys(components))
 
 

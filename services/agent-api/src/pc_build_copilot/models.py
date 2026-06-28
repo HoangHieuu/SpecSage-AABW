@@ -65,6 +65,7 @@ class BuildIntent(BaseModel):
     target_games: list[str] = Field(default_factory=list)
     target_apps: list[str] = Field(default_factory=list)
     performance_targets: list[str] = Field(default_factory=list)
+    monitor_count: int | None = Field(default=None, ge=1, le=4)
     form_factor: str | None = None
     brand_preferences: list[str] = Field(default_factory=list)
     noise_preferences: str | None = None

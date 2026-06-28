@@ -93,7 +93,35 @@ class PerformanceConfidence(str, Enum):
 class PerformanceEvidence(BaseModel):
     label: str
     value: str
-    source: Literal["catalog_spec", "intent", "rule"]
+    source: Literal["catalog_spec", "intent", "rule", "benchmark"]
+    source_label: str | None = None
+    source_url: str | None = None
+
+
+class PerformanceBalance(BaseModel):
+    score: int = Field(ge=0, le=100)
+    interpretation_vi: str
+    limiting_component: Literal["cpu", "gpu", "ram", "storage", "unknown"]
+    suggestions_vi: list[str] = Field(default_factory=list)
+    factors: dict[str, int] = Field(default_factory=dict)
+
+
+class PerformanceWorkloadProfile(BaseModel):
+    name: str
+    category: Literal["video_editing", "three_d", "photo_editing", "streaming", "local_llm"]
+    fit_level: PerformanceFitLevel
+    bottlenecks: list[
+        Literal[
+            "cpu_bound",
+            "gpu_bound",
+            "ram_limited",
+            "storage_limited",
+            "vram_limited",
+            "cuda_preferred",
+        ]
+    ] = Field(default_factory=list)
+    requirement_summary_vi: str
+    recommendation_vi: str
 
 
 class PerformanceProfile(BaseModel):
@@ -105,6 +133,8 @@ class PerformanceProfile(BaseModel):
     bottleneck_notes_vi: list[str] = Field(default_factory=list)
     warnings_vi: list[str] = Field(default_factory=list)
     evidence: list[PerformanceEvidence] = Field(default_factory=list)
+    balance: PerformanceBalance | None = None
+    workload_profiles: list[PerformanceWorkloadProfile] = Field(default_factory=list)
 
 
 class BuildItem(BaseModel):
@@ -205,11 +235,19 @@ class BuildAlternativeChangedSlot(BaseModel):
     reason_vi: str
 
 
+class BuildAlternativeRanking(BaseModel):
+    rank: int = Field(default=0, ge=0)
+    score: int = Field(default=0, ge=0, le=100)
+    priority: Literal["recommended", "good_fit", "situational", "low_priority"] = "low_priority"
+    reasons_vi: list[str] = Field(default_factory=list)
+
+
 class BuildAlternative(BaseModel):
     variant_id: str
     kind: BuildAlternativeKind
     label_vi: str
     summary_vi: str
+    ranking: BuildAlternativeRanking = Field(default_factory=BuildAlternativeRanking)
     total_price_vnd: int
     price_delta_vnd: int
     budget_status: BudgetStatus

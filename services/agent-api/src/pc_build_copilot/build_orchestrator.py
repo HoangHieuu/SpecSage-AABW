@@ -84,7 +84,10 @@ def _optimizer_agent(state: BuildOrchestrationState) -> dict[str, object]:
         "steps": [
             _step(
                 OrchestrationAgent.OPTIMIZER,
-                "Optimizer Agent chọn một cấu hình ứng viên bằng heuristic hiện tại.",
+                (
+                    "Optimizer Agent chọn build cơ sở rồi thử tối đa hai biến thể đủ điều kiện "
+                    "trong ngân sách."
+                ),
                 inputs={
                     "budget_max_vnd": state["intent"].budget_max,
                     "candidate_sku_count": state.get("candidate_sku_count"),
@@ -95,9 +98,12 @@ def _optimizer_agent(state: BuildOrchestrationState) -> dict[str, object]:
                     "selected_sku_count": len(artifact.items),
                     "total_price_vnd": artifact.total_price_vnd,
                     "budget_status": artifact.budget_status.value,
+                    "optimizer_note_count": sum(
+                        1 for explanation in artifact.explanations_vi if "Optimizer" in explanation
+                    ),
                 },
                 tool_calls=["build_generator.generate_build_artifact"],
-                model_version="heuristic-build-generator-v1",
+                model_version="budget-aware-build-generator-v3",
                 started_at=started_at,
                 latency_ms=_elapsed_ms(start),
             )
@@ -149,7 +155,7 @@ def _performance_agent(state: BuildOrchestrationState) -> dict[str, object]:
         "steps": [
             _step(
                 OrchestrationAgent.PERFORMANCE,
-                "Performance Agent tạo workload fit định tính từ fact trong catalog, không bịa FPS.",
+                "Performance Agent tạo workload fit từ catalog facts và benchmark matrix khi khớp, không bịa FPS.",
                 inputs={
                     "use_case": profile.use_case,
                     "selected_sku_count": len(artifact.items),
@@ -158,9 +164,10 @@ def _performance_agent(state: BuildOrchestrationState) -> dict[str, object]:
                     "fit_level": profile.fit_level.value,
                     "confidence": profile.confidence.value,
                     "evidence_count": len(profile.evidence),
+                    "balance_score": profile.balance.score if profile.balance else None,
                 },
                 tool_calls=["performance_profile.generate_performance_profile"],
-                model_version="qualitative-performance-fit-v1",
+                model_version="benchmark-aware-performance-fit-v1",
                 started_at=started_at,
                 latency_ms=_elapsed_ms(start),
             )

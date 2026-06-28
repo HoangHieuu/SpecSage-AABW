@@ -8,15 +8,19 @@ from pc_build_copilot.build_models import (
     BuildAlternative,
     BuildAlternativeChangedSlot,
     BuildAlternativeKind,
+    BuildAlternativeRanking,
     BuildAlternativesResponse,
     BuildArtifact,
     BuildItem,
     BuildStatus,
+    PerformanceFitLevel,
     MockCartPayload,
+    PerformanceProfile,
 )
 from pc_build_copilot.catalog_models import CatalogSku, CatalogSnapshot, ComponentCategory
 from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.compatibility_rules import validate_build_compatibility
+from pc_build_copilot.models import UseCase
 from pc_build_copilot.performance_profile import generate_performance_profile
 
 
@@ -38,6 +42,7 @@ def generate_build_alternatives(
         )
         if alternative is not None:
             alternatives.append(alternative)
+    alternatives = _rank_alternatives(base_artifact, alternatives)
 
     return BuildAlternativesResponse(
         build_id=base_artifact.build_id,
@@ -311,6 +316,230 @@ def _build_alternative(
         ],
         warnings_vi=warnings,
     )
+
+
+def _rank_alternatives(
+    base_artifact: BuildArtifact,
+    alternatives: list[BuildAlternative],
+) -> list[BuildAlternative]:
+    scored = [
+        alternative.model_copy(
+            update={"ranking": _score_alternative(base_artifact, alternative)}
+        )
+        for alternative in alternatives
+    ]
+    sorted_alternatives = sorted(
+        scored,
+        key=lambda alternative: (
+            -alternative.ranking.score,
+            _priority_order(alternative.ranking.priority),
+            alternative.price_delta_vnd,
+            alternative.kind.value,
+        ),
+    )
+    return [
+        alternative.model_copy(
+            update={
+                "ranking": alternative.ranking.model_copy(update={"rank": index})
+            }
+        )
+        for index, alternative in enumerate(sorted_alternatives, start=1)
+    ]
+
+
+def _score_alternative(
+    base_artifact: BuildArtifact,
+    alternative: BuildAlternative,
+) -> BuildAlternativeRanking:
+    score = 40
+    reasons: list[str] = []
+    base_profile = base_artifact.performance_profile
+    alternative_profile = alternative.performance_profile
+
+    if alternative.can_approve:
+        score += 15
+        reasons.append("Biến thể vẫn qua compatibility và không vượt ngân sách.")
+    else:
+        score -= 30
+        reasons.append("Ưu tiên thấp vì biến thể chưa thể duyệt ngay.")
+
+    if alternative.budget_status == BudgetStatus.WITHIN_BUDGET:
+        score += 10
+    elif alternative.budget_status == BudgetStatus.OVER_BUDGET:
+        penalty = min(35, 12 + alternative.budget_gap_vnd // 500_000)
+        score -= penalty
+        reasons.append("Vượt ngân sách nên bị hạ thứ tự ưu tiên.")
+
+    score += _balance_delta_score(base_profile, alternative_profile, reasons)
+    score += _fit_delta_score(base_profile, alternative_profile, reasons)
+    score += _workload_delta_score(base_profile, alternative_profile, reasons)
+    score += _use_case_bonus(base_artifact, alternative, reasons)
+    score -= _new_warning_penalty(base_profile, alternative_profile, reasons)
+
+    score = max(0, min(100, score))
+    if not reasons:
+        reasons.append("Giữ làm tùy chọn thấp ưu tiên vì chưa có lợi ích rõ từ profile.")
+    return BuildAlternativeRanking(
+        score=score,
+        priority=_priority_for_score(score),
+        reasons_vi=reasons[:4],
+    )
+
+
+def _balance_delta_score(
+    base_profile: PerformanceProfile,
+    alternative_profile: PerformanceProfile,
+    reasons: list[str],
+) -> int:
+    if not base_profile.balance or not alternative_profile.balance:
+        return 0
+    delta = alternative_profile.balance.score - base_profile.balance.score
+    if delta >= 8:
+        reasons.append(
+            f"Tăng balance score từ {base_profile.balance.score} lên {alternative_profile.balance.score}."
+        )
+        return min(18, delta)
+    if delta <= -8:
+        reasons.append(
+            f"Giảm balance score từ {base_profile.balance.score} xuống {alternative_profile.balance.score}."
+        )
+        return max(-14, delta // 2)
+    return 0
+
+
+def _fit_delta_score(
+    base_profile: PerformanceProfile,
+    alternative_profile: PerformanceProfile,
+    reasons: list[str],
+) -> int:
+    delta = _fit_value(alternative_profile.fit_level) - _fit_value(base_profile.fit_level)
+    if delta > 0:
+        reasons.append("Cải thiện mức workload fit tổng thể.")
+        return 18 * delta
+    if delta < 0:
+        reasons.append("Workload fit tổng thể thấp hơn build gốc.")
+        return 12 * delta
+    return 0
+
+
+def _workload_delta_score(
+    base_profile: PerformanceProfile,
+    alternative_profile: PerformanceProfile,
+    reasons: list[str],
+) -> int:
+    base_worst = _worst_workload_fit(base_profile)
+    alternative_worst = _worst_workload_fit(alternative_profile)
+    delta = alternative_worst - base_worst
+    if delta > 0:
+        reasons.append("Cải thiện app-fit cho workload đã khai báo.")
+        return 16 * delta
+    if delta < 0:
+        reasons.append("App-fit thấp hơn build gốc.")
+        return 10 * delta
+    return 0
+
+
+def _use_case_bonus(
+    base_artifact: BuildArtifact,
+    alternative: BuildAlternative,
+    reasons: list[str],
+) -> int:
+    intent = base_artifact.intent_snapshot
+    base_profile = base_artifact.performance_profile
+    bonus = 0
+    if alternative.kind == BuildAlternativeKind.RAM_UPGRADE:
+        if intent.use_case in {UseCase.CREATOR, UseCase.AI} or _has_bottleneck(base_profile, "ram_limited"):
+            bonus += 18
+            reasons.append("RAM là ưu tiên tốt cho creator, AI hoặc đa nhiệm nặng.")
+        elif intent.use_case in {UseCase.OFFICE, UseCase.STUDENT}:
+            bonus += 4
+    elif alternative.kind == BuildAlternativeKind.STORAGE_UPGRADE:
+        if intent.use_case in {UseCase.GAMING, UseCase.CREATOR} or _has_bottleneck(base_profile, "storage_limited"):
+            bonus += 12
+            reasons.append("SSD lớn hơn phù hợp game, project hoặc scratch disk.")
+        elif intent.use_case in {UseCase.OFFICE, UseCase.STUDENT}:
+            bonus += 6
+    elif alternative.kind == BuildAlternativeKind.NVIDIA_GPU:
+        if intent.use_case in {UseCase.AI, UseCase.CREATOR, UseCase.STREAMING}:
+            bonus += 24
+            reasons.append("GPU NVIDIA phù hợp hơn với workflow CUDA/encoder phổ biến.")
+        if _has_bottleneck(base_profile, "cuda_preferred") or _has_warning(base_profile, "CUDA"):
+            bonus += 16
+            reasons.append("Giảm rủi ro toolchain đang ưu tiên CUDA/NVIDIA.")
+        elif intent.use_case == UseCase.GAMING and (
+            _has_warning(base_profile, "PERF_BELOW_TARGET")
+            or _limiting_component(base_profile) == "gpu"
+        ):
+            bonus += 8
+    elif alternative.kind == BuildAlternativeKind.PSU_HEADROOM:
+        bonus += 6
+        if intent.use_case in {UseCase.GAMING, UseCase.CREATOR, UseCase.AI}:
+            bonus += 4
+            reasons.append("PSU dư tải hữu ích hơn nếu dự kiến nâng GPU sau này.")
+    return bonus
+
+
+def _new_warning_penalty(
+    base_profile: PerformanceProfile,
+    alternative_profile: PerformanceProfile,
+    reasons: list[str],
+) -> int:
+    new_warning_count = max(
+        0,
+        len(alternative_profile.warnings_vi) - len(base_profile.warnings_vi),
+    )
+    if new_warning_count:
+        reasons.append("Có thêm cảnh báo performance so với build gốc.")
+    return min(15, new_warning_count * 5)
+
+
+def _fit_value(fit_level: PerformanceFitLevel) -> int:
+    return {
+        PerformanceFitLevel.GOOD: 3,
+        PerformanceFitLevel.ADEQUATE: 2,
+        PerformanceFitLevel.LIMITED: 1,
+        PerformanceFitLevel.UNKNOWN: 0,
+    }[fit_level]
+
+
+def _worst_workload_fit(profile: PerformanceProfile) -> int:
+    if not profile.workload_profiles:
+        return _fit_value(profile.fit_level)
+    return min(_fit_value(workload.fit_level) for workload in profile.workload_profiles)
+
+
+def _has_bottleneck(profile: PerformanceProfile, bottleneck: str) -> bool:
+    return any(
+        bottleneck in workload.bottlenecks
+        for workload in profile.workload_profiles
+    )
+
+
+def _has_warning(profile: PerformanceProfile, token: str) -> bool:
+    return any(token in warning for warning in profile.warnings_vi)
+
+
+def _limiting_component(profile: PerformanceProfile) -> str | None:
+    return profile.balance.limiting_component if profile.balance else None
+
+
+def _priority_for_score(score: int) -> str:
+    if score >= 80:
+        return "recommended"
+    if score >= 65:
+        return "good_fit"
+    if score >= 45:
+        return "situational"
+    return "low_priority"
+
+
+def _priority_order(priority: str) -> int:
+    return {
+        "recommended": 0,
+        "good_fit": 1,
+        "situational": 2,
+        "low_priority": 3,
+    }[priority]
 
 
 def _build_items(
