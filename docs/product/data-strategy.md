@@ -89,6 +89,8 @@ FPS numbers.
   `services/agent-api/catalog/catalog_sources.json`
 - Capture command:
   `pnpm catalog:capture`
+- Source coverage report:
+  `pnpm catalog:source-report`
 - Sync command:
   `pnpm catalog:sync`
 - Read-only API:
@@ -123,6 +125,13 @@ upserts a manifest entry with relative path, source label, optional source URL,
 and optional category hint. It does not make the snapshot live or complete:
 captured SKUs still need compatibility-critical overrides before they should be
 used in recommendations.
+
+`US-020` adds staged catalog sources and `pnpm catalog:source-report`. Manifest
+entries default to enabled; entries with `enabled=false` are skipped by
+`pnpm catalog:sync` but included in the source report. The current staged
+captures cover CPU, mainboard, RAM, VGA, storage, PSU, case, cooler, and
+monitor public category pages from 2026-06-28. They provide broad candidate
+coverage for future curation, not recommendation-eligible SKUs yet.
 
 ## Commerce Adapter Boundary
 

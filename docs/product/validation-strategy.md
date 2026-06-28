@@ -150,6 +150,13 @@ story verification. Unit proof covers local input capture, invalid payload
 rejection, and manifest upsert idempotency. Integration proof uses a saved
 fixture so normal validation does not depend on live Phong Vu availability.
 
+`US-020` is verified by focused staged-source tests, `pnpm
+catalog:source-report`, `pnpm catalog:sync`, `pnpm check`, `pnpm eval:run`, and
+Harness story verification. Unit proof covers disabled source skipping, staged
+manifest entries, current Teko listing normalization, source report counts, and
+invalid staged rows. Integration proof checks broad staged captures are counted
+without changing the active validation-clean snapshot.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.

@@ -139,6 +139,7 @@ Typesense, Postgres, or admin catalog editing.
 - `services/agent-api/catalog/catalog_sources.json`
 - `services/agent-api/src/pc_build_copilot/catalog_cli.py`
 - `services/agent-api/src/pc_build_copilot/catalog_capture_cli.py`
+- `services/agent-api/src/pc_build_copilot/catalog_source_report_cli.py`
 - `services/agent-api/catalog/catalog_snapshot.json`
 
 The manifest lists saved public Phong Vu payloads in deterministic order. The
@@ -152,6 +153,12 @@ private APIs.
 public Phong Vu category HTML before writing a fixture or upserting a manifest
 entry. Tests use local input files so the normal quality gate does not depend
 on live Phong Vu availability.
+
+`US-020` adds staged manifest entries with `enabled=false`. Staged sources are
+excluded from `catalog:sync` and active recommendations, but
+`pnpm catalog:source-report` parses them to report candidate counts, duplicate
+counts, invalid rows, and category coverage. This keeps broad public captures
+auditable while preserving the deterministic active catalog gate.
 
 ## API Boundary
 

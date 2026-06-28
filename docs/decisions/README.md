@@ -22,6 +22,7 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0018` | Catalog variety health before broad SKU expansion |
 | `0019` | Catalog source manifest before live scraping |
 | `0020` | Public category capture before automated scraping |
+| `0021` | Staged catalog captures before recommendations |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:

@@ -69,6 +69,8 @@ The first demo should prove a narrow vertical slice:
     warnings before broader SKU expansion.
 16. Engineers can capture saved public Phong Vu category payloads into fixtures
     and manifest entries before broadening the local catalog snapshot.
+17. Engineers can stage captured category payloads and report candidate
+    coverage without making unverified SKUs recommendation-eligible.
 
 Current first-slice implementation reaches step 10 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, and mock
@@ -108,6 +110,9 @@ coverage can be added without changing parser code for each category.
 `US-019` adds a local capture command for public category payloads so fixture
 creation and manifest updates are repeatable before any scheduled scraping or
 private catalog API integration.
+`US-020` adds staged source entries and a source coverage report so broad public
+category captures can be measured before verified overrides make any new SKU
+eligible for recommendation.
 
 Out of first-slice scope unless a later story selects it:
 
