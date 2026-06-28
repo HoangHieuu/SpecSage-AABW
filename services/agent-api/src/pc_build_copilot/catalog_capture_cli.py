@@ -26,6 +26,7 @@ class CatalogCaptureResult:
     output_path: Path
     product_count: int
     manifest_path: Path | None = None
+    enabled: bool = True
 
 
 def capture_category_payload(
@@ -37,6 +38,7 @@ def capture_category_payload(
     category_hint: ComponentCategory | None = None,
     source: str = "phongvu_public_category_capture",
     source_url: str | None = None,
+    enabled: bool = True,
     timeout_seconds: float = 20.0,
 ) -> CatalogCaptureResult:
     if (input_path is None) == (url is None):
@@ -60,12 +62,14 @@ def capture_category_payload(
             category_hint=category_hint,
             source=source,
             source_url=resolved_source_url,
+            enabled=enabled,
         )
 
     return CatalogCaptureResult(
         output_path=output_path,
         product_count=product_count,
         manifest_path=manifest_path,
+        enabled=enabled,
     )
 
 
@@ -100,12 +104,13 @@ def _upsert_manifest_source(
     category_hint: ComponentCategory | None,
     source: str,
     source_url: str | None,
+    enabled: bool,
 ) -> None:
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest = _load_manifest(manifest_path)
     sources = manifest["sources"]
 
-    entry: dict[str, str] = {
+    entry: dict[str, str | bool] = {
         "input": _manifest_relative_path(manifest_path, output_path),
         "source": source,
     }
@@ -113,6 +118,8 @@ def _upsert_manifest_source(
         entry["source_url"] = source_url
     if category_hint is not None:
         entry["category_hint"] = category_hint.value
+    if not enabled:
+        entry["enabled"] = False
 
     for index, existing in enumerate(sources):
         if existing.get("input") == entry["input"] or (
@@ -171,6 +178,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--category-hint", choices=[item.value for item in ComponentCategory])
     parser.add_argument("--source", default="phongvu_public_category_capture")
     parser.add_argument("--source-url")
+    parser.add_argument(
+        "--staged",
+        action="store_true",
+        help="Add manifest entry as enabled=false so catalog:sync skips it.",
+    )
     parser.add_argument("--timeout-seconds", type=float, default=20.0)
     args = parser.parse_args(argv)
 
@@ -185,15 +197,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             else None,
             source=args.source,
             source_url=args.source_url,
+            enabled=not args.staged,
             timeout_seconds=args.timeout_seconds,
         )
     except CatalogParseError as exc:
         print(f"Catalog capture failed: {exc}", file=sys.stderr)
         return 1
 
-    manifest_text = (
-        f"; manifest updated at {result.manifest_path}" if result.manifest_path else ""
-    )
+    manifest_text = ""
+    if result.manifest_path:
+        state = "enabled" if result.enabled else "staged"
+        manifest_text = f"; manifest updated at {result.manifest_path} ({state})"
     print(
         f"Captured {result.product_count} SKU candidates to {result.output_path}"
         f"{manifest_text}."

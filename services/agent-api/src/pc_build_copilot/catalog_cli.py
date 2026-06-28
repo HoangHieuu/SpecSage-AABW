@@ -24,6 +24,7 @@ class CatalogSourceInput:
     category_hint: ComponentCategory | None = None
     source_url: str | None = None
     source: str = "phongvu_next_data_fixture"
+    enabled: bool = True
 
 
 def build_snapshot(
@@ -102,7 +103,9 @@ def build_snapshot_from_sources(
     return snapshot
 
 
-def load_source_manifest(path: Path) -> list[CatalogSourceInput]:
+def load_source_manifest(
+    path: Path, *, include_disabled: bool = False
+) -> list[CatalogSourceInput]:
     loaded = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(loaded, dict):
         raise CatalogParseError("Catalog source manifest must be a JSON object.")
@@ -115,6 +118,10 @@ def load_source_manifest(path: Path) -> list[CatalogSourceInput]:
     for index, raw_source in enumerate(sources):
         if not isinstance(raw_source, dict):
             raise CatalogParseError(f"Catalog source {index} must be a JSON object.")
+
+        enabled = _optional_bool(raw_source.get("enabled"), index)
+        if not enabled and not include_disabled:
+            continue
 
         input_value = raw_source.get("input") or raw_source.get("path")
         if not isinstance(input_value, str) or not input_value.strip():
@@ -134,6 +141,7 @@ def load_source_manifest(path: Path) -> list[CatalogSourceInput]:
                 category_hint=category_hint,
                 source_url=source_url,
                 source=source or "phongvu_next_data_fixture",
+                enabled=enabled,
             )
         )
     return parsed_sources
@@ -158,6 +166,20 @@ def _optional_str(value: Any, field: str, index: int) -> str | None:
     if not isinstance(value, str):
         raise CatalogParseError(f"Catalog source {index} {field} must be a string.")
     return value
+
+
+def _optional_bool(value: Any, index: int) -> bool:
+    if value in (None, ""):
+        return True
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "enabled"}:
+            return True
+        if normalized in {"false", "0", "no", "disabled", "staged"}:
+            return False
+    raise CatalogParseError(f"Catalog source {index} enabled must be a boolean.")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
