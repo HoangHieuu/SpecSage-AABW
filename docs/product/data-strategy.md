@@ -133,6 +133,13 @@ captures cover CPU, mainboard, RAM, VGA, storage, PSU, case, cooler, and
 monitor public category pages from 2026-06-28. They provide broad candidate
 coverage for future curation, not recommendation-eligible SKUs yet.
 
+`US-022` adds curated subset promotion through `include_skus` in
+`catalog_sources.json`. Enabled curated entries can point at staged public
+category fixtures but admit only reviewed SKUs into the active snapshot. The
+first promoted subset adds one CPU, one mainboard, and one case SKU with
+compatibility overrides, bringing every required full-build demo category to at
+least two active SKUs while keeping the full category pages staged.
+
 ## Commerce Adapter Boundary
 
 Hackathon:

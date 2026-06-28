@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-021` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-022` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -47,6 +47,9 @@ category pages can now be staged and counted without becoming
 recommendation-eligible until compatibility overrides are verified. Committed
 catalog fixtures now store sanitized `__NEXT_DATA__` payloads instead of full
 page HTML so page-shell environment keys are not checked in.
+Curated manifest entries can now promote reviewed SKUs from staged captures
+with `include_skus`, so the active catalog has two choices in every required
+full-build category while full category pages remain staged.
 
 Accepted product direction:
 
@@ -107,6 +110,7 @@ The initial implementation backlog is intentionally small:
 19. `US-019` - public catalog payload capture CLI. Implemented.
 20. `US-020` - staged catalog source coverage report. Implemented.
 21. `US-021` - sanitized catalog fixtures. Implemented.
+22. `US-022` - curated catalog subset promotion. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -181,6 +185,7 @@ scripts/bin/harness-cli story verify US-018
 scripts/bin/harness-cli story verify US-019
 scripts/bin/harness-cli story verify US-020
 scripts/bin/harness-cli story verify US-021
+scripts/bin/harness-cli story verify US-022
 pnpm eval:run
 ```
 

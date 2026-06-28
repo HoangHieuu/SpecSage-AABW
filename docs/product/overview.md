@@ -71,6 +71,8 @@ The first demo should prove a narrow vertical slice:
     and manifest entries before broadening the local catalog snapshot.
 17. Engineers can stage captured category payloads and report candidate
     coverage without making unverified SKUs recommendation-eligible.
+18. Engineers can promote a reviewed subset from staged category captures into
+    the active catalog without enabling the full unverified source.
 
 Current first-slice implementation reaches step 10 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, and mock
@@ -116,6 +118,9 @@ eligible for recommendation.
 `US-021` sanitizes committed catalog fixtures so public page-shell environment
 blocks are removed while the parseable `__NEXT_DATA__` product payload remains
 available to local catalog tooling.
+`US-022` promotes three reviewed SKUs from staged CPU, mainboard, and case
+captures via `include_skus`, so the active local snapshot has two choices in
+every required full-build category without enabling full category pages.
 
 Out of first-slice scope unless a later story selects it:
 

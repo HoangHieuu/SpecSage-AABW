@@ -21,6 +21,15 @@ Initial PC Build Copilot story packets:
 | `US-011` | LangGraph build orchestration foundation | implemented | normal |
 | `US-012` | Agent trace session replay foundation | implemented | normal |
 | `US-013` | Quality evaluation suite foundation | implemented | normal |
+| `US-014` | CI quality gate foundation | implemented | normal |
+| `US-015` | User feedback loop foundation | implemented | normal |
+| `US-016` | Catalog demo readiness health | implemented | normal |
+| `US-017` | Catalog demo variety health | implemented | normal |
+| `US-018` | Multi-source catalog ingestion foundation | implemented | normal |
+| `US-019` | Public catalog payload capture CLI | implemented | normal |
+| `US-020` | Staged catalog source coverage report | implemented | normal |
+| `US-021` | Sanitized catalog fixtures | implemented | high-risk |
+| `US-022` | Curated catalog subset promotion | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

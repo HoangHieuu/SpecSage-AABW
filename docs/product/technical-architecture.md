@@ -160,6 +160,13 @@ excluded from `catalog:sync` and active recommendations, but
 counts, invalid rows, and category coverage. This keeps broad public captures
 auditable while preserving the deterministic active catalog gate.
 
+`US-022` adds `include_skus` to manifest entries. When present, sync and source
+reporting normalize the referenced fixture but keep only those listed SKUs.
+This lets the local mirror promote reviewed products from staged captures while
+leaving the broad category pages non-eligible. The active snapshot now contains
+14 SKUs with two CPU, mainboard, RAM, storage, VGA, PSU, and case choices and
+zero catalog validation issues.
+
 ## API Boundary
 
 First public endpoints should be introduced with OpenAPI contracts:

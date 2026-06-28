@@ -162,6 +162,12 @@ scans, `pnpm catalog:source-report`, `pnpm catalog:sync`, `pnpm check`, `pnpm
 eval:run`, and Harness trace evidence. Unit proof covers removing page-shell
 environment data while preserving parseable `__NEXT_DATA__` products.
 
+`US-022` is verified by focused manifest-subset tests, `pnpm
+catalog:source-report`, `pnpm catalog:sync`, `pnpm check`, `pnpm eval:run`, and
+Harness story verification. Unit proof covers `include_skus` filtering, missing
+SKU failures, source-report counts, and the active snapshot reaching the
+recommended two-SKU coverage for every required full-build category.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.
