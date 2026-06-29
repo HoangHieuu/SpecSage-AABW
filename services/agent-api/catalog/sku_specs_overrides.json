@@ -25,6 +25,20 @@
       "integrated_graphics": false
     }
   },
+  "260501434": {
+    "category": "cpu",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/cpu-intel-core-i7-14700f-tray--s260501434"
+    ],
+    "specs": {
+      "socket": "LGA1700",
+      "tdp_w": 65,
+      "cores": 20,
+      "threads": 28,
+      "integrated_graphics": false
+    }
+  },
   "230203929": {
     "category": "mainboard",
     "specs_confidence": "verified",
@@ -44,6 +58,22 @@
     "spec_source_urls": [
       "https://www.msi.com/Motherboard/B760M-GAMING-PLUS-WIFI-DDR4/Specification",
       "https://phongvu.vn/bo-mach-chinh-mainboard-msi-b760m-gaming-plus-wifi-ddr4--s241105117"
+    ],
+    "specs": {
+      "socket": "LGA1700",
+      "chipset": "B760",
+      "memory_type": "DDR4",
+      "form_factor": "mATX",
+      "supported_cpu_generations": ["Intel 12th Gen", "Intel 13th Gen", "Intel 14th Gen"],
+      "max_memory_gb": 128,
+      "m2_slots": 2
+    }
+  },
+  "240900459": {
+    "category": "mainboard",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/mainboard-gigabyte-b760m-g-p-wifi-ddr4--s240900459"
     ],
     "specs": {
       "socket": "LGA1700",
@@ -77,6 +107,20 @@
       "form_factor": "UDIMM"
     }
   },
+  "251111506": {
+    "category": "ram",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/bo-nho-trong-ram-patriot-ddr4-16gb-3200mt-s-cl22-1-2v-udimm-psp416g3200h1--s251111506"
+    ],
+    "specs": {
+      "memory_type": "DDR4",
+      "capacity_gb": 16,
+      "module_count": 1,
+      "speed_mhz": 3200,
+      "form_factor": "UDIMM"
+    }
+  },
   "221000008": {
     "category": "storage",
     "specs_confidence": "verified",
@@ -92,6 +136,19 @@
     "specs_confidence": "verified",
     "specs": {
       "capacity_gb": 1000,
+      "interface": "NVMe",
+      "form_factor": "M.2 2280",
+      "pcie": "3.0"
+    }
+  },
+  "251111511": {
+    "category": "storage",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/o-cung-gan-trong-patriot-ssd-p300-512gb-nvme-m-2-pcie-p300p512gm28--s251111511"
+    ],
+    "specs": {
+      "capacity_gb": 512,
       "interface": "NVMe",
       "form_factor": "M.2 2280",
       "pcie": "3.0"
@@ -125,6 +182,23 @@
       "slot_width": 2
     }
   },
+  "260100504": {
+    "category": "vga",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/vga-inno3d-rtx-5060-twin-x2-8gb--s260100504"
+    ],
+    "specs": {
+      "chipset": "RTX 5060",
+      "vram_gb": 8,
+      "memory_type": "GDDR7",
+      "pcie": "5.0",
+      "tdp_w": 145,
+      "length_mm": 250,
+      "power_connectors": ["1x8-pin"],
+      "slot_width": 2
+    }
+  },
   "210800662": {
     "category": "psu",
     "specs_confidence": "verified",
@@ -138,6 +212,19 @@
   "230700750": {
     "category": "psu",
     "specs_confidence": "verified",
+    "specs": {
+      "wattage_w": 750,
+      "efficiency_rating": "80 Plus Bronze",
+      "pcie_8pin_connectors": 2,
+      "form_factor": "ATX"
+    }
+  },
+  "251111600": {
+    "category": "psu",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/nguon-may-tinh-msi-a750bn-pcie5-iii-750w-80-plus-non-modular-306-7zptx25-hd8--s251111600"
+    ],
     "specs": {
       "wattage_w": 750,
       "efficiency_rating": "80 Plus Bronze",
@@ -167,6 +254,100 @@
       "gpu_clearance_mm": 450,
       "psu_support": "ATX",
       "max_cooler_height_mm": 169
+    }
+  },
+  "260501470": {
+    "category": "case",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/vo-may-tinh-case-xigmatek-moon-ml-dgt-den-en49699--s260501470"
+    ],
+    "specs": {
+      "motherboard_support": ["ATX", "mATX", "Mini-ITX"],
+      "gpu_clearance_mm": 330,
+      "psu_support": "ATX",
+      "max_cooler_height_mm": 160
+    }
+  },
+  "260507124": {
+    "category": "cooler",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/tan-nhiet-khi-jonsbo-cr-1000e-den--s260507124"
+    ],
+    "specs": {
+      "socket_support": ["LGA1700", "LGA1200", "AM4", "AM5"],
+      "tdp_rating_w": 180,
+      "height_mm": 155,
+      "cooler_type": "air"
+    }
+  },
+  "251012780": {
+    "category": "cooler",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/tan-nhiet-khi-cooler-cpu-id-cooling-frozn-a410-td--s251012780"
+    ],
+    "specs": {
+      "socket_support": ["LGA1700", "LGA1200", "AM4", "AM5"],
+      "tdp_rating_w": 200,
+      "height_mm": 152,
+      "cooler_type": "air"
+    }
+  },
+  "251113503": {
+    "category": "cooler",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/tan-nhiet-nuoc-cooler-msi-mag-coreliquid-a13-240-den--s251113503"
+    ],
+    "specs": {
+      "socket_support": ["LGA1700", "LGA1200", "AM4", "AM5"],
+      "tdp_rating_w": 240,
+      "height_mm": 54,
+      "cooler_type": "aio_240"
+    }
+  },
+  "260602321": {
+    "category": "monitor",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/man-hinh-lenovo-loq-24-10-68f1gacbvn--s260602321"
+    ],
+    "specs": {
+      "resolution": "1920x1080",
+      "refresh_rate_hz": 200,
+      "size_inches": 23.8,
+      "panel_type": "IPS",
+      "response_time_ms": 0.5
+    }
+  },
+  "260602184": {
+    "category": "monitor",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/man-hinh-msi-mag-275qf-e21--s260602184"
+    ],
+    "specs": {
+      "resolution": "2560x1440",
+      "refresh_rate_hz": 210,
+      "size_inches": 27,
+      "panel_type": "RAPID IPS",
+      "response_time_ms": 0.5
+    }
+  },
+  "260508590": {
+    "category": "monitor",
+    "specs_confidence": "partial",
+    "spec_source_urls": [
+      "https://phongvu.vn/man-hinh-viewsonic-va3208-4k-mhd--s260508590"
+    ],
+    "specs": {
+      "resolution": "3840x2160",
+      "refresh_rate_hz": 60,
+      "size_inches": 31.5,
+      "panel_type": "VA",
+      "response_time_ms": 4
     }
   }
 }

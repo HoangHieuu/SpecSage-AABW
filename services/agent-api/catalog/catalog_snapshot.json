@@ -353,6 +353,34 @@
       "raw_category": "case-thung-may-tinh"
     },
     {
+      "sku": "260501434",
+      "name": "Bộ vi xử lý/ CPU Intel Core i7-14700F (20C - 28T | Up to 5.4 GHz | 33MB | No iGPU | LGA-1700)",
+      "category": "cpu",
+      "price_vnd": 10790000,
+      "list_price_vnd": 10790000,
+      "discount_amount_vnd": 0,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/cpu-intel-core-i7-14700f-tray--s260501434",
+      "image_url": "https://lh3.googleusercontent.com/1NXg3HbxIqF522BsO4TDI6Ufgp6f9_TWh42CUlSK11YMycKdgd7tVAzRAkCwEzUUC_SPeCEyhJ24SGCfjFesoviP_KI-HlM",
+      "brand": "Intel",
+      "warranty_text": null,
+      "highlights": [
+        "Socket 1700 20 nhân / 28 luồng"
+      ],
+      "specs": {
+        "socket": "LGA1700",
+        "cores": 20,
+        "threads": 28,
+        "tdp_w": 65,
+        "integrated_graphics": false
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_cpu_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
       "sku": "251204776",
       "name": "Bộ vi xử lý/ CPU Intel Core i5-12400F (6C - 12T | Up to 4.4 GHz | 18MB | No iGPU | LGA1700)",
       "category": "cpu",
@@ -415,6 +443,178 @@
       "raw_category": "NH03"
     },
     {
+      "sku": "240900459",
+      "name": "Mainboard Gigabyte B760M GAMING PLUS WIFI DDR4",
+      "category": "mainboard",
+      "price_vnd": 2990000,
+      "list_price_vnd": 3290000,
+      "discount_amount_vnd": 300000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/mainboard-gigabyte-b760m-g-p-wifi-ddr4--s240900459",
+      "image_url": "https://lh3.googleusercontent.com/2D8AqJW3Wwe7Ygqow9N6ACJwpMfr0VPyI7Df_eFe0uFTsJHe3y9ywP2kgSy1_64CkPlAbIeFhYybSOuRyhRBAUv0GtEy0snO5Q",
+      "brand": "Gigabyte",
+      "warranty_text": null,
+      "highlights": [
+        "Socket 1700 Micro-ATX 4 khe RAM - DDR4"
+      ],
+      "specs": {
+        "socket": "LGA1700",
+        "chipset": "B760",
+        "memory_type": "DDR4",
+        "form_factor": "mATX",
+        "supported_cpu_generations": [
+          "Intel 12th Gen",
+          "Intel 13th Gen",
+          "Intel 14th Gen"
+        ],
+        "max_memory_gb": 128,
+        "m2_slots": 2
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_mainboard_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "251111506",
+      "name": "Patriot (1 x 16GB) DDR4 3200MHz (PSP416G3200H1)",
+      "category": "ram",
+      "price_vnd": 3890000,
+      "list_price_vnd": 5490000,
+      "discount_amount_vnd": 1600000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/bo-nho-trong-ram-patriot-ddr4-16gb-3200mt-s-cl22-1-2v-udimm-psp416g3200h1--s251111506",
+      "image_url": "https://lh3.googleusercontent.com/yI_IRnmUbLkZYpteF-DtzNwopG29obI8LnRFp9Xq7536KJgNmZxErmc-wc_iKXbZajDP0CEpoaflCzLhKa6zIuFlraBuaxQ",
+      "brand": "Patriot",
+      "warranty_text": null,
+      "highlights": [],
+      "specs": {
+        "module_count": 1,
+        "capacity_gb": 16,
+        "memory_type": "DDR4",
+        "speed_mhz": 3200,
+        "form_factor": "UDIMM"
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_ram_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "251111511",
+      "name": "Ổ cứng gắn trong/ PATRIOT SSD P300 512GB NVMe M.2 PCIe P300P512GM28",
+      "category": "storage",
+      "price_vnd": 2590000,
+      "list_price_vnd": 3490000,
+      "discount_amount_vnd": 900000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/o-cung-gan-trong-patriot-ssd-p300-512gb-nvme-m-2-pcie-p300p512gm28--s251111511",
+      "image_url": "https://lh3.googleusercontent.com/JhmJUrQpWwNEtZwwgIYpSOTlLKCevte5Nm1Rj9HvNRGT2CPyTKy5gdkK9W4japhUxY_KoGqI1xT1c6Umyrw2Qh87N0YbbCc",
+      "brand": "Patriot",
+      "warranty_text": null,
+      "highlights": [],
+      "specs": {
+        "capacity_gb": 512,
+        "interface": "NVMe",
+        "form_factor": "M.2 2280",
+        "pcie": "3.0"
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_storage_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "260100504",
+      "name": "Card màn hình Inno3d GEFORCE RTX 5060 TWIN X2 8GB 8GB GDDR7 (N50602-08D7-195071N)",
+      "category": "vga",
+      "price_vnd": 10290000,
+      "list_price_vnd": 10990000,
+      "discount_amount_vnd": 700000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/vga-inno3d-rtx-5060-twin-x2-8gb--s260100504",
+      "image_url": "https://lh3.googleusercontent.com/ENR1fi6DrYG4BymA3enRtQa6zHivqzjfySE4lJnnNyh_futrWHUZtnVeKOfqA1GAHlIZhgQU8y6mvnKrQWKr-Y4Ue2pEgILquQ",
+      "brand": "Inno3d",
+      "warranty_text": null,
+      "highlights": [
+        "8GB GDDR7 - PCI-E 5.0 3840 CUDA cores"
+      ],
+      "specs": {
+        "vram_gb": 8,
+        "memory_type": "GDDR7",
+        "pcie": "5.0",
+        "chipset": "RTX 5060",
+        "tdp_w": 145,
+        "length_mm": 250,
+        "power_connectors": [
+          "1x8-pin"
+        ],
+        "slot_width": 2
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_vga_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "251111600",
+      "name": "Nguồn máy tính Msi MAG A750BN PCIE5 III - 750W - 80 Plus Bronze",
+      "category": "psu",
+      "price_vnd": 1590000,
+      "list_price_vnd": 1790000,
+      "discount_amount_vnd": 200000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/nguon-may-tinh-msi-a750bn-pcie5-iii-750w-80-plus-non-modular-306-7zptx25-hd8--s251111600",
+      "image_url": "https://lh3.googleusercontent.com/eBNLhbjiIRhnErC_tZ48zN_GeZw995IbvCWbD4esVDZq-2dX8H9Sqk1y8KSbiW8KAQdEXnvIn0cRPvfNljvGNA6O6_Akv0rO",
+      "brand": "Msi",
+      "warranty_text": null,
+      "highlights": [],
+      "specs": {
+        "wattage_w": 750,
+        "efficiency_rating": "80 Plus Bronze",
+        "pcie_8pin_connectors": 2,
+        "form_factor": "ATX"
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_psu_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "260501470",
+      "name": "Vỏ máy tính/ Case Xigmatek Moon ML DGT - Đen (EN49699)",
+      "category": "case",
+      "price_vnd": 990000,
+      "list_price_vnd": 1090000,
+      "discount_amount_vnd": 100000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/vo-may-tinh-case-xigmatek-moon-ml-dgt-den-en49699--s260501470",
+      "image_url": "https://lh3.googleusercontent.com/SxjYoeUyHBTvA052A_Dz37ZGa1E4nllidMk70IkpfaxlASmtxpOv5kuym-IPPvy5o3C8qVTKJ8ojixlgQIj8PQf_Os3gBhc3WQ",
+      "brand": "Xigmatek",
+      "warranty_text": null,
+      "highlights": [],
+      "specs": {
+        "motherboard_support": [
+          "ATX",
+          "mATX",
+          "Mini-ITX"
+        ],
+        "gpu_clearance_mm": 330,
+        "psu_support": "ATX",
+        "max_cooler_height_mm": 160
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_case_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
       "sku": "260302526",
       "name": "Thùng máy/ Case Jonsbo D400 (ATX)",
       "category": "case",
@@ -442,24 +642,208 @@
       "catalog_snapshot_at": "2026-06-27T00:00:00Z",
       "source": "phongvu_curated_case_2026_06_28",
       "raw_category": "NH03"
+    },
+    {
+      "sku": "260507124",
+      "name": "Tản nhiệt khí Jonsbo CR-1000E (Đen)",
+      "category": "cooler",
+      "price_vnd": 319000,
+      "list_price_vnd": 319000,
+      "discount_amount_vnd": 0,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/tan-nhiet-khi-jonsbo-cr-1000e-den--s260507124",
+      "image_url": "https://lh3.googleusercontent.com/awQ7_dKTcjGG8sqJ44HABzMgr3gev7mlb9S-XjNxrAwy-JY4tFBzJnqH-E-vB5CFRkDs3LLS-2TxJg9_ePY_F0I5WQV7iyJZpA",
+      "brand": "Jonsbo",
+      "warranty_text": null,
+      "highlights": [],
+      "specs": {
+        "socket_support": [
+          "LGA1700",
+          "LGA1200",
+          "AM4",
+          "AM5"
+        ],
+        "tdp_rating_w": 180,
+        "height_mm": 155,
+        "cooler_type": "air"
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_cooler_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "251113503",
+      "name": "Tản nhiệt nước/ COOLER MSI MAG CORELIQUID A13 240 Đen",
+      "category": "cooler",
+      "price_vnd": 1690000,
+      "list_price_vnd": 1890000,
+      "discount_amount_vnd": 200000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/tan-nhiet-nuoc-cooler-msi-mag-coreliquid-a13-240-den--s251113503",
+      "image_url": "https://lh3.googleusercontent.com/AE08tCbQmulL4R2ex4KJcXoGoOuKfmqXZeLAB2kJk0sXbTjWqgLSrnk3xC31-kZIGsX8EmeDdgO_pqqS56dGMp0eKG2l1cySyA",
+      "brand": "Msi",
+      "warranty_text": null,
+      "highlights": [],
+      "specs": {
+        "socket_support": [
+          "LGA1700",
+          "LGA1200",
+          "AM4",
+          "AM5"
+        ],
+        "tdp_rating_w": 240,
+        "height_mm": 54,
+        "cooler_type": "aio_240"
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_cooler_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "251012780",
+      "name": "Tản nhiệt khí/ COOLER CPU ID-COOLING FROZN A410 TD",
+      "category": "cooler",
+      "price_vnd": 690000,
+      "list_price_vnd": 890000,
+      "discount_amount_vnd": 200000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/tan-nhiet-khi-cooler-cpu-id-cooling-frozn-a410-td--s251012780",
+      "image_url": "https://lh3.googleusercontent.com/9n3XM8197xeX2mkTZX7e1aREs59Zt41EupHAvimtcqqjx9USO9OFzPaxFtP5tHimmHjMe6yxOFmG5fXvOQ7bKE1iNHZTB8pF",
+      "brand": "ID-Cooling",
+      "warranty_text": null,
+      "highlights": [],
+      "specs": {
+        "socket_support": [
+          "LGA1700",
+          "LGA1200",
+          "AM4",
+          "AM5"
+        ],
+        "tdp_rating_w": 200,
+        "height_mm": 152,
+        "cooler_type": "air"
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_cooler_2026_06_28",
+      "raw_category": "NH03"
+    },
+    {
+      "sku": "260602321",
+      "name": "Màn hình Lenovo LOQ 24-10 68F1GACBVN 23.8 inch (Full HD/ IPS/ 200Hz/ 0.5 ms)",
+      "category": "monitor",
+      "price_vnd": 2990000,
+      "list_price_vnd": 3490000,
+      "discount_amount_vnd": 500000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/man-hinh-lenovo-loq-24-10-68f1gacbvn--s260602321",
+      "image_url": "https://lh3.googleusercontent.com/iFz7FtBA9myfT8yyqWGQvnQVVEGS4Onmm5Y4F5PwLQMqmcSvAI3HTRczj5zo3OmotgRjnqOOX_mumZBNhQKs3M7_l3yXOhbU",
+      "brand": "Lenovo",
+      "warranty_text": null,
+      "highlights": [
+        "23.8\" FHD 200Hz IPS/ 0.5 ms"
+      ],
+      "specs": {
+        "resolution": "1920x1080",
+        "refresh_rate_hz": 200,
+        "size_inches": 23.8,
+        "panel_type": "IPS",
+        "response_time_ms": 0.5
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_monitor_2026_06_28",
+      "raw_category": "NH06"
+    },
+    {
+      "sku": "260602184",
+      "name": "Màn hình Msi MAG 275QF E21 27 inch (2K/ RAPID IPS/ 210Hz/ 0.5 ms)",
+      "category": "monitor",
+      "price_vnd": 4990000,
+      "list_price_vnd": 5490000,
+      "discount_amount_vnd": 500000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/man-hinh-msi-mag-275qf-e21--s260602184",
+      "image_url": "https://lh3.googleusercontent.com/dyEWU4xzzTbkYQxJPx8PdgBI_F8Xc5MA0f_kVDCoL0hqKxPVR00zxS5Bc5-LjiirlTW1u9AiYAyc4BFsN0riluoAZBVP8_8",
+      "brand": "Msi",
+      "warranty_text": null,
+      "highlights": [
+        "27\" 2K 210Hz RAPID IPS/ 0.5 ms"
+      ],
+      "specs": {
+        "resolution": "2560x1440",
+        "refresh_rate_hz": 210,
+        "size_inches": 27,
+        "panel_type": "RAPID IPS",
+        "response_time_ms": 0.5
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_monitor_2026_06_28",
+      "raw_category": "NH06"
+    },
+    {
+      "sku": "260508590",
+      "name": "Màn hình ViewSonic VA3208-4K-MHD 31.5 inch (4K/ VA/ 60Hz/ 4 ms)",
+      "category": "monitor",
+      "price_vnd": 6990000,
+      "list_price_vnd": 7690000,
+      "discount_amount_vnd": 700000,
+      "stock_quantity": 1000,
+      "stock_status": "in_stock",
+      "url": "https://phongvu.vn/man-hinh-viewsonic-va3208-4k-mhd--s260508590",
+      "image_url": "https://lh3.googleusercontent.com/DsNk2yZs_HwFfgKQ9D8aFqTo4lCR_dXOiGcgYza-DyfPo1mYVqWWx9jCgO-pUlRStGu_yWhjuVG2JmllF4jTRdLE4hNSqr0",
+      "brand": "ViewSonic",
+      "warranty_text": null,
+      "highlights": [
+        "31.5\" 4K UHD 60Hz VA/ 4 ms"
+      ],
+      "specs": {
+        "resolution": "3840x2160",
+        "refresh_rate_hz": 60,
+        "size_inches": 31.5,
+        "panel_type": "VA",
+        "response_time_ms": 4
+      },
+      "specs_confidence": "partial",
+      "catalog_snapshot_at": "2026-06-27T00:00:00Z",
+      "source": "phongvu_curated_monitor_2026_06_28",
+      "raw_category": "NH06"
     }
   ],
   "validation": {
     "snapshot_version": "catalog_v2026_06_27_fixture",
     "generated_at": "2026-06-27T00:00:00Z",
-    "sku_count": 14,
-    "issue_count": 0,
+    "sku_count": 27,
+    "issue_count": 1,
     "blocking_issue_count": 0,
+    "stale_after_days": 7,
+    "freshness_checked_at": "2026-06-29T08:45:12.446674Z",
+    "snapshot_fresh_until": "2026-07-04T00:00:00Z",
+    "snapshot_age_days": 2,
+    "freshness_status": "fresh",
+    "specs_confidence_counts": {
+      "verified": 14,
+      "partial": 13,
+      "inferred": 0
+    },
     "category_counts": {
-      "cpu": 2,
-      "mainboard": 2,
-      "ram": 2,
-      "vga": 2,
-      "storage": 2,
-      "psu": 2,
-      "case": 2,
-      "cooler": 0,
-      "monitor": 0
+      "cpu": 3,
+      "mainboard": 3,
+      "ram": 3,
+      "vga": 3,
+      "storage": 3,
+      "psu": 3,
+      "case": 3,
+      "cooler": 3,
+      "monitor": 3
     },
     "recommended_demo_category_counts": {
       "cpu": 2,
@@ -469,6 +853,26 @@
       "vga": 2,
       "psu": 2,
       "case": 2
+    },
+    "pilot_recommended_category_counts": {
+      "cpu": 3,
+      "mainboard": 3,
+      "ram": 3,
+      "storage": 3,
+      "vga": 3,
+      "psu": 3,
+      "case": 3
+    },
+    "production_target_category_counts": {
+      "cpu": 15,
+      "mainboard": 15,
+      "ram": 10,
+      "storage": 10,
+      "vga": 20,
+      "psu": 10,
+      "case": 10,
+      "cooler": 8,
+      "monitor": 10
     },
     "required_demo_categories": [
       "cpu",
@@ -481,7 +885,29 @@
     ],
     "missing_required_demo_categories": [],
     "thin_demo_categories": [],
+    "thin_pilot_categories": [],
+    "production_gap_categories": [
+      "cpu",
+      "mainboard",
+      "ram",
+      "storage",
+      "vga",
+      "psu",
+      "case",
+      "cooler",
+      "monitor"
+    ],
     "demo_ready": true,
-    "issues": []
+    "pilot_ready": true,
+    "production_ready": false,
+    "issues": [
+      {
+        "severity": "warn",
+        "code": "CATALOG_PRODUCTION_TARGET_GAP",
+        "sku": null,
+        "field": "category_counts",
+        "message": "Catalog snapshot is below the production coverage target for: cpu, mainboard, ram, storage, vga, psu, case, cooler, monitor."
+      }
+    ]
   }
 }

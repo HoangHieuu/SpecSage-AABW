@@ -10,21 +10,63 @@
       "source": "phongvu_curated_cpu_2026_06_28",
       "source_url": "https://phongvu.vn/c/cpu",
       "category_hint": "cpu",
-      "include_skus": ["251204776"]
+      "include_skus": ["251204776", "260501434"]
     },
     {
       "input": "../fixtures/phongvu-category-mainboard-2026-06-28.html",
       "source": "phongvu_curated_mainboard_2026_06_28",
       "source_url": "https://phongvu.vn/c/mainboard-bo-mach-chu",
       "category_hint": "mainboard",
-      "include_skus": ["241105117"]
+      "include_skus": ["241105117", "240900459"]
+    },
+    {
+      "input": "../fixtures/phongvu-category-ram-2026-06-28.html",
+      "source": "phongvu_curated_ram_2026_06_28",
+      "source_url": "https://phongvu.vn/c/ram",
+      "category_hint": "ram",
+      "include_skus": ["251111506"]
+    },
+    {
+      "input": "../fixtures/phongvu-category-storage-2026-06-28.html",
+      "source": "phongvu_curated_storage_2026_06_28",
+      "source_url": "https://phongvu.vn/c/o-cung-ssd",
+      "category_hint": "storage",
+      "include_skus": ["251111511"]
+    },
+    {
+      "input": "../fixtures/phongvu-category-vga-2026-06-28.html",
+      "source": "phongvu_curated_vga_2026_06_28",
+      "source_url": "https://phongvu.vn/c/vga-card-man-hinh",
+      "category_hint": "vga",
+      "include_skus": ["260100504"]
+    },
+    {
+      "input": "../fixtures/phongvu-category-psu-2026-06-28.html",
+      "source": "phongvu_curated_psu_2026_06_28",
+      "source_url": "https://phongvu.vn/c/psu-nguon-may-tinh",
+      "category_hint": "psu",
+      "include_skus": ["251111600"]
     },
     {
       "input": "../fixtures/phongvu-category-case-2026-06-28.html",
       "source": "phongvu_curated_case_2026_06_28",
       "source_url": "https://phongvu.vn/c/case",
       "category_hint": "case",
-      "include_skus": ["260302526"]
+      "include_skus": ["260302526", "260501470"]
+    },
+    {
+      "input": "../fixtures/phongvu-category-cooler-2026-06-28.html",
+      "source": "phongvu_curated_cooler_2026_06_28",
+      "source_url": "https://phongvu.vn/c/tan-nhiet",
+      "category_hint": "cooler",
+      "include_skus": ["260507124", "251012780", "251113503"]
+    },
+    {
+      "input": "../fixtures/phongvu-category-monitor-2026-06-28.html",
+      "source": "phongvu_curated_monitor_2026_06_28",
+      "source_url": "https://phongvu.vn/c/man-hinh-may-tinh",
+      "category_hint": "monitor",
+      "include_skus": ["260602321", "260602184", "260508590"]
     },
     {
       "input": "../fixtures/phongvu-category-cpu-2026-06-28.html",
