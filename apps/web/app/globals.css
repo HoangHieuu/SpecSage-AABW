@@ -256,11 +256,7 @@ textarea {
 /* ── Hero ── */
 
 .hero-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 380px);
-  gap: 32px;
-  align-items: stretch;
-  min-height: 280px;
+  display: block;
   padding: 40px;
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px);
@@ -274,6 +270,7 @@ textarea {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  max-width: 760px;
 }
 
 .hero-eyebrow {
@@ -352,149 +349,6 @@ textarea {
   font-size: 12px;
   font-weight: 500;
   color: var(--muted);
-}
-
-/* ── Rig visual ── */
-
-.rig-visual {
-  position: relative;
-  min-height: 240px;
-  display: grid;
-  place-items: center;
-  background:
-    linear-gradient(145deg, rgba(201, 21, 34, 0.04) 0%, transparent 50%),
-    var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.rig-glow {
-  position: absolute;
-  inset: 20%;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-  animation: pulse-glow 4s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.1);
-  }
-}
-
-.rig-frame {
-  position: relative;
-  z-index: 1;
-  width: min(260px, 82%);
-  aspect-ratio: 4 / 3;
-  border: 8px solid #1e293b;
-  border-radius: var(--radius-md);
-  background: linear-gradient(160deg, #334155 0%, #0f172a 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 20px 40px rgba(15, 23, 42, 0.25);
-}
-
-.fan,
-.gpu-bar,
-.ram-stick,
-.led {
-  position: absolute;
-  display: block;
-}
-
-.fan {
-  width: 56px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 6px solid #cbd5e1;
-  background:
-    conic-gradient(from 0deg, transparent 0deg 30deg, rgba(255, 255, 255, 0.15) 30deg 60deg, transparent 60deg 90deg, rgba(255, 255, 255, 0.15) 90deg 120deg, transparent 120deg 150deg, rgba(255, 255, 255, 0.15) 150deg 180deg, transparent 180deg 210deg, rgba(255, 255, 255, 0.15) 210deg 240deg, transparent 240deg 270deg, rgba(255, 255, 255, 0.15) 270deg 300deg, transparent 300deg 330deg, rgba(255, 255, 255, 0.15) 330deg 360deg),
-    radial-gradient(circle, #e2e8f0 0 18%, transparent 19% 100%);
-  animation: spin-fan 3s linear infinite;
-}
-
-.fan-one {
-  top: 24px;
-  left: 24px;
-}
-
-.fan-two {
-  bottom: 24px;
-  left: 24px;
-  animation-duration: 4s;
-  animation-direction: reverse;
-}
-
-@keyframes spin-fan {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.gpu-bar {
-  right: 24px;
-  bottom: 38px;
-  width: 110px;
-  height: 24px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, var(--accent) 0%, #e8353f 100%);
-  box-shadow: 0 0 12px var(--accent-glow);
-}
-
-.ram-stick {
-  top: 28px;
-  right: 48px;
-  width: 16px;
-  height: 88px;
-  border-radius: 4px;
-  background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
-}
-
-.led {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  animation: blink-led 2s ease-in-out infinite;
-}
-
-.led-one {
-  top: 14px;
-  right: 14px;
-  background: #22c55e;
-}
-
-.led-two {
-  top: 14px;
-  right: 26px;
-  background: var(--accent);
-  animation-delay: 0.4s;
-}
-
-.led-three {
-  top: 14px;
-  right: 38px;
-  background: #3b82f6;
-  animation-delay: 0.8s;
-}
-
-@keyframes blink-led {
-  0%,
-  100% {
-    opacity: 1;
-    box-shadow: 0 0 6px currentColor;
-  }
-  50% {
-    opacity: 0.3;
-    box-shadow: none;
-  }
 }
 
 /* ── Buttons ── */
@@ -649,21 +503,78 @@ textarea:focus {
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
-.action-row {
+.prompt-box {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 18px;
+  padding: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 250, 252, 0.94) 100%),
+    #f8fafc;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 14px 34px rgba(15, 23, 42, 0.06);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition),
+    background var(--transition);
+}
+
+.prompt-box:focus-within {
+  border-color: rgba(201, 21, 34, 0.44);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(249, 250, 251, 0.98) 100%),
+    #f9fafb;
+  box-shadow:
+    0 0 0 4px rgba(201, 21, 34, 0.08),
+    0 18px 46px rgba(201, 21, 34, 0.12),
+    0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.prompt-box textarea {
+  min-height: 112px;
+  max-height: 260px;
+  resize: none;
+  overflow-y: auto;
+  border: 0;
+  border-radius: 14px;
+  padding: 6px 4px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.prompt-box textarea:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.prompt-footer {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid rgba(226, 232, 240, 0.78);
+  padding-top: 12px;
 }
 
-.action-row button {
-  min-width: min(100%, 230px);
-}
-
-.action-row span {
+.prompt-footer span {
+  min-width: 0;
+  max-width: 420px;
   color: var(--muted);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.45;
+}
+
+.prompt-footer button {
+  min-height: 40px;
+  min-width: 168px;
+  border-radius: 999px;
+  padding: 0 18px;
+  white-space: nowrap;
 }
 
 .error {
@@ -2470,5 +2381,16 @@ tbody tr:last-child td {
 
   .hero-stats {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .prompt-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .prompt-footer button {
+    width: 100%;
   }
 }

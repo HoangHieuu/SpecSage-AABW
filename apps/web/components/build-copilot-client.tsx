@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { BackgroundAnimation } from "@/components/background-animation";
 import {
@@ -72,6 +72,7 @@ const useCaseLabels: Record<UseCase, string> = {
 type DisplayMode = "basic" | "advanced";
 
 export function BuildCopilotClient() {
+  const intentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [session, setSession] = useState<BuildSession | null>(null);
   const [message, setMessage] = useState(presets[0].sample);
   const [preset, setPreset] = useState<UseCase>("gaming");
@@ -118,6 +119,13 @@ export function BuildCopilotClient() {
     if (!intent) return "Chưa có";
     return formatBudget(intent.budget_min, intent.budget_max);
   }, [intent]);
+
+  useEffect(() => {
+    const textarea = intentTextareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [message]);
 
   async function ensureSession() {
     if (session) return session;
@@ -406,18 +414,6 @@ export function BuildCopilotClient() {
               </div>
             </div>
           </div>
-          <div className="rig-visual" aria-hidden="true">
-            <div className="rig-glow" />
-            <div className="rig-frame">
-              <span className="fan fan-one" />
-              <span className="fan fan-two" />
-              <span className="gpu-bar" />
-              <span className="ram-stick" />
-              <span className="led led-one" />
-              <span className="led led-two" />
-              <span className="led led-three" />
-            </div>
-          </div>
         </section>
 
       <section className="workspace-grid">
@@ -446,23 +442,25 @@ export function BuildCopilotClient() {
           </div>
 
           <label htmlFor="intent">Mô tả nhu cầu</label>
-          <textarea
-            id="intent"
-            data-testid="intent-input"
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            rows={7}
-          />
-
-          <div className="action-row">
-            <button
-              type="submit"
-              data-testid="primary-flow-action"
-              disabled={isLoading || !message.trim()}
-            >
-              {isLoading ? "Đang xử lý..." : primaryActionLabel}
-            </button>
-            <span>{primaryActionHint}</span>
+          <div className="prompt-box">
+            <textarea
+              id="intent"
+              ref={intentTextareaRef}
+              data-testid="intent-input"
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              rows={3}
+            />
+            <div className="prompt-footer">
+              <span>{primaryActionHint}</span>
+              <button
+                type="submit"
+                data-testid="primary-flow-action"
+                disabled={isLoading || !message.trim()}
+              >
+                {isLoading ? "Đang xử lý..." : primaryActionLabel}
+              </button>
+            </div>
           </div>
 
           {error ? <p className="error">{error}</p> : null}
