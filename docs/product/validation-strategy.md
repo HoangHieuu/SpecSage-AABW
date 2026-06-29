@@ -189,6 +189,12 @@ and appends iteration decisions to `optimizer_trace`. Browser proof must show a
 generated Cyberpunk build, the `Điều chỉnh build` panel, an applied SSD command,
 and the resulting build v2 state.
 
+`US-038` is verified by `pnpm check:web`, Harness story verification, and
+browser desktop/mobile proof. Browser proof must show Basic mode with
+buyer-facing copy, the customer decision summary, no customer-visible
+engineering/demo terminology in the first decision path, advanced details still
+reachable, and no page-wide horizontal overflow.
+
 `US-010` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit and integration proof cover SQLite round-trips for sessions, intent
 revisions, builds, applied build versions, and idempotent cart handoffs by
@@ -274,6 +280,22 @@ catalog:source-report`, `pnpm catalog:sync`, `pnpm check`, `pnpm eval:run`, and
 Harness story verification. Unit proof covers `include_skus` filtering, missing
 SKU failures, source-report counts, and the active snapshot reaching the
 recommended two-SKU coverage for every required full-build category.
+
+`US-039` is verified by focused catalog/API tests, `pnpm catalog:sync`,
+`pnpm catalog:source-report`, `pnpm check:web`, and Harness story verification.
+Unit proof covers stale snapshot warnings, pilot readiness thresholds, spec
+confidence counts, production target gaps, and the real manifest reaching three
+active SKUs for every required full-build category. Integration proof checks
+`GET /catalog/health` exposes freshness, pilot, and production fields while the
+active snapshot remains validation-clean and honest about production gaps.
+
+`US-040` is verified by the same focused catalog/API gate, `pnpm catalog:sync`,
+`pnpm catalog:source-report`, `pnpm check:web`, and Harness story verification.
+Unit proof covers the real manifest reaching three cooler SKUs and three
+monitor SKUs with all required validation fields present. Integration proof
+checks the active snapshot remains validation-clean, `pilot_ready=true`, and
+`production_ready=false` while optional category gaps are reduced but not
+overclaimed.
 
 ## Never Claim Without Proof
 

@@ -100,11 +100,25 @@ The first demo should prove a narrow vertical slice:
     feedback.
 31. Customers can submit bounded Vietnamese iteration commands after generation
     and receive a new validated build version without restarting the session.
+32. The default customer web flow presents generated builds as buyer decisions:
+    price, fit, budget status, next action, alternatives, warnings, shopping
+    links, and feedback use customer-facing Vietnamese while technical trace and
+    optimizer proof stays behind advanced details.
+33. Catalog health distinguishes demo, pilot, and production readiness, reports
+    snapshot freshness, exposes spec-confidence counts, and keeps production
+    coverage gaps visible while the mirror is still curated.
+34. Optional cooler and monitor categories have curated active SKUs with
+    compatibility-critical fields, but they do not become required slots in the
+    default full-build flow.
 
-Current first-slice implementation reaches step 31 with a deterministic
+Current first-slice implementation reaches step 34 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, mock
 cart handoff, replayable agent traces, local quality gates, feedback capture,
-and curated catalog subset promotion. It produces one build from the local
+and curated catalog subset promotion. The active snapshot now has three choices
+for every required full-build category plus three curated cooler choices and
+three curated monitor choices. It also has a freshness-aware `pilot_ready`
+health layer, while `production_ready` remains false until full catalog target
+counts are met. It produces one build from the local
 catalog snapshot, validates it through the compatibility rule engine, reports
 explicit budget gaps when the current snapshot cannot satisfy a low budget,
 summarizes workload fit from CPU/GPU/RAM/storage facts, adds benchmark-backed
@@ -184,6 +198,16 @@ priority overrides, and candidate decisions.
 `US-036` proves the polished customer demo path through the running web app.
 `US-037` adds deterministic natural-language build iteration commands before
 full Pareto variants.
+`US-038` adds customer-facing polish to the default web path: a compact
+decision summary, buyer-oriented copy, shopping-list language for cart links,
+and advanced technical details kept out of the basic customer view.
+`US-039` promotes one more reviewed SKU in each required full-build category,
+adds freshness and production coverage fields to catalog health, and keeps the
+local mirror honest by reporting production gaps instead of claiming full
+catalog readiness.
+`US-040` promotes reviewed cooler and monitor SKUs from staged captures with
+required compatibility fields, reducing optional-category catalog gaps while
+keeping cooler and monitor selection out of the default generated build.
 
 Out of first-slice scope unless a later story selects it:
 
@@ -199,7 +223,7 @@ Out of first-slice scope unless a later story selects it:
 | Phase | Product area | Harness posture |
 | --- | --- | --- |
 | 1 | Session foundation and intent capture | First build slice |
-| 2 | Catalog intelligence and product grounding | First build slice |
+| 2 | Catalog intelligence and product grounding | Curated active catalog with demo, pilot, freshness, and production-gap health |
 | 3 | Compatibility and safety engine | First build slice |
 | 4 | Performance modeling and workload fit | Qualitative by default; source-backed benchmark seed, monitor warnings, balance scoring, app-fit thresholds, and office adequacy guidance |
 | 5 | Build optimization and iteration | Deterministic alternatives, apply flow, performance-aware ranking, benchmark-gated gaming optimization, bounded two-swap generation, optimizer-loop trace foundation, and bounded natural-language iteration commands |

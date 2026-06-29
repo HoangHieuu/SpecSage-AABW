@@ -99,7 +99,9 @@ source label and URL.
 
 The current snapshot is intentionally small: CPU, mainboard, RAM, SSD, GPU, PSU,
 and case SKUs for the next compatibility slice. It is not full catalog coverage
-and does not claim live price or stock freshness.
+and does not claim live price or stock freshness. Freshness health is measured
+against the local snapshot timestamp so stale fixtures are visible before
+recommendations or evals run.
 
 `US-016` extends the embedded validation report with demo-readiness coverage:
 per-category SKU counts, required full-build demo categories, missing required
@@ -141,6 +143,34 @@ first promoted subset adds one CPU, one mainboard, and one case SKU with
 compatibility overrides, bringing every required full-build demo category to at
 least two active SKUs while keeping the full category pages staged.
 
+`US-039` extends the curated subset to one additional reviewed CPU, mainboard,
+RAM, storage, VGA, PSU, and case SKU. The active snapshot now contains 21 SKUs:
+three choices for every required full-build category, 14 verified spec rows,
+and 7 partial spec rows with deterministic compatibility fields. Catalog health
+now distinguishes:
+
+- `demo_ready`: required categories are present with no blocking validation
+  issues.
+- `pilot_ready`: each required full-build category has at least three active
+  SKUs and the snapshot is inside the 7-day freshness window.
+- `production_ready`: all production target counts are met with no blocking
+  issues and a fresh snapshot.
+
+The current snapshot is pilot-ready for the core full-build categories but not
+production-ready. Production target gaps remain for CPU, mainboard, RAM,
+storage, VGA, PSU, case, cooler, and monitor until broader verified catalog
+curation is selected.
+
+`US-040` adds curated optional-category coverage for CPU coolers and monitors.
+The active snapshot now contains 27 SKUs: three choices for every required
+full-build category, three cooler choices, and three monitor choices. The
+promoted cooler rows include `socket_support`, `tdp_rating_w`, and `height_mm`;
+the promoted monitor rows include `resolution` and `refresh_rate_hz`. These
+fields are enough for deterministic validation and future optional-slot work,
+but the rows remain `partial` confidence until a richer detail-source pass is
+implemented. Production target gaps remain because cooler target coverage is 8
+SKUs and monitor target coverage is 10 SKUs.
+
 `US-023` adds the first local gaming benchmark matrix:
 `services/agent-api/benchmarks/gaming_benchmark_matrix.json`. Rows are curated
 from public benchmark sources and include game/GPU aliases, resolution, preset,
@@ -150,10 +180,11 @@ selection; they only allow the performance profile to display FPS evidence when
 the generated build and user target match exactly.
 
 `US-024` uses that benchmark evidence to warn about monitor overspec requests.
-Because active monitor SKUs are not yet curated, the system may warn that a
-requested 144Hz/240Hz display target exceeds the source-backed FPS estimate,
-but it must not recommend a monitor SKU until monitor rows are promoted from
-staged captures with verified `resolution` and `refresh_rate_hz` fields.
+The system may warn that a requested 144Hz/240Hz display target exceeds the
+source-backed FPS estimate. `US-040` adds curated monitor rows with
+`resolution` and `refresh_rate_hz`, but generated builds still must not add or
+recommend monitor SKUs until a dedicated monitor recommendation story selects
+that behavior.
 
 `US-030` expands the same matrix with RTX 4060 coverage for Cyberpunk 2077
 1440p Ultra native. `US-031` uses that coverage to allow only
@@ -165,7 +196,7 @@ unsupported.
 explicit monitor counts. Because the active catalog still lacks verified
 GPU/mainboard output-port fields, multi-monitor office builds warn with
 `OFFICE_MULTI_MONITOR_OUTPUTS_UNKNOWN` instead of inventing HDMI/DisplayPort
-support or recommending staged monitor SKUs.
+support or recommending monitor bundles.
 
 ## Commerce Adapter Boundary
 

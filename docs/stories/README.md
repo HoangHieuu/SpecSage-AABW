@@ -45,6 +45,9 @@ Initial PC Build Copilot story packets:
 | `US-035` | Phase 5 multi-agent optimizer loop foundation | implemented | normal |
 | `US-036` | Polished end-to-end demo proof | implemented | normal |
 | `US-037` | Natural-language build iteration commands | implemented | normal |
+| `US-038` | Customer-facing demo polish | implemented | normal |
+| `US-039` | Production catalog breadth and freshness foundation | implemented | normal |
+| `US-040` | Optional cooler and monitor catalog curation | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

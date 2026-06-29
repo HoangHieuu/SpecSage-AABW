@@ -114,22 +114,37 @@ must update the manifest and tests together.
 
 ## Current Catalog Health Slice
 
-`US-016` and `US-017` make catalog readiness and variety explicit in the local
-validation report:
+`US-016`, `US-017`, and `US-039` make catalog readiness, variety, freshness,
+and production gaps explicit in the local validation report:
 
 - `CatalogValidationReport.category_counts`
+- `CatalogValidationReport.specs_confidence_counts`
 - `CatalogValidationReport.recommended_demo_category_counts`
+- `CatalogValidationReport.pilot_recommended_category_counts`
+- `CatalogValidationReport.production_target_category_counts`
 - `CatalogValidationReport.required_demo_categories`
 - `CatalogValidationReport.missing_required_demo_categories`
 - `CatalogValidationReport.thin_demo_categories`
+- `CatalogValidationReport.thin_pilot_categories`
+- `CatalogValidationReport.production_gap_categories`
+- `CatalogValidationReport.stale_after_days`
+- `CatalogValidationReport.freshness_checked_at`
+- `CatalogValidationReport.snapshot_fresh_until`
+- `CatalogValidationReport.snapshot_age_days`
+- `CatalogValidationReport.freshness_status`
 - `CatalogValidationReport.demo_ready`
+- `CatalogValidationReport.pilot_ready`
+- `CatalogValidationReport.production_ready`
 
-`GET /catalog/health` returns those fields from the embedded snapshot
-validation report. Missing CPU, mainboard, RAM, storage, VGA, PSU, or case
-coverage is a blocking catalog validation issue because those categories are
-required for the current full-build demo flow. Present-but-thin categories are
-warning issues, not blockers; the current recommended minimum is two SKUs for
-each required category. This does not add live scraping, external catalog APIs,
+`GET /catalog/health` returns those fields from validation over the current
+snapshot. Missing CPU, mainboard, RAM, storage, VGA, PSU, or case coverage is a
+blocking catalog validation issue because those categories are required for the
+current full-build demo flow. Present-but-thin demo categories are warning
+issues, not blockers; the demo recommended minimum remains two SKUs for each
+required category. The pilot recommended minimum is three SKUs for each
+required category, plus a fresh snapshot inside the 7-day window. Production
+readiness requires the broader target counts from `Data.md`, including cooler
+and monitor coverage. This does not add live scraping, external catalog APIs,
 Typesense, Postgres, or admin catalog editing.
 
 ## Current Catalog Ingestion Slice
@@ -166,6 +181,22 @@ This lets the local mirror promote reviewed products from staged captures while
 leaving the broad category pages non-eligible. The active snapshot now contains
 14 SKUs with two CPU, mainboard, RAM, storage, VGA, PSU, and case choices and
 zero catalog validation issues.
+
+`US-039` keeps the same curated promotion mechanism and adds one more reviewed
+SKU per required full-build category. The active snapshot now contains 21 SKUs
+with three CPU, mainboard, RAM, storage, VGA, PSU, and case choices, 14
+verified rows, 7 partial rows, zero blocking validation issues, `pilot_ready =
+true`, and `production_ready = false` because full production target counts are
+not met yet.
+
+`US-040` adds curated cooler and monitor entries through the same
+`include_skus` gate. The active snapshot now contains 27 SKUs with three
+optional cooler choices and three optional monitor choices in addition to the
+required full-build categories. Cooler rows must include `socket_support`,
+`tdp_rating_w`, and `height_mm`; monitor rows must include `resolution` and
+`refresh_rate_hz`. These rows reduce catalog health gaps and prepare optional
+slot work, but they do not change `REQUIRED_FULL_BUILD_SLOTS` or make the
+generator select cooler or monitor parts by default.
 
 ## API Boundary
 
@@ -336,8 +367,9 @@ benchmark evidence rather than falling back to nearby rows.
 recommendations. The intent parser records monitor/display mentions in
 `BuildIntent.mentioned_components`. If the user mentions a monitor target and a
 matched benchmark estimate is below the requested refresh rate, the performance
-profile raises `PERF_MONITOR_OVERSPEC`. This deliberately does not add monitor
-items to builds because active monitor SKUs have not been curated yet.
+profile raises `PERF_MONITOR_OVERSPEC`. `US-040` adds curated monitor rows to
+the active catalog, but this deliberately still does not add monitor items to
+builds until a dedicated recommendation story defines ranking and UX behavior.
 
 `US-025` adds deterministic balance scoring to the same profile. The scorer
 uses selected SKU facts only: CPU cores/threads, GPU chipset/VRAM, RAM

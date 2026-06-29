@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-037` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-040` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -49,14 +49,22 @@ recommendation-eligible until compatibility overrides are verified. Committed
 catalog fixtures now store sanitized `__NEXT_DATA__` payloads instead of full
 page HTML so page-shell environment keys are not checked in.
 Curated manifest entries can now promote reviewed SKUs from staged captures
-with `include_skus`, so the active catalog has two choices in every required
-full-build category while full category pages remain staged.
+with `include_skus`, so the active catalog has three choices in every required
+full-build category while full category pages remain staged. Catalog health now
+also separates `demo_ready`, `pilot_ready`, and `production_ready`, reports
+snapshot freshness against a 7-day window, counts verified/partial/inferred
+spec confidence, and keeps production target gaps visible without pretending
+the local mirror is a full Phong Vu catalog. The active catalog now also
+includes curated cooler and monitor rows, giving optional CPU cooling and
+display categories three validated choices each while preserving the existing
+full-build required-slot behavior.
 Gaming benchmark evidence now comes from
 `services/agent-api/benchmarks/gaming_benchmark_matrix.json`; unsupported FPS
 claims remain blocked by the local eval gate. Monitor-targeted gaming requests
 now warn with `PERF_MONITOR_OVERSPEC` when matched benchmark FPS is below the
-requested display refresh target, without recommending monitor SKUs before
-monitor catalog curation. Generated builds also include a deterministic
+requested display refresh target. Curated monitor SKUs exist in the catalog,
+but generated builds still do not add monitor parts until a dedicated
+recommendation story selects that behavior. Generated builds also include a deterministic
 CPU/GPU/RAM/storage balance score and `PERF_IMBALANCE` warning for severe
 mismatch. Creator, streaming, and local LLM requests now show deterministic
 app-fit rows for RAM, VRAM, CPU threads, storage, and CUDA preference. Office
@@ -80,7 +88,9 @@ alternatives, mock cart handoff, and feedback path. Generated builds can also
 accept bounded Vietnamese iteration commands such as "Tăng SSD nhưng giữ dưới
 20 triệu" or "Giảm xuống dưới 18 triệu", producing a new validated build
 version through the existing alternatives, budget, compatibility, performance,
-and trace gates.
+and trace gates. The customer web flow now keeps the default path focused on
+buyer decisions with a compact price/fit/budget/next-action summary, while
+technical optimizer and trace proof stays behind the advanced details path.
 
 Accepted product direction:
 
@@ -157,6 +167,9 @@ The initial implementation backlog is intentionally small:
 35. `US-035` - Phase 5 multi-agent optimizer loop foundation. Implemented.
 36. `US-036` - polished end-to-end demo proof. Implemented.
 37. `US-037` - natural-language build iteration commands. Implemented.
+38. `US-038` - customer-facing demo polish. Implemented.
+39. `US-039` - production catalog breadth and freshness foundation. Implemented.
+40. `US-040` - optional cooler and monitor catalog curation. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -247,6 +260,9 @@ scripts/bin/harness-cli story verify US-034
 scripts/bin/harness-cli story verify US-035
 scripts/bin/harness-cli story verify US-036
 scripts/bin/harness-cli story verify US-037
+scripts/bin/harness-cli story verify US-038
+scripts/bin/harness-cli story verify US-039
+scripts/bin/harness-cli story verify US-040
 pnpm eval:run
 ```
 
