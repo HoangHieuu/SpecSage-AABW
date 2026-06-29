@@ -36,7 +36,7 @@ approval, or cart handoff decisions into an LLM.
 - Replay events include agent name, redacted inputs, tool-call labels, redacted
   outputs, latency, status, and model/runtime version metadata.
 - The response includes a support-export text payload.
-- The web app renders a trace replay panel after build generation.
+- The web app exposes trace replay after build generation behind `Chi tiết hỗ trợ`.
 - PII-sensitive trace keys and obvious email/phone values are redacted.
 
 ## Design Notes
@@ -59,7 +59,7 @@ approval, or cart handoff decisions into an LLM.
     authority for SKU, price, budget, compatibility, workload fit, approval,
     alternatives, and handoff.
 - UI surfaces:
-  - `Trace replay` panel in the generated build view.
+  - `Chi tiết hỗ trợ` support disclosure in the generated build view.
   - Support trace copy action.
 
 ## Validation
@@ -71,7 +71,7 @@ When updating durable proof status, use numeric booleans:
 | --- | --- |
 | Unit | Trace replay builder returns event metadata and redacts sensitive payloads |
 | Integration | Build/session trace endpoints return build-version-linked replay data; SQLite replay survives app restart |
-| E2E | Browser flow generates a build and renders `Trace replay` with six events and export action |
+| E2E | Browser flow generates a build and renders support trace with six events and export action after opening `Chi tiết hỗ trợ` |
 | Platform | Not required; Langfuse remains a later keyed integration |
 | Release | `pnpm check`; `scripts/bin/harness-cli story verify US-012` |
 
@@ -92,9 +92,10 @@ external Langfuse integration.
 - `scripts/bin/harness-cli story verify US-012` passed with the same release
   check.
 - Browser QA on `http://127.0.0.1:3000/` generated a 25M VND gaming build and
-  rendered `Trace replay` with `1 build / 6 event`, Catalog through Validator
+  rendered support trace with `1 build / 6 event`, Catalog through Validator
   events, tool-call labels, model/runtime metadata, redacted payload details,
-  and a support-export copy button that reached `Đã copy trace`.
+  and a support-export copy button that reached `Đã copy trace` after opening
+  `Chi tiết hỗ trợ`.
 - Browser console check reported no errors or warnings. Current desktop
   viewport and 390px mobile viewport had no page-wide horizontal overflow
   (`scrollWidth` = `clientWidth`) and no framework runtime overlay.

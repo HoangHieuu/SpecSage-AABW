@@ -11,8 +11,8 @@ normal
 ## Product Contract
 
 The current hackathon demo should prove the core customer flow end to end in the
-running app after `US-035`: Vietnamese intent, generated build, optimizer loop
-trace, benchmark-backed gaming warning, ranked alternative, applied build,
+running app after `US-035`: Vietnamese intent, generated build, support-details
+optimizer trace, benchmark-backed gaming warning, ranked alternative, applied build,
 mock cart handoff, and feedback capture.
 
 ## Relevant Product Docs
@@ -28,7 +28,7 @@ mock cart handoff, and feedback capture.
 ## Acceptance Criteria
 
 - Browser flow starts from a Vietnamese Cyberpunk 2077 1440p Ultra 144Hz prompt.
-- The generated build renders the optimizer loop trace from `US-035`.
+- The generated build keeps optimizer loop trace available behind `Chi tiết hỗ trợ`.
 - The generated build shows benchmark-backed warning provenance without adding
   unsupported numeric FPS claims to explanations.
 - The optimizer loop shows the RTX 4060 GPU swap accepted for the matching
@@ -48,8 +48,9 @@ mock cart handoff, and feedback capture.
 - Tables: no schema change.
 - Domain rules: proof story only; no relaxation of SKU, budget,
   compatibility, benchmark, or approval gates.
-- UI surfaces: generated build view must make the optimizer loop visible enough
-  for demo narration.
+- UI surfaces: generated build view must keep the customer path clean while
+  making the optimizer loop reachable through support details for demo
+  narration.
 
 ## Validation
 
@@ -71,7 +72,7 @@ Adds an explicit demo-proof story after the Phase 5 optimizer-loop foundation.
 ## Evidence
 
 - `.venv/bin/python -m pytest services/agent-api/tests/test_demo_e2e_flow.py` passed as API demo-flow proof.
-- Playwright browser proof completed the Cyberpunk 2077 1440p Ultra 144Hz Vietnamese prompt, rendered the optimizer loop trace, applied the SSD alternative, approved build v2, rendered mock cart handoff, and saved negative feedback with review queue state.
+- Playwright browser proof completed the Cyberpunk 2077 1440p Ultra 144Hz Vietnamese prompt, kept the optimizer loop trace behind support details, applied the SSD alternative, approved build v2, rendered mock cart handoff, and saved negative feedback with review queue state.
 - Mobile Playwright viewport proof at 390x844 kept the page shell within the viewport; the existing parts table remains horizontally scrollable inside its container.
 - `pnpm check` passed with Next.js build and 108 API tests.
 - `pnpm eval:run` passed 30/30 canonical scenarios.

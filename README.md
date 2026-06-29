@@ -32,8 +32,8 @@ cart handoffs persist in a local SQLite store for restart-safe demos.
 Build generation now runs through a bounded LangGraph orchestration layer with
 catalog, optimizer, compatibility, performance, explainer, and validator steps
 recorded on each build artifact. Agent trace replay is now exposed through
-build/session trace endpoints and a web `Trace replay` panel with redacted
-event payloads and support-export text. A local quality eval suite now runs 30
+build/session trace endpoints and a web `Chi tiết hỗ trợ` disclosure with
+redacted event payloads and support-export text. A local quality eval suite now runs 30
 canonical scenarios as a release gate for catalog-grounding, budget,
 compatibility, required slots, SKU hallucination, and explanation-rubric
 regressions.

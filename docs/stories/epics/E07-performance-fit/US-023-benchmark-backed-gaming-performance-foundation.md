@@ -46,7 +46,7 @@ resolution, and preset. Unsupported numeric FPS claims remain blocked.
 - API: optional `source_label` and `source_url` on `PerformanceEvidence`.
 - Tables: `services/agent-api/benchmarks/gaming_benchmark_matrix.json`.
 - Domain rules: exact-match benchmark lookup; no interpolation or LLM scoring.
-- UI surfaces: existing `Workload fit` evidence grid can display source links.
+- UI surfaces: existing `Mức phù hợp` evidence grid can display source links.
 
 ## Validation
 

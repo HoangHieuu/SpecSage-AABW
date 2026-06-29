@@ -651,8 +651,19 @@ textarea:focus {
 
 .action-row {
   display: flex;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.action-row button {
+  min-width: min(100%, 230px);
+}
+
+.action-row span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .error {
@@ -847,6 +858,19 @@ textarea:focus {
   font-weight: 600;
 }
 
+.llm-agent-details {
+  margin-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 12px;
+}
+
+.llm-agent-details summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 /* ── Build panel ── */
 
 .build-panel {
@@ -902,6 +926,84 @@ textarea:focus {
   font-weight: 600;
   line-height: 1.6;
   font-size: 14px;
+}
+
+/* ── Display mode ── */
+
+.display-mode-toggle {
+  display: inline-flex;
+  gap: 6px;
+  margin: -4px 0 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  background: var(--surface-muted);
+}
+
+.display-mode-toggle button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--text-secondary);
+  box-shadow: none;
+  font-size: 13px;
+}
+
+.display-mode-toggle button:hover:not(:disabled) {
+  transform: none;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: none;
+}
+
+.display-mode-toggle button.selected {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Support details ── */
+
+.support-details {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.support-details-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.support-details-heading h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.support-details-heading p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.support-details-stack {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.support-details-stack .trace-replay,
+.support-details-stack .agent-trace,
+.support-details-stack .optimizer-trace {
+  margin: 0;
 }
 
 /* ── Performance fit ── */
@@ -1685,6 +1787,41 @@ textarea:focus {
   font-size: 14px;
 }
 
+.risk-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.risk-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.risk-tag.ok {
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.risk-tag.warning {
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.risk-tag.danger {
+  border: 1px solid rgba(201, 21, 34, 0.2);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .alternative-changes {
   margin-top: 14px;
 }
@@ -1836,6 +1973,10 @@ table {
   border-collapse: collapse;
 }
 
+table.parts-table.basic {
+  min-width: 620px;
+}
+
 th,
 td {
   padding: 14px 16px;
@@ -1868,14 +2009,15 @@ tbody tr:last-child td {
   border-bottom: 0;
 }
 
-td a {
-  color: var(--accent);
+.parts-table td a {
+  color: var(--text);
   font-weight: 600;
   text-decoration: none;
   transition: color var(--transition);
 }
 
-td a:hover {
+.parts-table td a:hover {
+  color: var(--accent);
   text-decoration: underline;
 }
 
@@ -2147,6 +2289,33 @@ td a:hover {
   font-size: 14px;
 }
 
+.customer-warning-panel {
+  margin-top: 20px;
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  background: var(--warning-soft);
+}
+
+.customer-warning-panel.compact {
+  margin-top: 16px;
+}
+
+.customer-warning-panel h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.customer-warning-panel ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 /* ── Cart ready ── */
 
 .cart-ready {
@@ -2257,6 +2426,7 @@ td a:hover {
   }
 
   .alternatives-heading,
+  .support-details-heading,
   .agent-trace-heading,
   .optimizer-trace-heading,
   .iteration-heading,

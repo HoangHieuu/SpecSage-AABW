@@ -79,4 +79,4 @@ Adds `US-037` and decision `0037` to the Phase 5 build iteration contract.
 - Release gate: `pnpm check` passed with the Next.js production build and 113 API tests.
 - Eval gate: `pnpm eval:run` passed 30/30 canonical scenarios.
 - Harness gate: `scripts/bin/harness-cli story verify US-037` passed.
-- Browser proof: generated the Cyberpunk 2077 1440p Ultra build, applied `Tăng SSD nhưng giữ dưới 20 triệu`, rendered `Build v2`, selected `SSD rộng hơn`, updated total price to `19.790.000 ₫`, showed the 1TB Samsung SSD SKU, and replayed the v2 optimizer event; mobile-width iteration panel remained usable with no console errors.
+- Browser proof: generated the Cyberpunk 2077 1440p Ultra build, applied `Tăng SSD nhưng giữ dưới 20 triệu`, rendered `Build v2`, selected `SSD rộng hơn`, updated total price to `19.790.000 ₫`, showed the 1TB Samsung SSD SKU, and kept the v2 optimizer event available behind support details; mobile-width iteration panel remained usable with no console errors.

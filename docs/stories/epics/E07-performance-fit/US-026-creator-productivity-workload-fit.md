@@ -44,7 +44,7 @@ configured thresholds from catalog facts and never invent app benchmark numbers.
 - API: `PerformanceProfile.workload_profiles`.
 - Tables: in-code threshold config for this slice.
 - Domain rules: deterministic threshold checks, no LLM scoring.
-- UI surfaces: existing `Workload fit` panel gains an `App fit` row list.
+- UI surfaces: existing `Mức phù hợp` panel gains an `Ứng dụng` row list.
 
 ## Validation
 

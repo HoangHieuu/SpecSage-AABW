@@ -47,7 +47,7 @@ claims.
 - Tables: none; PostgreSQL/LangGraph checkpointing remains future Phase 5.
 - Domain rules: deterministic candidate substitutions only; validate every
   variant with compatibility rules before returning it.
-- UI surfaces: generated build panel adds an "Alternatives" section below the
+- UI surfaces: generated build panel adds a `Phương án thay thế` section below the
   main parts table.
 
 ## Validation
@@ -75,7 +75,7 @@ No harness behavior change expected.
 - `scripts/bin/harness-cli story verify US-008` passed.
 - Playwright browser flow opened the local app, analyzed intent through the
   OpenRouter advisor, confirmed intent, generated a valid build, and rendered
-  `Alternatives` with four validated variants: RAM upgrade, larger SSD, NVIDIA
+  `Phương án thay thế` with four validated variants: RAM upgrade, larger SSD, NVIDIA
   GPU, and PSU headroom.
 - Browser network proof showed `GET /builds/{build_id}/alternatives` returned
   HTTP 200 after generation.

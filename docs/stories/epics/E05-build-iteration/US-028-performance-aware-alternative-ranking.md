@@ -48,7 +48,7 @@ autonomous optimization.
 - Tables: no new persistence; ranking is recomputed from the current catalog
   snapshot and stored build.
 - Domain rules: deterministic score only; no LLM ranking.
-- UI surfaces: existing `Alternatives` cards show priority rank and reasons.
+- UI surfaces: existing `Phương án thay thế` cards show priority rank and reasons.
 
 ## Validation
 

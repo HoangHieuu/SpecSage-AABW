@@ -69,6 +69,8 @@ const useCaseLabels: Record<UseCase, string> = {
   unknown: "Chưa rõ"
 };
 
+type DisplayMode = "basic" | "advanced";
+
 export function BuildCopilotClient() {
   const [session, setSession] = useState<BuildSession | null>(null);
   const [message, setMessage] = useState(presets[0].sample);
@@ -83,6 +85,8 @@ export function BuildCopilotClient() {
   const [appliedAlternativeLabel, setAppliedAlternativeLabel] = useState<string | null>(null);
   const [iterationCommand, setIterationCommand] = useState("Tăng SSD nhưng giữ dưới 20 triệu");
   const [lastIteration, setLastIteration] = useState<BuildIterationResponse | null>(null);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>("basic");
+  const [showSupportDetails, setShowSupportDetails] = useState(false);
   const [traceCopyState, setTraceCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
@@ -91,10 +95,24 @@ export function BuildCopilotClient() {
   const intent = intentResponse?.revision.intent;
   const isConfirmed = intentResponse?.revision.confirmed ?? false;
   const canConfirm = Boolean(intentResponse && !intentResponse.revision.clarification.field);
-  const canGenerate = Boolean(session && isConfirmed);
   const canApprove = Boolean(
     buildArtifact && buildArtifact.can_approve && buildArtifact.status === "generated" && !cartHandoff
   );
+  const needsClarification = Boolean(intentResponse?.revision.clarification.field);
+  const primaryActionLabel = buildArtifact
+    ? "Phân tích nhu cầu mới"
+    : isConfirmed
+      ? "Sinh cấu hình"
+      : intentResponse && !needsClarification
+        ? "Xác nhận & sinh cấu hình"
+        : "Phân tích nhu cầu";
+  const primaryActionHint = buildArtifact
+    ? "Chỉnh mô tả rồi chạy lại nếu bạn muốn bắt đầu một đề xuất mới."
+    : isConfirmed
+      ? "Intent đã xác nhận, bước tiếp theo là sinh cấu hình."
+      : intentResponse && !needsClarification
+        ? "Bước này sẽ xác nhận nhu cầu và tạo cấu hình ngay."
+        : "Mô tả nhu cầu, ngân sách và ưu tiên của bạn.";
 
   const budget = useMemo(() => {
     if (!intent) return "Chưa có";
@@ -123,6 +141,8 @@ export function BuildCopilotClient() {
       setBuildFeedback(null);
       setAppliedAlternativeLabel(null);
       setLastIteration(null);
+      setDisplayMode("basic");
+      setShowSupportDetails(false);
       setTraceCopyState("idle");
     } catch (err) {
       setError(toErrorMessage(err));
@@ -133,6 +153,63 @@ export function BuildCopilotClient() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    await handlePrimaryAction();
+  }
+
+  async function submitIntentRevision(confirm: boolean) {
+    const activeSession = await ensureSession();
+    const response = await submitIntent(activeSession.build_session_id, message, confirm, preset);
+    setSession(response.session);
+    setIntentResponse(response);
+    if (response.agent_analysis) {
+      setAgentAnalysis(response.agent_analysis);
+    } else if (!confirm) {
+      setAgentAnalysis(null);
+    }
+    setBuildArtifact(null);
+    setBuildAlternatives(null);
+    setSessionTrace(null);
+    setCartHandoff(null);
+    setBuildFeedback(null);
+    setAppliedAlternativeLabel(null);
+    setLastIteration(null);
+    setDisplayMode("basic");
+    setShowSupportDetails(false);
+    setTraceCopyState("idle");
+    return response;
+  }
+
+  async function loadBuildOutputs(artifact: BuildArtifact) {
+    const [alternatives, trace] = await Promise.all([
+      getBuildAlternatives(artifact.build_id),
+      getSessionTrace(artifact.build_session_id)
+    ]);
+    setBuildArtifact(artifact);
+    setBuildAlternatives(alternatives);
+    setSessionTrace(trace);
+    setCartHandoff(null);
+    setBuildFeedback(null);
+    setAppliedAlternativeLabel(null);
+    setLastIteration(null);
+    setDisplayMode("basic");
+    setShowSupportDetails(false);
+    setTraceCopyState("idle");
+    setSession((current) => (current ? { ...current, state: "generated" } : current));
+  }
+
+  async function handlePrimaryAction() {
+    if (buildArtifact) {
+      await sendIntent(false);
+      return;
+    }
+    if (isConfirmed) {
+      await handleGenerate();
+      return;
+    }
+    if (intentResponse && canConfirm) {
+      await handleConfirmAndGenerate();
+      return;
+    }
     await sendIntent(false);
   }
 
@@ -140,23 +217,22 @@ export function BuildCopilotClient() {
     setIsLoading(true);
     setError(null);
     try {
-      const activeSession = await ensureSession();
-      const response = await submitIntent(activeSession.build_session_id, message, confirm, preset);
-      setSession(response.session);
-      setIntentResponse(response);
-      if (response.agent_analysis) {
-        setAgentAnalysis(response.agent_analysis);
-      } else if (!confirm) {
-        setAgentAnalysis(null);
-      }
-      setBuildArtifact(null);
-      setBuildAlternatives(null);
-      setSessionTrace(null);
-      setCartHandoff(null);
-      setBuildFeedback(null);
-      setAppliedAlternativeLabel(null);
-      setLastIteration(null);
-      setTraceCopyState("idle");
+      await submitIntentRevision(confirm);
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleConfirmAndGenerate() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await submitIntentRevision(true);
+      if (!response.revision.confirmed) return;
+      const artifact = await generateBuild(response.session.build_session_id);
+      await loadBuildOutputs(artifact);
     } catch (err) {
       setError(toErrorMessage(err));
     } finally {
@@ -170,19 +246,7 @@ export function BuildCopilotClient() {
     setError(null);
     try {
       const artifact = await generateBuild(session.build_session_id);
-      const [alternatives, trace] = await Promise.all([
-        getBuildAlternatives(artifact.build_id),
-        getSessionTrace(artifact.build_session_id)
-      ]);
-      setBuildArtifact(artifact);
-      setBuildAlternatives(alternatives);
-      setSessionTrace(trace);
-      setCartHandoff(null);
-      setBuildFeedback(null);
-      setAppliedAlternativeLabel(null);
-      setLastIteration(null);
-      setTraceCopyState("idle");
-      setSession((current) => (current ? { ...current, state: "generated" } : current));
+      await loadBuildOutputs(artifact);
     } catch (err) {
       setError(toErrorMessage(err));
     } finally {
@@ -207,6 +271,8 @@ export function BuildCopilotClient() {
       setBuildFeedback(null);
       setAppliedAlternativeLabel(alternative.label_vi);
       setLastIteration(null);
+      setDisplayMode("basic");
+      setShowSupportDetails(false);
       setTraceCopyState("idle");
       setSession((current) => (current ? { ...current, state: "generated" } : current));
     } catch (err) {
@@ -246,6 +312,8 @@ export function BuildCopilotClient() {
       setAppliedAlternativeLabel(null);
       setLastIteration(response);
       setIterationCommand(command);
+      setDisplayMode("basic");
+      setShowSupportDetails(false);
       setTraceCopyState("idle");
       setSession((current) => (current ? { ...current, state: "generated" } : current));
     } catch (err) {
@@ -299,9 +367,9 @@ export function BuildCopilotClient() {
             </div>
           </div>
           <div className="header-meta">
-            <span className="header-pill">SKU thật</span>
-            <span className="header-pill">Rule deterministic</span>
-            <span className="header-pill accent">LangGraph</span>
+            <span className="header-pill">SKU Phong Vu</span>
+            <span className="header-pill">Kiểm tra tương thích</span>
+            <span className="header-pill accent">Tư vấn AI</span>
           </div>
         </header>
 
@@ -330,7 +398,7 @@ export function BuildCopilotClient() {
               </div>
               <div className="hero-stat">
                 <strong>SKU</strong>
-                <span>từ snapshot</span>
+                <span>Phong Vu</span>
               </div>
               <div className="hero-stat">
                 <strong>0</strong>
@@ -387,27 +455,14 @@ export function BuildCopilotClient() {
           />
 
           <div className="action-row">
-            <button type="submit" data-testid="analyze-intent" disabled={isLoading || !message.trim()}>
-              Phân tích intent
-            </button>
             <button
-              type="button"
-              className="secondary"
-              data-testid="confirm-intent"
-              disabled={isLoading || !canConfirm}
-              onClick={() => sendIntent(true)}
+              type="submit"
+              data-testid="primary-flow-action"
+              disabled={isLoading || !message.trim()}
             >
-              Xác nhận intent
+              {isLoading ? "Đang xử lý..." : primaryActionLabel}
             </button>
-            <button
-              type="button"
-              className="secondary"
-              data-testid="generate-build"
-              disabled={isLoading || !canGenerate}
-              onClick={handleGenerate}
-            >
-              Sinh cấu hình
-            </button>
+            <span>{primaryActionHint}</span>
           </div>
 
           {error ? <p className="error">{error}</p> : null}
@@ -423,8 +478,8 @@ export function BuildCopilotClient() {
 
           <dl className="facts">
             <div>
-              <dt>Session</dt>
-              <dd>{session?.build_session_id ?? "Chưa tạo"}</dd>
+              <dt>Trạng thái</dt>
+              <dd>{session ? "Đang tư vấn" : "Chưa tạo"}</dd>
             </div>
             <div>
               <dt>Use case</dt>
@@ -499,9 +554,11 @@ export function BuildCopilotClient() {
                     : "Chưa có"
                 }
               />
-              <Metric label="Catalog" value={buildArtifact.catalog_version} />
-              <Metric label="Rules" value={buildArtifact.rules_version} />
+              <Metric label="Còn dư" value={formatBudgetHeadroom(buildArtifact)} />
+              <Metric label="Phiên bản" value={`Build v${buildArtifact.build_version}`} />
             </div>
+
+            <DisplayModeToggle mode={displayMode} onModeChange={setDisplayMode} />
 
             {appliedAlternativeLabel ? (
               <p className="build-version-note" data-testid="applied-alternative-note">
@@ -511,46 +568,35 @@ export function BuildCopilotClient() {
               </p>
             ) : null}
 
-            {sessionTrace ? (
-              <TraceReplayPanel
-                trace={sessionTrace}
-                copyState={traceCopyState}
-                onCopyExport={handleCopyTraceExport}
-              />
-            ) : buildArtifact.orchestration_trace.length ? (
-              <AgentTracePanel steps={buildArtifact.orchestration_trace} />
-            ) : null}
-
-            {buildArtifact.optimizer_trace ? (
-              <OptimizerTracePanel trace={buildArtifact.optimizer_trace} />
-            ) : null}
-
-            <PerformanceProfilePanel profile={buildArtifact.performance_profile} />
+            <PerformanceProfilePanel
+              profile={buildArtifact.performance_profile}
+              isAdvanced={displayMode === "advanced"}
+            />
 
             <div className="table-wrap">
-              <table>
+              <table className={`parts-table ${displayMode}`}>
                 <thead>
                   <tr>
                     <th>Slot</th>
-                    <th>SKU</th>
+                    {displayMode === "advanced" ? <th>SKU</th> : null}
                     <th>Linh kiện</th>
                     <th>Giá</th>
-                    <th>Lý do chọn</th>
+                    {displayMode === "advanced" ? <th>Lý do chọn</th> : null}
                   </tr>
                 </thead>
                 <tbody>
                   {buildArtifact.items.map((item) => (
                     <tr key={`${item.slot}-${item.sku}`}>
                       <td>{slotLabel(item.slot)}</td>
-                      <td>{item.sku}</td>
+                      {displayMode === "advanced" ? <td>{item.sku}</td> : null}
                       <td>
                         <a href={item.url} target="_blank" rel="noreferrer">
                           {item.name}
                         </a>
-                        <span className="confidence">{item.specs_confidence}</span>
+                        <span className="confidence">{specConfidenceLabel(item.specs_confidence)}</span>
                       </td>
                       <td>{formatVnd(item.price_vnd)}</td>
-                      <td>{item.explanation_vi}</td>
+                      {displayMode === "advanced" ? <td>{item.explanation_vi}</td> : null}
                     </tr>
                   ))}
                 </tbody>
@@ -560,6 +606,7 @@ export function BuildCopilotClient() {
             {buildAlternatives ? (
               <BuildAlternativesPanel
                 response={buildAlternatives}
+                isAdvanced={displayMode === "advanced"}
                 isApplying={isLoading}
                 onApplyAlternative={handleApplyAlternative}
               />
@@ -573,29 +620,33 @@ export function BuildCopilotClient() {
               onSubmitCommand={handleIterateBuild}
             />
 
-            <div className="build-notes">
-              <div>
-                <h3>Giải thích</h3>
-                <ul>
-                  {buildArtifact.explanations_vi.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h3>Cảnh báo</h3>
-                <ul>
-                  {buildArtifact.warnings_vi.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                  {buildArtifact.compatibility_report.results
-                    .filter((result) => result.severity !== "pass")
-                    .map((result) => (
-                      <li key={result.rule_id}>{result.explanation_vi}</li>
+            {displayMode === "advanced" ? (
+              <div className="build-notes">
+                <div>
+                  <h3>Giải thích</h3>
+                  <ul>
+                    {buildArtifact.explanations_vi.map((item) => (
+                      <li key={item}>{item}</li>
                     ))}
-                </ul>
+                  </ul>
+                </div>
+                <div>
+                  <h3>Cảnh báo</h3>
+                  <ul>
+                    {buildArtifact.warnings_vi.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                    {buildArtifact.compatibility_report.results
+                      .filter((result) => result.severity !== "pass")
+                      .map((result) => (
+                        <li key={result.rule_id}>{result.explanation_vi}</li>
+                      ))}
+                  </ul>
+                </div>
               </div>
-            </div>
+            ) : (
+              <CustomerWarningsPanel artifact={buildArtifact} />
+            )}
 
             <div className="approval-strip">
               <div>
@@ -604,7 +655,7 @@ export function BuildCopilotClient() {
                   {cartHandoff
                     ? "Build đã được duyệt và có handoff giỏ mock từ các link SKU Phong Vu."
                     : canApprove
-                      ? "Build đã đạt rule compatibility và nằm trong ngân sách, có thể tạo handoff giỏ mock."
+                      ? "Build đã qua kiểm tra tương thích và nằm trong ngân sách, có thể tạo giỏ mock."
                       : "Build chưa đủ điều kiện duyệt vì bị chặn, vượt ngân sách hoặc thiếu thông tin."}
                 </p>
               </div>
@@ -626,11 +677,23 @@ export function BuildCopilotClient() {
             />
 
             {cartHandoff ? <CartReadyPanel handoff={cartHandoff} /> : null}
+
+            {displayMode === "advanced" ? (
+              <SupportDetailsPanel
+                isOpen={showSupportDetails}
+                trace={sessionTrace}
+                copyState={traceCopyState}
+                orchestrationSteps={buildArtifact.orchestration_trace}
+                optimizerTrace={buildArtifact.optimizer_trace}
+                onCopyExport={handleCopyTraceExport}
+                onToggle={() => setShowSupportDetails((current) => !current)}
+              />
+            ) : null}
           </>
         ) : (
           <p className="empty">
             Xác nhận intent rồi sinh cấu hình để xem bảng linh kiện, tổng giá,
-            compatibility report và link SKU Phong Vu.
+            mức phù hợp và link SKU Phong Vu.
           </p>
         )}
       </section>
@@ -671,6 +734,35 @@ function FlowProgress({
         </div>
       ))}
     </nav>
+  );
+}
+
+function DisplayModeToggle({
+  mode,
+  onModeChange
+}: {
+  mode: DisplayMode;
+  onModeChange: (mode: DisplayMode) => void;
+}) {
+  return (
+    <div className="display-mode-toggle" aria-label="Chế độ xem">
+      <button
+        type="button"
+        className={mode === "basic" ? "selected" : ""}
+        data-testid="view-basic"
+        onClick={() => onModeChange("basic")}
+      >
+        Xem cơ bản
+      </button>
+      <button
+        type="button"
+        className={mode === "advanced" ? "selected" : ""}
+        data-testid="view-advanced"
+        onClick={() => onModeChange("advanced")}
+      >
+        Xem nâng cao
+      </button>
+    </div>
   );
 }
 
@@ -760,7 +852,7 @@ function BuildFeedbackPanel({
       <section className="feedback-panel saved" data-testid="feedback-panel">
         <div className="feedback-heading">
           <div>
-            <h3>Feedback build</h3>
+            <h3>Đánh giá build</h3>
             <p>Đã lưu đánh giá cho build version {feedback.build_version}.</p>
           </div>
           <span
@@ -778,9 +870,12 @@ function BuildFeedbackPanel({
             label="Đánh giá"
             value={feedback.rating === "thumbs_up" ? "Hữu ích" : "Chưa phù hợp"}
           />
-          <Metric label="Part feedback" value={`${feedback.part_feedback.length}`} />
-          <Metric label="Catalog" value={feedback.catalog_version} />
-          <Metric label="Rules" value={feedback.rules_version} />
+          <Metric label="Linh kiện" value={`${feedback.part_feedback.length} mục`} />
+          <Metric label="Build" value={`v${feedback.build_version}`} />
+          <Metric
+            label="Trạng thái"
+            value={feedback.review_queue_status === "queued" ? "Đang xem lại" : "Đã ghi nhận"}
+          />
         </div>
         {feedback.review_queue_reason_vi ? <p>{feedback.review_queue_reason_vi}</p> : null}
       </section>
@@ -791,7 +886,7 @@ function BuildFeedbackPanel({
     <section className="feedback-panel" data-testid="feedback-panel">
       <div className="feedback-heading">
         <div>
-          <h3>Feedback build</h3>
+          <h3>Đánh giá build</h3>
           <p>Ghi nhận cảm nhận tổng thể và từng linh kiện cho vòng review sau demo.</p>
         </div>
         <span className="status">Build v{artifact.build_version}</span>
@@ -906,7 +1001,7 @@ function TraceReplayPanel({
     <section className="trace-replay" data-testid="trace-replay-panel">
       <div className="trace-replay-heading">
         <div>
-          <h3>Trace replay</h3>
+          <h3>Support trace</h3>
           <p>{trace.redaction_policy_vi}</p>
         </div>
         <div className="trace-replay-actions">
@@ -1014,7 +1109,7 @@ function AgentTracePanel({ steps }: { steps: BuildOrchestrationStep[] }) {
     <section className="agent-trace" data-testid="agent-trace-panel">
       <div className="agent-trace-heading">
         <div>
-          <h3>Agent orchestration</h3>
+          <h3>Agent steps</h3>
           <p>LangGraph chạy các agent theo thứ tự, còn rule và số liệu vẫn là deterministic.</p>
         </div>
         <span className="status">{steps.length} bước</span>
@@ -1042,7 +1137,7 @@ function OptimizerTracePanel({ trace }: { trace: OptimizerTrace }) {
     <section className="optimizer-trace" data-testid="optimizer-trace-panel">
       <div className="optimizer-trace-heading">
         <div>
-          <h3>Optimizer loop</h3>
+          <h3>Optimizer decisions</h3>
           <p>Phase 5 agent dùng allocation config, priority override và gate deterministic.</p>
         </div>
         <span className="status">
@@ -1104,12 +1199,87 @@ function OptimizerTracePanel({ trace }: { trace: OptimizerTrace }) {
   );
 }
 
+function SupportDetailsPanel({
+  isOpen,
+  trace,
+  copyState,
+  orchestrationSteps,
+  optimizerTrace,
+  onCopyExport,
+  onToggle
+}: {
+  isOpen: boolean;
+  trace: SessionTraceReplay | null;
+  copyState: "idle" | "copied" | "failed";
+  orchestrationSteps: BuildOrchestrationStep[];
+  optimizerTrace: OptimizerTrace | null;
+  onCopyExport: () => void;
+  onToggle: () => void;
+}) {
+  const hasDetails = Boolean(trace || orchestrationSteps.length || optimizerTrace);
+  if (!hasDetails) return null;
+
+  return (
+    <section className="support-details" data-testid="support-details-panel">
+      <div className="support-details-heading">
+        <div>
+          <h3>Chi tiết hỗ trợ</h3>
+          <p>Thông tin dành cho kiểm tra demo hoặc gửi kỹ thuật khi cần.</p>
+        </div>
+        <button
+          type="button"
+          className="secondary"
+          data-testid="toggle-support-details"
+          onClick={onToggle}
+        >
+          {isOpen ? "Ẩn chi tiết" : "Hiện chi tiết"}
+        </button>
+      </div>
+
+      {isOpen ? (
+        <div className="support-details-stack">
+          {trace ? (
+            <TraceReplayPanel trace={trace} copyState={copyState} onCopyExport={onCopyExport} />
+          ) : orchestrationSteps.length ? (
+            <AgentTracePanel steps={orchestrationSteps} />
+          ) : null}
+          {optimizerTrace ? <OptimizerTracePanel trace={optimizerTrace} /> : null}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function CustomerWarningsPanel({ artifact }: { artifact: BuildArtifact }) {
+  const warnings = [
+    ...artifact.warnings_vi,
+    ...artifact.compatibility_report.results
+      .filter((result) => result.severity !== "pass")
+      .map((result) => result.explanation_vi)
+  ];
+
+  if (!warnings.length) return null;
+
+  return (
+    <section className="customer-warning-panel" data-testid="customer-warning-panel">
+      <h3>Điểm cần lưu ý</h3>
+      <ul>
+        {warnings.slice(0, 3).map((item) => (
+          <li key={item}>{friendlyWarning(item)}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function BuildAlternativesPanel({
   response,
+  isAdvanced,
   isApplying,
   onApplyAlternative
 }: {
   response: BuildAlternativesResponse;
+  isAdvanced: boolean;
   isApplying: boolean;
   onApplyAlternative: (alternative: BuildAlternative) => void;
 }) {
@@ -1119,10 +1289,10 @@ function BuildAlternativesPanel({
     <section className="alternatives-panel" data-testid="alternatives-panel">
       <div className="alternatives-heading">
         <div>
-          <h3>Alternatives</h3>
+          <h3>Phương án thay thế</h3>
           <p>
-            Các biến thể được tạo từ cùng catalog snapshot và đã chạy lại rule
-            compatibility.
+            Các lựa chọn đổi linh kiện vẫn dùng SKU Phong Vu và đã kiểm tra
+            tương thích lại.
           </p>
         </div>
         <span className="status">{response.alternatives.length} biến thể</span>
@@ -1142,14 +1312,17 @@ function BuildAlternativesPanel({
             </div>
 
             <div className="alternative-metrics">
-              <Metric
-                label="Ưu tiên"
-                value={`#${alternative.ranking.rank} · ${alternative.ranking.score}/100`}
-              />
+              {isAdvanced ? (
+                <Metric
+                  label="Ưu tiên"
+                  value={`#${alternative.ranking.rank} · ${alternative.ranking.score}/100`}
+                />
+              ) : null}
               <Metric label="Tổng giá" value={formatVnd(alternative.total_price_vnd)} />
               <Metric label="Chênh lệch" value={formatDeltaVnd(alternative.price_delta_vnd)} />
-              <Metric label="Fit" value={fitLevelLabel(alternative.performance_profile.fit_level)} />
             </div>
+
+            <AlternativeRiskTags alternative={alternative} />
 
             <div className="alternative-changes">
               <h5>Thay đổi</h5>
@@ -1166,21 +1339,23 @@ function BuildAlternativesPanel({
               </ul>
             </div>
 
-            <ul className="alternative-reasons">
-              {alternative.ranking.reasons_vi.map((reason) => (
-                <li key={`${alternative.variant_id}-ranking-${reason}`}>
-                  {reason}
-                </li>
-              ))}
-              {alternative.changed_slots.map((change) => (
-                <li key={`${alternative.variant_id}-${change.slot}-reason`}>
-                  {change.reason_vi}
-                </li>
-              ))}
-              {alternative.warnings_vi.map((warning) => (
-                <li key={`${alternative.variant_id}-${warning}`}>{warning}</li>
-              ))}
-            </ul>
+            {isAdvanced ? (
+              <ul className="alternative-reasons">
+                {alternative.ranking.reasons_vi.map((reason) => (
+                  <li key={`${alternative.variant_id}-ranking-${reason}`}>
+                    {reason}
+                  </li>
+                ))}
+                {alternative.changed_slots.map((change) => (
+                  <li key={`${alternative.variant_id}-${change.slot}-reason`}>
+                    {change.reason_vi}
+                  </li>
+                ))}
+                {alternative.warnings_vi.map((warning) => (
+                  <li key={`${alternative.variant_id}-${warning}`}>{warning}</li>
+                ))}
+              </ul>
+            ) : null}
 
             <button
               type="button"
@@ -1195,6 +1370,19 @@ function BuildAlternativesPanel({
         ))}
       </div>
     </section>
+  );
+}
+
+function AlternativeRiskTags({ alternative }: { alternative: BuildAlternative }) {
+  const tags = alternativeRiskTags(alternative);
+  return (
+    <div className="risk-tags" aria-label="Đánh giá rủi ro">
+      {tags.map((tag) => (
+        <span className={`risk-tag ${tag.tone}`} key={tag.label} title={tag.title}>
+          {tag.label}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -1223,7 +1411,7 @@ function BuildIterationPanel({
       <div className="iteration-heading">
         <div>
           <h3>Điều chỉnh build</h3>
-          <p>Yêu cầu được parse thành lệnh deterministic rồi chạy lại validation.</p>
+          <p>Nhập yêu cầu ngắn, hệ thống sẽ đổi linh kiện và kiểm tra lại.</p>
         </div>
         {lastIteration ? (
           <span className="status confirmed">Build v{lastIteration.applied_build.build_version}</span>
@@ -1279,7 +1467,13 @@ function BuildIterationPanel({
   );
 }
 
-function PerformanceProfilePanel({ profile }: { profile: PerformanceProfile }) {
+function PerformanceProfilePanel({
+  profile,
+  isAdvanced
+}: {
+  profile: PerformanceProfile;
+  isAdvanced: boolean;
+}) {
   const fitLabel: Record<PerformanceProfile["fit_level"], string> = {
     good: "Phù hợp tốt",
     adequate: "Đủ dùng",
@@ -1304,7 +1498,7 @@ function PerformanceProfilePanel({ profile }: { profile: PerformanceProfile }) {
     <section className="performance-fit" data-testid="performance-profile">
       <div className="performance-fit-heading">
         <div>
-          <h3>Workload fit</h3>
+          <h3>Mức phù hợp</h3>
           <p>{profile.summary_vi}</p>
         </div>
         <div className="performance-fit-status">
@@ -1331,7 +1525,7 @@ function PerformanceProfilePanel({ profile }: { profile: PerformanceProfile }) {
         </div>
       ) : null}
 
-      {profile.balance ? (
+      {profile.balance && isAdvanced ? (
         <div className="performance-balance" aria-label="Balance score">
           <div>
             <span>Balance</span>
@@ -1349,9 +1543,9 @@ function PerformanceProfilePanel({ profile }: { profile: PerformanceProfile }) {
         </div>
       ) : null}
 
-      {profile.workload_profiles.length ? (
+      {profile.workload_profiles.length && isAdvanced ? (
         <div className="workload-profiles" aria-label="App workload fit">
-          <h4>App fit</h4>
+          <h4>Ứng dụng</h4>
           {profile.workload_profiles.map((workload) => (
             <div key={`${workload.name}-${workload.category}`}>
               <div>
@@ -1368,38 +1562,49 @@ function PerformanceProfilePanel({ profile }: { profile: PerformanceProfile }) {
         </div>
       ) : null}
 
-      <div className="performance-notes">
-        {profile.fit_notes_vi.length ? (
-          <div>
-            <h4>Phù hợp</h4>
-            <ul>
-              {profile.fit_notes_vi.map((note) => (
-                <li key={note}>{note}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-        {profile.bottleneck_notes_vi.length ? (
-          <div>
-            <h4>Bottleneck</h4>
-            <ul>
-              {profile.bottleneck_notes_vi.map((note) => (
-                <li key={note}>{note}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-        {profile.warnings_vi.length ? (
-          <div>
-            <h4>Lưu ý</h4>
-            <ul>
-              {profile.warnings_vi.map((note) => (
-                <li key={note}>{note}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </div>
+      {isAdvanced ? (
+        <div className="performance-notes">
+          {profile.fit_notes_vi.length ? (
+            <div>
+              <h4>Phù hợp</h4>
+              <ul>
+                {profile.fit_notes_vi.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {profile.bottleneck_notes_vi.length ? (
+            <div>
+              <h4>Điểm cần lưu ý</h4>
+              <ul>
+                {profile.bottleneck_notes_vi.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {profile.warnings_vi.length ? (
+            <div>
+              <h4>Lưu ý</h4>
+              <ul>
+                {profile.warnings_vi.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      ) : profile.warnings_vi.length ? (
+        <div className="customer-warning-panel compact">
+          <h3>Điểm cần lưu ý</h3>
+          <ul>
+            {profile.warnings_vi.slice(0, 2).map((note) => (
+              <li key={note}>{friendlyWarning(note)}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -1443,10 +1648,8 @@ function LlmAgentPanel({ analysis }: { analysis: IntentAgentAnalysis }) {
     <section className="llm-agent" data-testid="llm-agent-panel">
       <div className="llm-agent-heading">
         <div>
-          <h3>LLM Agent</h3>
-          <p>
-            OpenRouter <span>{analysis.model}</span>
-          </p>
+          <h3>Tóm tắt nhu cầu</h3>
+          <p>AI hỗ trợ diễn giải; cấu hình vẫn được kiểm tra bằng luật.</p>
         </div>
         <span className={statusClassName}>{statusLabel[analysis.status]}</span>
       </div>
@@ -1467,26 +1670,30 @@ function LlmAgentPanel({ analysis }: { analysis: IntentAgentAnalysis }) {
 
       {analysis.error_vi ? <p className="llm-agent-error">{analysis.error_vi}</p> : null}
 
-      {analysis.confidence_notes_vi.length ? (
-        <div className="llm-agent-block">
-          <strong>Ghi chú hiểu intent</strong>
-          <ul>
-            {analysis.confidence_notes_vi.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {analysis.safety_notes_vi.length ? (
-        <div className="llm-agent-block">
-          <strong>Ghi chú an toàn</strong>
-          <ul>
-            {analysis.safety_notes_vi.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
-        </div>
+      {analysis.confidence_notes_vi.length || analysis.safety_notes_vi.length ? (
+        <details className="llm-agent-details">
+          <summary>Chi tiết phân tích</summary>
+          {analysis.confidence_notes_vi.length ? (
+            <div className="llm-agent-block">
+              <strong>Ghi chú hiểu nhu cầu</strong>
+              <ul>
+                {analysis.confidence_notes_vi.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {analysis.safety_notes_vi.length ? (
+            <div className="llm-agent-block">
+              <strong>Ghi chú kiểm tra</strong>
+              <ul>
+                {analysis.safety_notes_vi.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </details>
       ) : null}
     </section>
   );
@@ -1496,14 +1703,14 @@ function CartReadyPanel({ handoff }: { handoff: CartReadyHandoff }) {
   return (
     <section className="cart-ready" data-testid="cart-ready-panel">
       <div className="panel-heading">
-        <h3>Handoff giỏ mock</h3>
+        <h3>Giỏ mock</h3>
         <span className="status confirmed">Sẵn sàng chuyển giỏ</span>
       </div>
       <div className="build-metrics compact">
         <Metric label="Tổng giá" value={formatVnd(handoff.total_price_vnd)} />
         <Metric label="Số SKU" value={`${handoff.item_count}`} />
-        <Metric label="Approval" value={handoff.approval.approval_id} />
-        <Metric label="Handoff" value={handoff.handoff_id} />
+        <Metric label="Duyệt build" value="Đã duyệt" />
+        <Metric label="Giỏ mock" value="Sẵn sàng" />
       </div>
       <p>{handoff.mock_cart_payload.disclaimer_vi}</p>
       <ol className="cart-links">
@@ -1562,6 +1769,11 @@ function formatDeltaVnd(value: number) {
   return formatted;
 }
 
+function formatBudgetHeadroom(artifact: BuildArtifact) {
+  if (!artifact.budget_max_vnd) return "Chưa có";
+  return formatDeltaVnd(artifact.budget_max_vnd - artifact.total_price_vnd);
+}
+
 function slotLabel(slot: BuildItem["slot"]) {
   const labels: Record<BuildItem["slot"], string> = {
     cpu: "CPU",
@@ -1576,18 +1788,65 @@ function slotLabel(slot: BuildItem["slot"]) {
   return labels[slot];
 }
 
+function specConfidenceLabel(confidence: BuildItem["specs_confidence"]) {
+  const labels: Record<BuildItem["specs_confidence"], string> = {
+    verified: "đã kiểm tra",
+    partial: "cần kiểm tra thêm",
+    inferred: "ước tính"
+  };
+  return labels[confidence];
+}
+
 function feedbackPartKey(item: BuildItem) {
   return `${item.slot}:${item.sku}`;
 }
 
-function fitLevelLabel(level: PerformanceProfile["fit_level"]) {
-  const labels: Record<PerformanceProfile["fit_level"], string> = {
-    good: "Phù hợp tốt",
-    adequate: "Đủ dùng",
-    limited: "Hạn chế",
-    unknown: "Chưa rõ"
-  };
-  return labels[level];
+function friendlyWarning(value: string) {
+  if (value.includes("PERF_BELOW_TARGET")) {
+    return "Hiệu năng đang thấp hơn mục tiêu màn hình đã chọn; nên nâng GPU hoặc giảm thiết lập game.";
+  }
+  return value;
+}
+
+function alternativeRiskTags(alternative: BuildAlternative) {
+  const tags: Array<{ label: string; title: string; tone: "ok" | "warning" | "danger" }> = [];
+
+  if (!alternative.can_approve || alternative.budget_status !== "within_budget") {
+    tags.push({
+      label: "Cần xem lại",
+      title: "Phương án này chưa qua đủ điều kiện ngân sách hoặc tương thích.",
+      tone: "danger"
+    });
+  }
+
+  if (alternative.warnings_vi.some((warning) => warning.includes("PERF_BELOW_TARGET"))) {
+    tags.push({
+      label: "FPS chưa đạt mục tiêu",
+      title: "Benchmark hiện có thấp hơn mục tiêu tần số quét đã nhập.",
+      tone: "warning"
+    });
+  }
+
+  if (alternative.performance_profile.fit_level === "limited") {
+    const limiting = alternative.performance_profile.balance?.limiting_component;
+    tags.push({
+      label: limiting && limiting !== "unknown"
+        ? `Hạn chế: ${balanceComponentLabel(limiting)}`
+        : "Hiệu năng còn hạn chế",
+      title: "Cấu hình có thể chưa mượt với mục tiêu hoặc workload nặng.",
+      tone: "warning"
+    });
+  }
+
+  if (!tags.length) {
+    tags.push({
+      label: "Qua kiểm tra",
+      title: "Phương án này nằm trong ngân sách và qua kiểm tra tương thích.",
+      tone: "ok"
+    });
+  }
+
+  return tags;
 }
 
 function decisionLabel(decision: OptimizerTrace["iterations"][number]["decision"]) {

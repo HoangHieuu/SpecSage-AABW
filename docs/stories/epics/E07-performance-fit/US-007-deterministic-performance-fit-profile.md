@@ -44,7 +44,7 @@ benchmark tables exist.
 - API: `BuildArtifact.performance_profile`.
 - Tables: none; benchmark tables remain future Phase 4 scope.
 - Domain rules: qualitative only; no LLM and no invented FPS.
-- UI surfaces: build panel adds a "Workload fit" section after metrics.
+- UI surfaces: build panel adds a `Mức phù hợp` section after metrics.
 
 ## Validation
 
@@ -66,7 +66,7 @@ No harness behavior change expected.
 - `scripts/bin/harness-cli story verify US-007` passed.
 - Playwright browser flow opened the local app, analyzed intent through the
   OpenRouter advisor, confirmed intent, generated a valid 7-SKU build, and
-  displayed `Workload fit` with `Phù hợp tốt`, `RX 7600 · 8GB VRAM`, `144Hz`,
+  displayed `Mức phù hợp` with `Phù hợp tốt`, `RX 7600 · 8GB VRAM`, `144Hz`,
   and qualitative fit notes.
 - Direct Playwright extraction confirmed the performance profile panel contains
   no `fps` text.

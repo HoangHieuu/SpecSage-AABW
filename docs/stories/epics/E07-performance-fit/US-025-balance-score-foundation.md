@@ -44,7 +44,7 @@ reported as `PERF_IMBALANCE`.
 - Tables: none.
 - Domain rules: formula uses CPU core/thread factor, GPU chipset/VRAM factor,
   RAM capacity factor, and storage interface/capacity factor.
-- UI surfaces: existing `Workload fit` panel.
+- UI surfaces: existing `Mức phù hợp` panel.
 
 ## Validation
 

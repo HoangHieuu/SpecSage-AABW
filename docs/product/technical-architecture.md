@@ -236,9 +236,11 @@ The loop computes use-case allocation weights, applies priority overrides for
 GPU/VGA, quiet operation, and RGB/aesthetic intent, then records candidate
 decisions as accepted, rejected, or skipped. The existing safety gates still
 own final behavior: catalog-only SKUs, compatibility rules, budget status, and
-benchmark-preserving gaming auto-swaps. `US-036` uses this visible trace in the
-browser demo; it does not add a new endpoint, storage table, checkout adapter,
-or staff/admin surface.
+benchmark-preserving gaming auto-swaps. The browser keeps this trace behind
+`Chi tiết hỗ trợ` so customers see the recommendation first while demo/support
+users can still inspect the agent decisions. `US-036` uses this support
+disclosure in the browser demo; it does not add a new endpoint, storage table,
+checkout adapter, or staff/admin surface.
 
 `US-037` adds the first natural-language iteration endpoint:
 

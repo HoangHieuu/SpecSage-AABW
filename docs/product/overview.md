@@ -137,9 +137,10 @@ survive an Agent API process restart without requiring Postgres credentials.
 `US-011` routes build generation through a bounded LangGraph state graph and
 surfaces a schema-valid orchestration trace while preserving deterministic SKU,
 price, compatibility, workload fit, approval, and handoff behavior.
-`US-012` adds local trace replay endpoints and a web replay panel derived from
-persisted build artifacts. It is a hackathon observability bridge before
-Langfuse/OpenTelemetry integration, not production telemetry.
+`US-012` adds local trace replay endpoints and a web support-details disclosure
+derived from persisted build artifacts. It is hidden from the default customer
+view and acts as a hackathon observability bridge before Langfuse/OpenTelemetry
+integration, not production telemetry.
 `US-013` adds 30 local canonical evaluation scenarios and a `pnpm eval:run`
 release gate before Langfuse datasets or hosted CI are available.
 `US-014` promotes `pnpm check` and `pnpm eval:run` into a GitHub Actions quality

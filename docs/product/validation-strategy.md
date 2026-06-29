@@ -65,7 +65,7 @@ deterministic flow still works if the LLM panel is available or degraded.
 Unit proof covers deterministic fit thresholds for gaming, creator, AI/local
 LLM, and office builds. Integration proof checks the generate endpoint returns
 `performance_profile`. Browser proof must show the generated build view renders
-the `Workload fit` panel. Unsupported numeric FPS claims remain blocked.
+the `Mức phù hợp` panel. Unsupported numeric FPS claims remain blocked.
 
 `US-023` is verified by focused benchmark lookup tests, build generation tests,
 `pnpm check`, `pnpm eval:run`, and Harness story verification. Unit proof covers
@@ -127,7 +127,7 @@ Unit proof covers deterministic alternative generation from catalog SKUs,
 changed slot deltas, compatibility revalidation, and absence of FPS claims.
 Integration proof checks `GET /builds/{build_id}/alternatives` returns variants
 for stored builds and 404s missing build IDs. Browser proof must show the
-generated build view renders the `Alternatives` panel with concrete SKU deltas.
+generated build view renders the `Phương án thay thế` panel with concrete SKU deltas.
 
 `US-009` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit proof covers converting a deterministic variant into a new versioned build
@@ -175,9 +175,10 @@ optimizer-loop counts and tool calls.
 
 `US-036` is verified by the API demo-flow test, browser desktop/mobile proof,
 `pnpm check`, `pnpm eval:run`, and Harness story verification. The demo proof
-must show the Cyberpunk 2077 prompt, optimizer loop panel, benchmark-backed
-warning, alternatives panel, applied build, mock cart handoff, saved feedback,
-and no page-wide horizontal overflow on mobile.
+must show the Cyberpunk 2077 prompt, customer-facing build summary,
+benchmark-backed warning, alternatives panel, applied build, mock cart handoff,
+saved feedback, support-details access to optimizer trace, and no page-wide
+horizontal overflow on mobile.
 
 `US-037` is verified by focused parser, API, generation, and trace replay
 tests, `pnpm check`, `pnpm eval:run`, Harness story verification, and browser
@@ -206,7 +207,8 @@ must show the generated build view renders the `Agent orchestration` panel.
 Unit proof covers trace replay conversion and PII-sensitive payload redaction.
 Integration proof checks build/session trace endpoints, build-version grouping,
 support-export text, and SQLite restart survival. Browser proof must show the
-generated build view renders `Trace replay` with six events and a support-export
+generated build view keeps trace details out of the default customer path while
+`Chi tiết hỗ trợ` renders the support trace with six events and a support-export
 copy action.
 
 `US-013` is verified by `pnpm check`, `pnpm eval:run`, and Harness story
