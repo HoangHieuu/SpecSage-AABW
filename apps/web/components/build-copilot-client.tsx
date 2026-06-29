@@ -14,6 +14,7 @@ import {
   BuildItem,
   BuildIterationResponse,
   BuildOrchestrationStep,
+  BuildRecommendedAddOn,
   BuildSession,
   CartReadyHandoff,
   IntentAgentAnalysis,
@@ -82,6 +83,7 @@ export function BuildCopilotClient() {
   const [buildAlternatives, setBuildAlternatives] = useState<BuildAlternativesResponse | null>(null);
   const [sessionTrace, setSessionTrace] = useState<SessionTraceReplay | null>(null);
   const [cartHandoff, setCartHandoff] = useState<CartReadyHandoff | null>(null);
+  const [selectedAddOnSkus, setSelectedAddOnSkus] = useState<string[]>([]);
   const [buildFeedback, setBuildFeedback] = useState<BuildFeedback | null>(null);
   const [appliedAlternativeLabel, setAppliedAlternativeLabel] = useState<string | null>(null);
   const [iterationCommand, setIterationCommand] = useState("Tăng SSD nhưng giữ dưới 20 triệu");
@@ -119,6 +121,14 @@ export function BuildCopilotClient() {
     if (!intent) return "Chưa có";
     return formatBudget(intent.budget_min, intent.budget_max);
   }, [intent]);
+  const selectedAddOnTotal = useMemo(() => {
+    if (!buildArtifact || !selectedAddOnSkus.length) return 0;
+    const selected = new Set(selectedAddOnSkus);
+    return buildArtifact.recommended_addons.reduce(
+      (total, addon) => total + (selected.has(addon.sku) ? addon.price_vnd : 0),
+      0
+    );
+  }, [buildArtifact, selectedAddOnSkus]);
 
   useEffect(() => {
     const textarea = intentTextareaRef.current;
@@ -146,6 +156,7 @@ export function BuildCopilotClient() {
       setBuildAlternatives(null);
       setSessionTrace(null);
       setCartHandoff(null);
+      setSelectedAddOnSkus([]);
       setBuildFeedback(null);
       setAppliedAlternativeLabel(null);
       setLastIteration(null);
@@ -178,6 +189,7 @@ export function BuildCopilotClient() {
     setBuildAlternatives(null);
     setSessionTrace(null);
     setCartHandoff(null);
+    setSelectedAddOnSkus([]);
     setBuildFeedback(null);
     setAppliedAlternativeLabel(null);
     setLastIteration(null);
@@ -196,6 +208,7 @@ export function BuildCopilotClient() {
     setBuildAlternatives(alternatives);
     setSessionTrace(trace);
     setCartHandoff(null);
+    setSelectedAddOnSkus([]);
     setBuildFeedback(null);
     setAppliedAlternativeLabel(null);
     setLastIteration(null);
@@ -276,6 +289,7 @@ export function BuildCopilotClient() {
       setBuildAlternatives(alternatives);
       setSessionTrace(trace);
       setCartHandoff(null);
+      setSelectedAddOnSkus([]);
       setBuildFeedback(null);
       setAppliedAlternativeLabel(alternative.label_vi);
       setLastIteration(null);
@@ -316,6 +330,7 @@ export function BuildCopilotClient() {
       setBuildAlternatives(alternatives);
       setSessionTrace(trace);
       setCartHandoff(null);
+      setSelectedAddOnSkus([]);
       setBuildFeedback(null);
       setAppliedAlternativeLabel(null);
       setLastIteration(response);
@@ -336,7 +351,9 @@ export function BuildCopilotClient() {
     setIsLoading(true);
     setError(null);
     try {
-      const handoff = await approveBuild(buildArtifact.build_id);
+      const handoff = await approveBuild(buildArtifact.build_id, {
+        selected_addon_skus: selectedAddOnSkus
+      });
       setCartHandoff(handoff);
       setSession((current) => (current ? { ...current, state: "cart_ready" } : current));
     } catch (err) {
@@ -344,6 +361,15 @@ export function BuildCopilotClient() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleToggleAddOn(sku: string, checked: boolean) {
+    setSelectedAddOnSkus((current) => {
+      if (checked) {
+        return current.includes(sku) ? current : [...current, sku];
+      }
+      return current.filter((item) => item !== sku);
+    });
   }
 
   async function handleSubmitFeedback(payload: BuildFeedbackRequest) {
@@ -607,6 +633,14 @@ export function BuildCopilotClient() {
               </table>
             </div>
 
+            <AddOnRecommendationsPanel
+              addons={buildArtifact.recommended_addons}
+              isAdvanced={displayMode === "advanced"}
+              selectedSkus={selectedAddOnSkus}
+              disabled={Boolean(cartHandoff)}
+              onToggle={handleToggleAddOn}
+            />
+
             {buildAlternatives ? (
               <BuildAlternativesPanel
                 response={buildAlternatives}
@@ -659,7 +693,9 @@ export function BuildCopilotClient() {
                   {cartHandoff
                     ? "Danh sách sản phẩm đã sẵn sàng từ các link Phong Vu."
                     : canApprove
-                      ? "Cấu hình đã qua kiểm tra tương thích và nằm trong ngân sách."
+                      ? selectedAddOnTotal > 0
+                        ? `Cấu hình đã qua kiểm tra. Gợi ý thêm đã chọn: ${formatVnd(selectedAddOnTotal)}.`
+                        : "Cấu hình đã qua kiểm tra tương thích và nằm trong ngân sách."
                       : "Cấu hình cần xem lại ngân sách, cảnh báo hoặc thông tin còn thiếu trước khi mua."}
                 </p>
               </div>
@@ -1329,6 +1365,94 @@ function SupportDetailsPanel({
   );
 }
 
+function AddOnRecommendationsPanel({
+  addons,
+  isAdvanced,
+  selectedSkus,
+  disabled,
+  onToggle
+}: {
+  addons: BuildRecommendedAddOn[];
+  isAdvanced: boolean;
+  selectedSkus: string[];
+  disabled: boolean;
+  onToggle: (sku: string, checked: boolean) => void;
+}) {
+  if (!addons.length) return null;
+  const selected = new Set(selectedSkus);
+
+  return (
+    <section className="addon-panel" data-testid="addon-recommendations">
+      <div className="addon-heading">
+        <div>
+          <h3>Gợi ý thêm</h3>
+          <p>Không tính vào tổng giá PC; dùng khi bạn muốn mua thêm cùng cấu hình.</p>
+        </div>
+        <span className="status">{addons.length} tùy chọn</span>
+      </div>
+
+      <div className="addon-grid">
+        {addons.map((addon) => (
+          <article className="addon-card" key={`${addon.kind}-${addon.sku}`}>
+            <div className="addon-card-heading">
+              <div>
+                <span className="addon-kind">{addonKindLabel(addon.kind)}</span>
+                <h4>
+                  <a href={addon.url} target="_blank" rel="noreferrer">
+                    {addon.name}
+                  </a>
+                </h4>
+              </div>
+              <strong>{formatVnd(addon.price_vnd)}</strong>
+            </div>
+
+            <p>{addon.reason_vi}</p>
+
+            <div className="addon-tags" aria-label="Trạng thái gợi ý">
+              <span className="risk-tag ok">Tùy chọn</span>
+              {addon.warnings_vi.length ? (
+                <span className="risk-tag warning" title={addon.warnings_vi[0]}>
+                  Cần xem lại
+                </span>
+              ) : null}
+              {isAdvanced ? (
+                <span className="risk-tag neutral" title="Mức đầy đủ thông số trong snapshot">
+                  {specConfidenceLabel(addon.specs_confidence)}
+                </span>
+              ) : null}
+            </div>
+
+            {isAdvanced ? (
+              <ul className="addon-fit-notes">
+                {addon.fit_notes_vi.map((note) => (
+                  <li key={`${addon.sku}-${note}`}>{note}</li>
+                ))}
+                {addon.warnings_vi.map((warning) => (
+                  <li key={`${addon.sku}-${warning}`}>{warning}</li>
+                ))}
+              </ul>
+            ) : null}
+
+            <a className="addon-link" href={addon.url} target="_blank" rel="noreferrer">
+              Xem sản phẩm
+            </a>
+
+            <label className="addon-select">
+              <input
+                type="checkbox"
+                checked={selected.has(addon.sku)}
+                disabled={disabled}
+                onChange={(event) => onToggle(addon.sku, event.currentTarget.checked)}
+              />
+              <span>Thêm vào danh sách mua</span>
+            </label>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function CustomerWarningsPanel({ artifact }: { artifact: BuildArtifact }) {
   const warnings = [
     ...artifact.warnings_vi,
@@ -1787,6 +1911,7 @@ function LlmAgentPanel({ analysis }: { analysis: IntentAgentAnalysis }) {
 }
 
 function CartReadyPanel({ handoff }: { handoff: CartReadyHandoff }) {
+  const shoppingTotal = handoff.shopping_list_total_price_vnd || handoff.total_price_vnd;
   return (
     <section className="cart-ready" data-testid="cart-ready-panel">
       <div className="panel-heading">
@@ -1794,20 +1919,32 @@ function CartReadyPanel({ handoff }: { handoff: CartReadyHandoff }) {
         <span className="status confirmed">Sẵn sàng mở sản phẩm</span>
       </div>
       <div className="build-metrics compact">
-        <Metric label="Tổng giá" value={formatVnd(handoff.total_price_vnd)} />
+        <Metric label="PC" value={formatVnd(handoff.total_price_vnd)} />
+        <Metric label="Gợi ý thêm" value={formatVnd(handoff.add_on_total_price_vnd)} />
+        <Metric label="Tổng danh sách" value={formatVnd(shoppingTotal)} />
         <Metric label="Số sản phẩm" value={`${handoff.item_count}`} />
-        <Metric label="Trạng thái" value="Đã kiểm tra" />
-        <Metric label="Mua hàng" value="Mở link Phong Vu" />
       </div>
       <p>
         Danh sách này dùng link sản phẩm Phong Vu để bạn kiểm tra giá, tồn kho và thêm vào
         giỏ hàng trên website chính thức.
       </p>
+      {handoff.selected_addons.length ? (
+        <div className="cart-addon-summary">
+          <strong>Gợi ý thêm đã chọn</strong>
+          <ul>
+            {handoff.selected_addons.map((addon) => (
+              <li key={addon.sku}>
+                {addonKindLabel(addon.kind)} · {addon.name} · {formatVnd(addon.price_vnd)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <ol className="cart-links">
         {handoff.mock_cart_payload.items.map((item) => (
           <li key={item.sku}>
             <a href={item.url} target="_blank" rel="noreferrer">
-              Sản phẩm {item.sku}
+              {item.name || `Sản phẩm ${item.sku}`}
             </a>
           </li>
         ))}
@@ -1876,6 +2013,14 @@ function slotLabel(slot: BuildItem["slot"]) {
     cooler: "Cooler"
   };
   return labels[slot];
+}
+
+function addonKindLabel(kind: BuildRecommendedAddOn["kind"]) {
+  const labels: Record<BuildRecommendedAddOn["kind"], string> = {
+    monitor: "Màn hình",
+    cooler: "Tản nhiệt"
+  };
+  return labels[kind];
 }
 
 function specConfidenceLabel(confidence: BuildItem["specs_confidence"]) {

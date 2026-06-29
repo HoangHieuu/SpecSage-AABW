@@ -1668,6 +1668,153 @@ textarea:focus {
 
 /* ── Alternatives ── */
 
+.addon-panel {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+}
+
+.addon-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.addon-heading h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.addon-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.addon-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.addon-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.addon-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.addon-card-heading h4 {
+  margin: 6px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.addon-card-heading a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.addon-card-heading a:hover,
+.addon-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.addon-card-heading strong {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.addon-kind {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.addon-card p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+.addon-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.risk-tag.neutral {
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--muted);
+}
+
+.addon-fit-notes {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.addon-fit-notes li {
+  overflow-wrap: anywhere;
+}
+
+.addon-link {
+  display: inline-flex;
+  margin-top: 14px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.addon-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.addon-select input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.addon-select:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .alternatives-panel {
   margin-top: 20px;
   padding-top: 20px;
@@ -2322,6 +2469,27 @@ tbody tr:last-child td {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.cart-addon-summary {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.cart-addon-summary strong {
+  display: block;
+  font-size: 13px;
+}
+
+.cart-addon-summary ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
 .cart-links,
 .cart-warnings {
   margin: 14px 0 0;
@@ -2375,6 +2543,7 @@ tbody tr:last-child td {
   .agent-trace-list,
   .optimizer-summary-grid,
   .optimizer-weights,
+  .addon-grid,
   .alternatives-grid,
   .alternative-metrics,
   .iteration-command-row,
@@ -2424,9 +2593,11 @@ tbody tr:last-child td {
   .agent-trace-heading,
   .optimizer-trace-heading,
   .iteration-heading,
+  .addon-heading,
   .trace-replay-heading,
   .trace-build-card-heading,
   .trace-event-title,
+  .addon-card-heading,
   .alternative-card-heading {
     flex-direction: column;
   }

@@ -130,6 +130,21 @@ export type BuildItem = {
   explanation_vi: string;
 };
 
+export type BuildRecommendedAddOn = {
+  kind: "monitor" | "cooler";
+  sku: string;
+  name: string;
+  category: string;
+  price_vnd: number;
+  url: string;
+  brand: string | null;
+  specs_confidence: "verified" | "partial" | "inferred";
+  reason_vi: string;
+  fit_notes_vi: string[];
+  warnings_vi: string[];
+  optional: boolean;
+};
+
 export type PerformanceProfile = {
   use_case: string;
   fit_level: "good" | "adequate" | "limited" | "unknown";
@@ -268,6 +283,7 @@ export type BuildArtifact = {
   compatibility_report: CompatibilityReport;
   performance_profile: PerformanceProfile;
   optimizer_trace: OptimizerTrace | null;
+  recommended_addons: BuildRecommendedAddOn[];
   explanations_vi: string[];
   warnings_vi: string[];
   orchestration_trace: BuildOrchestrationStep[];
@@ -361,6 +377,10 @@ export type BuildApproval = {
   disclaimer_vi: string;
 };
 
+export type BuildApprovalRequest = {
+  selected_addon_skus?: string[];
+};
+
 export type CartReadyHandoff = {
   handoff_id: string;
   build_id: string;
@@ -369,11 +389,14 @@ export type CartReadyHandoff = {
   status: "cart_ready";
   approval: BuildApproval;
   total_price_vnd: number;
+  add_on_total_price_vnd: number;
+  shopping_list_total_price_vnd: number;
   item_count: number;
+  selected_addons: BuildRecommendedAddOn[];
   mock_cart_payload: {
     provider: string;
     disclaimer_vi: string;
-    items: Array<{ sku: string; url: string }>;
+    items: Array<{ sku: string; url: string; name?: string }>;
   };
   warnings_vi: string[];
 };
@@ -491,10 +514,13 @@ export function iterateBuild(buildId: string, commandVi: string): Promise<BuildI
   });
 }
 
-export function approveBuild(buildId: string): Promise<CartReadyHandoff> {
+export function approveBuild(
+  buildId: string,
+  payload: BuildApprovalRequest = {}
+): Promise<CartReadyHandoff> {
   return request<CartReadyHandoff>(`/builds/${buildId}/approve`, {
     method: "POST",
-    body: JSON.stringify({})
+    body: JSON.stringify(payload)
   });
 }
 
