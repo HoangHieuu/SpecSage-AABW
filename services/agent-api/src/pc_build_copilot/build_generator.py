@@ -14,6 +14,7 @@ from pc_build_copilot.build_models import (
     OptimizerIterationDecision,
     OptimizerTrace,
 )
+from pc_build_copilot.build_addons import recommend_build_addons
 from pc_build_copilot.catalog_models import CatalogSku, CatalogSnapshot, ComponentCategory
 from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.compatibility_rules import validate_build_compatibility
@@ -116,6 +117,11 @@ def _build_artifact_from_selected(
         )
         for slot, item in selected.items()
     ]
+    recommended_addons = recommend_build_addons(
+        intent=intent,
+        catalog=catalog,
+        selected=selected,
+    )
 
     warnings = [
         *_budget_warnings(total_price, intent.budget_max, budget_gap),
@@ -140,12 +146,14 @@ def _build_artifact_from_selected(
         compatibility_report=compatibility_report,
         performance_profile=performance_profile,
         optimizer_trace=optimizer_trace,
+        recommended_addons=recommended_addons,
         explanations_vi=_build_explanations(
             intent,
             total_price,
             budget_status,
             catalog,
             optimizer_notes,
+            has_addons=bool(recommended_addons),
         ),
         warnings_vi=warnings,
         mock_cart_payload=MockCartPayload(
@@ -510,6 +518,8 @@ def _build_explanations(
     budget_status: BudgetStatus,
     catalog: CatalogSnapshot,
     optimizer_notes: list[str],
+    *,
+    has_addons: bool = False,
 ) -> list[str]:
     use_case = _use_case_label(intent.use_case)
     explanation = [
@@ -528,6 +538,10 @@ def _build_explanations(
     if budget_status == BudgetStatus.WITHIN_BUDGET:
         explanation.append(f"Tổng giá snapshot là {_format_vnd(total_price)}, nằm trong ngân sách.")
         explanation.extend(optimizer_notes)
+    if has_addons:
+        explanation.append(
+            "Gợi ý thêm là tùy chọn, không cộng vào tổng giá PC hoặc danh sách mua chính."
+        )
     if budget_status == BudgetStatus.OVER_BUDGET:
         explanation.append(
             "Snapshot hiện tại không có phương án rẻ hơn đủ slot, nên hệ thống trả về "

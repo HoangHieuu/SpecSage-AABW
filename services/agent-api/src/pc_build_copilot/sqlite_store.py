@@ -10,14 +10,20 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 
 from pc_build_copilot.build_models import (
-    BuildApproval,
+    BuildApprovalRequest,
     BuildArtifact,
     BuildFeedback,
     BuildFeedbackRequest,
     BuildStatus,
     CartReadyHandoff,
 )
-from pc_build_copilot.build_store import BuildStore, build_feedback_from_artifact
+from pc_build_copilot.build_store import (
+    BuildStore,
+    assert_same_addon_selection,
+    build_feedback_from_artifact,
+    cart_handoff_from_artifact,
+    normalized_selected_addon_skus,
+)
 from pc_build_copilot.models import BuildSession, IntentRevision, SessionState
 from pc_build_copilot.store import SessionStore
 
@@ -225,15 +231,23 @@ class SqliteBuildStore(BuildStore):
             ).fetchall()
         return [BuildArtifact.model_validate_json(row["payload_json"]) for row in rows]
 
-    def approve(self, build_id: str) -> CartReadyHandoff:
+    def approve(
+        self,
+        build_id: str,
+        payload: BuildApprovalRequest | None = None,
+    ) -> CartReadyHandoff:
         artifact = self.get(build_id)
+        payload = payload or BuildApprovalRequest()
+        selected_addon_skus = normalized_selected_addon_skus(artifact, payload)
         with _connect(self.db_path) as conn:
             existing = conn.execute(
                 "SELECT payload_json FROM cart_handoffs WHERE build_id = ?",
                 (build_id,),
             ).fetchone()
             if existing is not None:
-                return CartReadyHandoff.model_validate_json(existing["payload_json"])
+                handoff = CartReadyHandoff.model_validate_json(existing["payload_json"])
+                assert_same_addon_selection(handoff, selected_addon_skus)
+                return handoff
 
             if artifact.status != BuildStatus.GENERATED or not artifact.can_approve:
                 raise HTTPException(
@@ -241,26 +255,7 @@ class SqliteBuildStore(BuildStore):
                     detail="build must be compatible and within budget before approval",
                 )
 
-            approval = BuildApproval(
-                build_id=artifact.build_id,
-                build_session_id=artifact.build_session_id,
-                selected_skus={item.slot.value: item.sku for item in artifact.items},
-                total_price_vnd=artifact.total_price_vnd,
-                catalog_version=artifact.catalog_version,
-                rules_version=artifact.rules_version,
-            )
-            handoff = CartReadyHandoff(
-                build_id=artifact.build_id,
-                build_session_id=artifact.build_session_id,
-                approval=approval,
-                total_price_vnd=artifact.total_price_vnd,
-                item_count=len(artifact.items),
-                mock_cart_payload=artifact.mock_cart_payload,
-                warnings_vi=[
-                    *artifact.warnings_vi,
-                    "Mock cart: mở từng link sản phẩm Phong Vu để thêm vào giỏ.",
-                ],
-            )
+            handoff = cart_handoff_from_artifact(artifact, payload)
             conn.execute(
                 """
                 INSERT INTO cart_handoffs (

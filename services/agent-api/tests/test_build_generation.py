@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
@@ -14,10 +15,11 @@ from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.models import BuildIntent, UseCase
 from pc_build_copilot.store import SessionStore
 
-from test_catalog_ingestion import _items
+from test_catalog_ingestion import ROOT, _items
 
 
 SNAPSHOT_AT = datetime(2026, 6, 27, tzinfo=UTC)
+ACTIVE_CATALOG = ROOT / "catalog" / "catalog_snapshot.json"
 
 
 def _snapshot(items=None) -> CatalogSnapshot:
@@ -29,8 +31,14 @@ def _snapshot(items=None) -> CatalogSnapshot:
     )
 
 
-def _client() -> TestClient:
-    return TestClient(create_app(SessionStore(), CatalogRepository(snapshot=_snapshot())))
+def _active_catalog_snapshot() -> CatalogSnapshot:
+    return CatalogSnapshot.model_validate_json(
+        Path(ACTIVE_CATALOG).read_text(encoding="utf-8")
+    )
+
+
+def _client(snapshot: CatalogSnapshot | None = None) -> TestClient:
+    return TestClient(create_app(SessionStore(), CatalogRepository(snapshot=snapshot or _snapshot())))
 
 
 def test_generator_creates_compatible_grounded_build_under_budget() -> None:
@@ -301,6 +309,83 @@ def test_generator_warns_when_requested_monitor_exceeds_benchmark_fps() -> None:
         "PERF_MONITOR_OVERSPEC" in warning
         for warning in artifact.warnings_vi
     )
+
+
+def test_generator_recommends_optional_monitor_from_real_catalog_without_cart_total() -> None:
+    intent = BuildIntent(
+        raw_text="PC gaming 25 triệu chơi Cyberpunk 2077 1440p Ultra 144Hz kèm màn hình 2K",
+        use_case=UseCase.GAMING,
+        budget_max=25_000_000,
+        target_games=["Cyberpunk 2077"],
+        performance_targets=["1440p", "Ultra", "144Hz"],
+        mentioned_components=["monitor"],
+    )
+
+    artifact = generate_build_artifact(
+        build_session_id="bs_monitor_addon",
+        intent=intent,
+        catalog=_active_catalog_snapshot(),
+        optimize=False,
+    )
+    monitor = next(item for item in artifact.recommended_addons if item.kind == "monitor")
+
+    assert monitor.sku == "260602184"
+    assert monitor.category == "monitor"
+    assert monitor.optional is True
+    assert monitor.price_vnd == 4_990_000
+    assert "2560x1440" in monitor.reason_vi
+    assert monitor.sku not in {item.sku for item in artifact.items}
+    assert monitor.sku not in {item["sku"] for item in artifact.mock_cart_payload.items}
+    assert artifact.total_price_vnd == sum(item.price_vnd for item in artifact.items)
+    assert any("không cộng vào tổng giá" in item for item in artifact.explanations_vi)
+
+
+def test_generator_keeps_monitor_addon_conservative_without_display_target() -> None:
+    intent = BuildIntent(
+        raw_text="PC gaming 20 triệu chơi Valorant và LMHT 144Hz",
+        use_case=UseCase.GAMING,
+        budget_max=20_000_000,
+        target_games=["Valorant", "LMHT"],
+        performance_targets=["144Hz"],
+    )
+
+    artifact = generate_build_artifact(
+        build_session_id="bs_no_monitor_addon",
+        intent=intent,
+        catalog=_active_catalog_snapshot(),
+        optimize=False,
+    )
+
+    assert all(item.kind != "monitor" for item in artifact.recommended_addons)
+
+
+def test_generator_recommends_optional_cooler_from_real_catalog_with_fit_notes() -> None:
+    intent = BuildIntent(
+        raw_text="Máy văn phòng khoảng 20 triệu, ưu tiên êm và bền, thêm tản nhiệt CPU",
+        use_case=UseCase.OFFICE,
+        budget_max=20_000_000,
+        noise_preferences="quiet",
+        mentioned_components=["cooler"],
+    )
+
+    artifact = generate_build_artifact(
+        build_session_id="bs_cooler_addon",
+        intent=intent,
+        catalog=_active_catalog_snapshot(),
+        optimize=False,
+    )
+    cooler = next(item for item in artifact.recommended_addons if item.kind == "cooler")
+
+    assert cooler.sku == "251012780"
+    assert cooler.category == "cooler"
+    assert cooler.optional is True
+    assert "vận hành êm" in cooler.reason_vi
+    assert any("LGA1700" in note for note in cooler.fit_notes_vi)
+    assert any("TDP" in note for note in cooler.fit_notes_vi)
+    assert any("giới hạn case" in note for note in cooler.fit_notes_vi)
+    assert cooler.sku not in {item.sku for item in artifact.items}
+    assert cooler.sku not in {item["sku"] for item in artifact.mock_cart_payload.items}
+    assert artifact.total_price_vnd == sum(item.price_vnd for item in artifact.items)
 
 
 def test_generator_returns_explicit_over_budget_gap_without_inventing_parts() -> None:
@@ -635,6 +720,96 @@ def test_apply_alternative_endpoint_creates_new_stored_build_version_and_can_app
     assert handoff.json()["status"] == "cart_ready"
     assert handoff.json()["build_id"] == body["build_id"]
     assert handoff.json()["total_price_vnd"] == body["total_price_vnd"]
+
+
+def test_addon_recommendations_are_excluded_from_approval_payload() -> None:
+    client = _client(_active_catalog_snapshot())
+    session = client.post("/sessions", json={}).json()
+    client.post(
+        f"/sessions/{session['build_session_id']}/intent",
+        json={
+            "message": (
+                "PC gaming 25 triệu chơi Cyberpunk 2077 1440p Ultra 144Hz "
+                "kèm màn hình 2K"
+            ),
+            "confirm": True,
+            "preset": "gaming",
+        },
+    )
+    build = client.post(f"/sessions/{session['build_session_id']}/generate").json()
+    addon_skus = {item["sku"] for item in build["recommended_addons"]}
+
+    response = client.post(f"/builds/{build['build_id']}/approve")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert addon_skus == {"260602184"}
+    assert body["total_price_vnd"] == build["total_price_vnd"]
+    assert addon_skus.isdisjoint(set(body["approval"]["selected_skus"].values()))
+    assert addon_skus.isdisjoint({item["sku"] for item in body["mock_cart_payload"]["items"]})
+
+
+def test_approve_endpoint_can_include_selected_addons_in_shopping_list() -> None:
+    client = _client(_active_catalog_snapshot())
+    session = client.post("/sessions", json={}).json()
+    client.post(
+        f"/sessions/{session['build_session_id']}/intent",
+        json={
+            "message": (
+                "PC gaming 25 triệu chơi Cyberpunk 2077 1440p Ultra 144Hz "
+                "kèm màn hình 2K"
+            ),
+            "confirm": True,
+            "preset": "gaming",
+        },
+    )
+    build = client.post(f"/sessions/{session['build_session_id']}/generate").json()
+    addon = build["recommended_addons"][0]
+
+    response = client.post(
+        f"/builds/{build['build_id']}/approve",
+        json={"selected_addon_skus": [addon["sku"]]},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert addon["sku"] == "260602184"
+    assert body["total_price_vnd"] == build["total_price_vnd"]
+    assert body["approval"]["total_price_vnd"] == build["total_price_vnd"]
+    assert addon["sku"] not in set(body["approval"]["selected_skus"].values())
+    assert body["add_on_total_price_vnd"] == 4_990_000
+    assert body["shopping_list_total_price_vnd"] == build["total_price_vnd"] + 4_990_000
+    assert body["item_count"] == len(build["items"]) + 1
+    assert [item["sku"] for item in body["selected_addons"]] == [addon["sku"]]
+    assert addon["sku"] in {item["sku"] for item in body["mock_cart_payload"]["items"]}
+    assert any(
+        item["name"] == addon["name"]
+        for item in body["mock_cart_payload"]["items"]
+        if item["sku"] == addon["sku"]
+    )
+    assert any("tùy chọn" in warning.casefold() for warning in body["warnings_vi"])
+
+
+def test_approve_endpoint_rejects_addon_sku_that_was_not_recommended() -> None:
+    client = _client(_active_catalog_snapshot())
+    session = client.post("/sessions", json={}).json()
+    client.post(
+        f"/sessions/{session['build_session_id']}/intent",
+        json={
+            "message": "PC gaming 25 triệu chơi Cyberpunk 2077 1440p Ultra 144Hz",
+            "confirm": True,
+            "preset": "gaming",
+        },
+    )
+    build = client.post(f"/sessions/{session['build_session_id']}/generate").json()
+
+    response = client.post(
+        f"/builds/{build['build_id']}/approve",
+        json={"selected_addon_skus": ["not-recommended-sku"]},
+    )
+
+    assert response.status_code == 422
+    assert "recommended add-ons" in response.json()["detail"]
 
 
 def test_apply_alternative_endpoint_404s_for_missing_variant() -> None:

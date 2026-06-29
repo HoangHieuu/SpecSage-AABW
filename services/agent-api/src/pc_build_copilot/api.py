@@ -8,6 +8,7 @@ from pc_build_copilot.build_alternatives import (
 from pc_build_copilot.build_orchestrator import generate_build_with_orchestration
 from pc_build_copilot.build_iteration import iterate_build_from_command
 from pc_build_copilot.build_models import (
+    BuildApprovalRequest,
     BuildAlternativesResponse,
     BuildArtifact,
     BuildFeedback,
@@ -175,11 +176,14 @@ def create_app(
         return response
 
     @app.post("/builds/{build_id}/approve", response_model=CartReadyHandoff)
-    def approve_build(build_id: str) -> CartReadyHandoff:
+    def approve_build(
+        build_id: str,
+        payload: BuildApprovalRequest | None = None,
+    ) -> CartReadyHandoff:
         artifact = builds.get(build_id)
         if artifact.can_approve and artifact.status.value == "generated":
             session_store.mark_reviewing(artifact.build_session_id)
-        handoff = builds.approve(build_id)
+        handoff = builds.approve(build_id, payload or BuildApprovalRequest())
         session_store.mark_approved(artifact.build_session_id)
         session_store.mark_cart_ready(artifact.build_session_id)
         return handoff

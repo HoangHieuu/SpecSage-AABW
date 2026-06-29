@@ -18,6 +18,7 @@ from pc_build_copilot.build_models import (
     MockCartPayload,
     PerformanceProfile,
 )
+from pc_build_copilot.build_addons import recommend_build_addons
 from pc_build_copilot.catalog_models import CatalogSku, CatalogSnapshot, ComponentCategory
 from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.compatibility_rules import validate_build_compatibility
@@ -111,6 +112,12 @@ def apply_build_alternative(
     if not compatibility_report.can_approve:
         warnings.append("Build áp dụng từ biến thể có lỗi tương thích mức block nên chưa thể duyệt.")
 
+    recommended_addons = recommend_build_addons(
+        intent=base_artifact.intent_snapshot,
+        catalog=catalog,
+        selected=selected,
+    )
+
     return BuildArtifact(
         build_id=build_id,
         build_session_id=base_artifact.build_session_id,
@@ -128,6 +135,7 @@ def apply_build_alternative(
         compatibility_report=compatibility_report,
         performance_profile=performance_profile,
         optimizer_trace=base_artifact.optimizer_trace,
+        recommended_addons=recommended_addons,
         explanations_vi=[
             *alternative.explanations_vi,
             (
@@ -135,6 +143,11 @@ def apply_build_alternative(
                 f"{base_artifact.build_id} thành build version {base_artifact.build_version + 1}."
             ),
             "Approval và handoff giỏ mock vẫn là bước riêng sau khi người dùng duyệt build.",
+            *(
+                ["Gợi ý thêm là tùy chọn, không cộng vào tổng giá PC hoặc danh sách mua chính."]
+                if recommended_addons
+                else []
+            ),
         ],
         warnings_vi=warnings,
         mock_cart_payload=MockCartPayload(

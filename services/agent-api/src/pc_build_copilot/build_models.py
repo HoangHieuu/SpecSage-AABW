@@ -78,6 +78,11 @@ class BuildAlternativeKind(str, Enum):
     BUDGET_SAVER = "budget_saver"
 
 
+class BuildAddOnKind(str, Enum):
+    MONITOR = "monitor"
+    COOLER = "cooler"
+
+
 class PerformanceFitLevel(str, Enum):
     GOOD = "good"
     ADEQUATE = "adequate"
@@ -148,6 +153,21 @@ class BuildItem(BaseModel):
     brand: str | None = None
     specs_confidence: SpecsConfidence
     explanation_vi: str
+
+
+class BuildRecommendedAddOn(BaseModel):
+    kind: BuildAddOnKind
+    sku: str
+    name: str
+    category: ComponentCategory
+    price_vnd: int
+    url: str
+    brand: str | None = None
+    specs_confidence: SpecsConfidence
+    reason_vi: str
+    fit_notes_vi: list[str] = Field(default_factory=list)
+    warnings_vi: list[str] = Field(default_factory=list)
+    optional: bool = True
 
 
 class MockCartPayload(BaseModel):
@@ -253,6 +273,7 @@ class BuildArtifact(BaseModel):
     compatibility_report: CompatibilityReport
     performance_profile: PerformanceProfile
     optimizer_trace: OptimizerTrace | None = None
+    recommended_addons: list[BuildRecommendedAddOn] = Field(default_factory=list)
     explanations_vi: list[str] = Field(default_factory=list)
     warnings_vi: list[str] = Field(default_factory=list)
     orchestration_trace: list[BuildOrchestrationStep] = Field(default_factory=list)
@@ -349,6 +370,10 @@ class BuildApproval(BaseModel):
     )
 
 
+class BuildApprovalRequest(BaseModel):
+    selected_addon_skus: list[str] = Field(default_factory=list, max_length=8)
+
+
 class CartReadyHandoff(BaseModel):
     handoff_id: str = Field(default_factory=lambda: f"cart_{uuid4().hex}")
     build_id: str
@@ -357,7 +382,10 @@ class CartReadyHandoff(BaseModel):
     status: CartHandoffStatus = CartHandoffStatus.CART_READY
     approval: BuildApproval
     total_price_vnd: int
+    add_on_total_price_vnd: int = 0
+    shopping_list_total_price_vnd: int = 0
     item_count: int
+    selected_addons: list[BuildRecommendedAddOn] = Field(default_factory=list)
     mock_cart_payload: MockCartPayload
     warnings_vi: list[str] = Field(default_factory=list)
 
