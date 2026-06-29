@@ -17,5 +17,6 @@ the work is selected or when a product decision needs a durable place to land.
 | E06 Explanation and Education | LLM-assisted summaries, customer-facing rationale, and buyer-oriented polish grounded in validated facts | stories created: `US-006`, `US-038` |
 | E07 Performance Fit | Deterministic workload fit profile, source-backed benchmark evidence, monitor overspec warnings, balance scoring, app-level creator/AI profiles, office adequacy guidance, and optimizer-safe benchmark coverage | stories created: `US-007`, `US-023`, `US-024`, `US-025`, `US-026`, `US-027`, `US-030`, `US-032` |
 | E08 Commerce Handoff | Mock cart first, optional add-on shopping-list selection, real Teko cart/promos after API access | stories created: `US-005`, `US-043` |
+| E09 Upgrade Planning | Existing-PC intake, confirmation, and deterministic reuse/replace guidance before multi-phase roadmaps | stories created: `US-044`, `US-045` |
 | E11 Observability Quality | Replay agent decisions, run local quality gates, CI gates, collect feedback, and prove demo flows before production observability | stories created: `US-012`, `US-013`, `US-014`, `US-015`, `US-036` |
 | Later Staff/Admin | Staff console, admin rules, auth/RBAC, analytics | unsliced high-risk |

@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-043` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-045` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -69,7 +69,10 @@ builds also include optional cooler recommendations for quiet/cooler requests,
 after deterministic socket, TDP, and case-clearance checks. These add-ons stay
 outside the PC total and approval gate. Customers can now explicitly include
 selected add-ons in the mock shopping list, which reports PC total, add-on
-total, and combined shopping-list total separately. Generated builds also include a deterministic
+total, and combined shopping-list total separately. Upgrade buyers can also
+enter an existing PC description, confirm the parsed current-PC summary, and
+receive a first GPU upgrade plan grounded in the active catalog, with
+deterministic PSU and case checks. Generated builds also include a deterministic
 CPU/GPU/RAM/storage balance score and `PERF_IMBALANCE` warning for severe
 mismatch. Creator, streaming, and local LLM requests now show deterministic
 app-fit rows for RAM, VRAM, CPU threads, storage, and CUDA preference. Office
@@ -179,6 +182,8 @@ The initial implementation backlog is intentionally small:
 41. `US-041` - monitor add-on recommendation foundation. Implemented.
 42. `US-042` - cooler add-on recommendation foundation. Implemented.
 43. `US-043` - optional add-on shopping-list selection. Implemented.
+44. `US-044` - GPU upgrade planning foundation. Implemented.
+45. `US-045` - existing system confirmation before upgrade planning. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -275,6 +280,8 @@ scripts/bin/harness-cli story verify US-040
 scripts/bin/harness-cli story verify US-041
 scripts/bin/harness-cli story verify US-042
 scripts/bin/harness-cli story verify US-043
+scripts/bin/harness-cli story verify US-044
+scripts/bin/harness-cli story verify US-045
 pnpm eval:run
 ```
 
@@ -310,6 +317,8 @@ Catalog endpoints after `pnpm catalog:sync`:
 - API build feedback history: `GET http://127.0.0.1:8000/builds/{build_id}/feedback`
 - API feedback review queue: `GET http://127.0.0.1:8000/feedback/review-queue`
 - API mock cart handoff: `POST http://127.0.0.1:8000/builds/{build_id}/approve`
+- API existing-system parse: `POST http://127.0.0.1:8000/upgrade-plans/existing-system/parse`
+- API GPU upgrade plan: `POST http://127.0.0.1:8000/upgrade-plans/gpu`
 - Local quality evals: `pnpm eval:run`
 - CI quality gate: `.github/workflows/ci.yml` runs `pnpm check` and
   `pnpm eval:run`

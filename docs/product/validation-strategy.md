@@ -311,6 +311,22 @@ being accepted only from `recommended_addons`, invalid add-on SKUs returning
 422, approval selected SKUs and approval total staying PC-only, and the mock
 shopping list reporting separate add-on and combined totals.
 
+`US-044` is verified by focused upgrade planner tests, `pnpm check:web`, and
+Harness story verification. Unit proof checks existing-system parsing,
+unknown-field warnings, in-stock catalog GPU selection, PSU wattage pass/block
+logic, PCIe connector checks, and GPU/case clearance checks. Integration proof
+checks `POST /upgrade-plans/gpu` returns a typed plan from the active catalog.
+Browser E2E is not required for this foundation story; the web panel is covered
+by the Next.js type/build gate.
+
+`US-045` is verified by focused upgrade planner tests, `pnpm check:web`, and
+Harness story verification. Unit proof checks confirmed existing-system fields
+override parsed free text before deterministic checks run. Integration proof
+checks `POST /upgrade-plans/existing-system/parse` returns the typed parsed
+summary, unknown fields, warnings, and confirmation next steps. Browser E2E is
+not required for this foundation story; the confirmation panel is covered by the
+Next.js type/build gate.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.

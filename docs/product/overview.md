@@ -119,12 +119,19 @@ The first demo should prove a narrow vertical slice:
 37. Customers can explicitly include recommended add-ons in the mock shopping
     list, with PC total, add-on total, and combined shopping-list total shown
     separately.
+38. Upgrade buyers can enter an existing PC description and get a first GPU
+    upgrade plan with catalog-grounded GPU choice plus deterministic PSU and
+    case checks.
+39. Upgrade buyers confirm the parsed current-PC summary before deterministic
+    upgrade checks use those facts.
 
-Current first-slice implementation reaches step 37 with a deterministic
+Current first-slice implementation reaches step 39 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, mock
 cart handoff, replayable agent traces, local quality gates, feedback capture,
 curated catalog subset promotion, and optional monitor/cooler add-on
-recommendations with explicit shopping-list selection. The active snapshot now
+recommendations with explicit shopping-list selection. It also has a first
+GPU-only upgrade planner for existing PCs with a parsed-spec confirmation step.
+The active snapshot now
 has three choices for every required full-build category plus three curated
 cooler choices and three curated monitor choices. It also has a freshness-aware `pilot_ready`
 health layer, while `production_ready` remains false until full catalog target
@@ -228,11 +235,21 @@ cooler requests after socket, TDP, and case-clearance checks. Both remain
 outside the PC total and approval gate. `US-043` lets customers explicitly add
 those recommendations to the mock shopping list, with add-on totals separated
 from the approved PC total.
+`US-044` starts Phase 7 with `POST /upgrade-plans/gpu`: existing system text is
+parsed for known CPU/GPU/RAM/PSU/case/storage facts, missing fields remain
+explicit `unknown` warnings, and one in-stock catalog GPU can be recommended
+inside the upgrade budget after PSU wattage, PCIe connector, and GPU/case
+clearance checks.
+`US-045` adds `POST /upgrade-plans/existing-system/parse` and a web
+confirmation step. The upgrade buyer can review and correct parsed CPU,
+mainboard, RAM, GPU, PSU wattage, PCIe 8-pin count, case clearance, and storage
+before those typed fields feed deterministic upgrade checks.
 
 Out of first-slice scope unless a later story selects it:
 
 - Customer auth and saved account history.
 - Real Teko cart checkout.
+- Prior order import and multi-phase upgrade roadmaps.
 - Staff RBAC and showroom console.
 - Admin CRUD for rules, benchmarks, and glossary.
 - Production analytics warehouse.
@@ -248,7 +265,7 @@ Out of first-slice scope unless a later story selects it:
 | 4 | Performance modeling and workload fit | Qualitative by default; source-backed benchmark seed, monitor warnings, balance scoring, app-fit thresholds, and office adequacy guidance |
 | 5 | Build optimization and iteration | Deterministic alternatives, apply flow, performance-aware ranking, benchmark-gated gaming optimization, bounded two-swap generation, optimizer-loop trace foundation, bounded natural-language iteration commands, and optional add-on recommendations |
 | 6 | Explanation and education | First vertical slice |
-| 7 | Upgrade planning | Later |
+| 7 | Upgrade planning | GPU upgrade planning with existing-system confirmation |
 | 8 | Commerce actions and checkout handoff | Mock first, real adapter later |
 | 9 | Staff copilot and showroom operations | Later high-risk |
 | 10 | Administration and rules CMS | Later high-risk |

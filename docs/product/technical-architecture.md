@@ -212,6 +212,7 @@ First public endpoints should be introduced with OpenAPI contracts:
 - `GET /builds/{id}/alternatives`
 - `POST /builds/{id}/alternatives/{variant_id}/apply`
 - `POST /builds/{id}/cart-payload`
+- `POST /upgrade-plans/gpu`
 
 Do not expose checkout, staff auth, webhooks, or admin mutation APIs until their
 stories create the required authorization and validation packets.
@@ -466,6 +467,29 @@ This follows the `techstack.md` Phase 5 recommendation for alternatives and
 slot-level diffs, but keeps the hackathon implementation narrow: no autonomous
 optimizer loop, no long-running orchestration, no external provider calls, and
 no persisted variant history.
+
+## Current Upgrade Planning Slice
+
+`US-044` adds the first Phase 7 upgrade-planning path:
+
+- `POST /upgrade-plans/gpu`
+- `POST /upgrade-plans/existing-system/parse`
+- `services/agent-api/src/pc_build_copilot/upgrade_models.py`
+- `services/agent-api/src/pc_build_copilot/upgrade_planner.py`
+- `apps/web/components/build-copilot-client.tsx`
+
+The parse endpoint accepts current-PC text and returns a typed existing-system
+summary with explicit unknown fields, Vietnamese confirmation copy, warnings,
+and next steps. The GPU endpoint accepts the same current-PC text plus optional
+confirmed existing-system fields and GPU upgrade budget. It recommends at most
+one in-stock catalog GPU that fits the budget and improves over the confirmed or
+parsed current GPU tier when known. Safety checks are deterministic: PSU
+wattage uses the same headroom formula as the compatibility engine, PCIe
+connector count is checked against the GPU power connector spec, and GPU/case
+clearance uses the existing clearance threshold.
+
+This slice does not import orders, save upgrade plans, authenticate users,
+create a multi-phase roadmap, or integrate checkout.
 
 ## Current Alternative Apply Slice
 

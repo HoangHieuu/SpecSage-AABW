@@ -207,6 +207,18 @@ GPU/mainboard output-port fields, multi-monitor office builds warn with
 `OFFICE_MULTI_MONITOR_OUTPUTS_UNKNOWN` instead of inventing HDMI/DisplayPort
 support or recommending monitor bundles.
 
+`US-044` uses the same active catalog mirror for a first existing-PC upgrade
+planner. The planner recommends only in-stock catalog GPU rows, keeps the
+current PC text as parsed user input, marks missing existing specs as
+`unknown`, and limits deterministic safety checks to data it actually has:
+PSU wattage, PSU PCIe 8-pin count, and case GPU clearance.
+
+`US-045` keeps the existing-PC text as the raw user artifact but adds a typed
+confirmation layer before planning. Confirmed CPU, mainboard, RAM, GPU, PSU,
+connector, case-clearance, and storage fields are accepted as structured
+overrides; missing values remain `unknown` and are not converted into
+compatibility facts.
+
 ## Commerce Adapter Boundary
 
 Hackathon:

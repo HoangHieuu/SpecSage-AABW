@@ -51,6 +51,8 @@ Initial PC Build Copilot story packets:
 | `US-041` | Monitor add-on recommendation foundation | implemented | normal |
 | `US-042` | Cooler add-on recommendation foundation | implemented | normal |
 | `US-043` | Optional add-on shopping-list selection | implemented | normal |
+| `US-044` | GPU upgrade planning foundation | implemented | normal |
+| `US-045` | Existing system confirmation before upgrade planning | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 
