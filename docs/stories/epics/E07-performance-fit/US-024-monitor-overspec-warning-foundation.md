@@ -12,8 +12,8 @@ normal
 
 When a customer asks for a monitor or display target, generated gaming builds
 warn if source-backed benchmark evidence is below the requested refresh rate.
-The system must not recommend monitor SKUs until active monitor catalog SKUs
-are curated and verified.
+The system must not recommend monitor SKUs until a later story defines monitor
+recommendation ranking and UX behavior.
 
 ## Relevant Product Docs
 
@@ -38,7 +38,8 @@ are curated and verified.
 ## Design Notes
 
 - Commands: no new runtime command.
-- Queries: no catalog monitor query yet because active monitor SKUs are absent.
+- Queries: no generated-build monitor query in this slice; `US-040` later adds
+  active monitor catalog rows for future recommendation work.
 - API: no schema change; warning appears in existing `warnings_vi` fields.
 - Tables: reuses `services/agent-api/benchmarks/gaming_benchmark_matrix.json`.
 - Domain rules: monitor overspec warning is emitted only when benchmark FPS is
