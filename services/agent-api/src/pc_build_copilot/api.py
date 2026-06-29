@@ -43,6 +43,16 @@ from pc_build_copilot.models import (
 from pc_build_copilot.sqlite_store import create_sqlite_stores
 from pc_build_copilot.store import SessionStore
 from pc_build_copilot.trace_replay import build_trace_replay, session_trace_replay
+from pc_build_copilot.upgrade_models import (
+    ExistingSystemParseRequest,
+    ExistingSystemParseResponse,
+    UpgradePlanRequest,
+    UpgradePlanResponse,
+)
+from pc_build_copilot.upgrade_planner import (
+    create_existing_system_parse,
+    create_gpu_upgrade_plan,
+)
 
 
 def create_app(
@@ -114,6 +124,22 @@ def create_app(
             selected_skus=payload.selected_skus,
             catalog=catalog_store.snapshot(),
         )
+
+    @app.post("/upgrade-plans/gpu", response_model=UpgradePlanResponse)
+    def create_gpu_upgrade(payload: UpgradePlanRequest) -> UpgradePlanResponse:
+        return create_gpu_upgrade_plan(
+            payload=payload,
+            catalog=catalog_store.snapshot(),
+        )
+
+    @app.post(
+        "/upgrade-plans/existing-system/parse",
+        response_model=ExistingSystemParseResponse,
+    )
+    def parse_existing_upgrade_system(
+        payload: ExistingSystemParseRequest,
+    ) -> ExistingSystemParseResponse:
+        return create_existing_system_parse(payload)
 
     @app.get("/builds/{build_id}", response_model=BuildArtifact)
     def get_build(build_id: str) -> BuildArtifact:
