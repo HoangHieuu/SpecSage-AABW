@@ -18,6 +18,8 @@
   --success-soft: rgba(5, 150, 105, 0.1);
   --warning: #d97706;
   --warning-soft: rgba(217, 119, 6, 0.1);
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.1);
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 20px;
@@ -873,6 +875,85 @@ textarea:focus {
   background: var(--surface);
   color: var(--accent);
   box-shadow: var(--shadow-sm);
+}
+
+/* ── Customer decision summary ── */
+
+.customer-decision-summary {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.36fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid rgba(201, 21, 34, 0.12);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, rgba(201, 21, 34, 0.06) 0%, rgba(248, 250, 252, 0.92) 54%),
+    var(--surface);
+}
+
+.customer-decision-copy h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.customer-decision-copy p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.customer-decision-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.decision-item {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.decision-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.decision-item strong {
+  display: block;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.decision-item.good {
+  border-color: rgba(5, 150, 105, 0.2);
+  background: rgba(5, 150, 105, 0.08);
+}
+
+.decision-item.warning {
+  border-color: rgba(217, 119, 6, 0.2);
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.decision-item.danger {
+  border-color: rgba(220, 38, 38, 0.2);
+  background: var(--danger-soft);
 }
 
 /* ── Support details ── */
@@ -2285,6 +2366,8 @@ tbody tr:last-child td {
   .hero-panel,
   .workspace-grid,
   .build-metrics,
+  .customer-decision-summary,
+  .customer-decision-grid,
   .build-notes,
   .performance-evidence,
   .performance-balance,

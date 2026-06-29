@@ -53,8 +53,8 @@ const presets: Array<{ value: UseCase; label: string; sample: string }> = [
   },
   {
     value: "ai",
-    label: "AI/local LLM",
-    sample: "PC AI local LLM 40 triệu, ưu tiên NVIDIA và 32GB RAM"
+    label: "AI cá nhân",
+    sample: "PC chạy AI cục bộ 40 triệu, ưu tiên NVIDIA và 32GB RAM"
   }
 ];
 
@@ -63,7 +63,7 @@ const useCaseLabels: Record<UseCase, string> = {
   creator: "Creator/đồ họa",
   office: "Văn phòng",
   student: "Sinh viên",
-  ai: "AI/local LLM",
+  ai: "AI cá nhân",
   streaming: "Streaming",
   compact: "Compact/Mini ITX",
   unknown: "Chưa rõ"
@@ -110,7 +110,7 @@ export function BuildCopilotClient() {
   const primaryActionHint = buildArtifact
     ? "Chỉnh mô tả rồi chạy lại nếu bạn muốn bắt đầu một đề xuất mới."
     : isConfirmed
-      ? "Intent đã xác nhận, bước tiếp theo là sinh cấu hình."
+      ? "Nhu cầu đã xác nhận, bước tiếp theo là sinh cấu hình."
       : intentResponse && !needsClarification
         ? "Bước này sẽ xác nhận nhu cầu và tạo cấu hình ngay."
         : "Mô tả nhu cầu, ngân sách và ưu tiên của bạn.";
@@ -371,13 +371,13 @@ export function BuildCopilotClient() {
             </span>
             <div>
               <strong>PC Build Copilot</strong>
-              <span>Phong Vu · Agentic AI</span>
+              <span>Phong Vu · Tư vấn cấu hình</span>
             </div>
           </div>
           <div className="header-meta">
-            <span className="header-pill">SKU Phong Vu</span>
-            <span className="header-pill">Kiểm tra tương thích</span>
-            <span className="header-pill accent">Tư vấn AI</span>
+            <span className="header-pill">Sản phẩm Phong Vu</span>
+            <span className="header-pill">Tương thích rõ ràng</span>
+            <span className="header-pill accent">Tư vấn theo nhu cầu</span>
           </div>
         </header>
 
@@ -396,17 +396,17 @@ export function BuildCopilotClient() {
               <em> đúng ngân sách</em>
             </h1>
             <p>
-              Tư vấn cấu hình từ nhu cầu thật, dùng dữ liệu SKU Phong Vu và kiểm tra
-              tương thích bằng luật trước khi tạo build.
+              Tư vấn cấu hình từ nhu cầu thật, dùng dữ liệu sản phẩm Phong Vu và kiểm tra
+              tương thích bằng luật trước khi đề xuất cấu hình.
             </p>
             <div className="hero-stats">
               <div className="hero-stat">
                 <strong>7+</strong>
-                <span>slot linh kiện</span>
+                <span>nhóm linh kiện</span>
               </div>
               <div className="hero-stat">
-                <strong>SKU</strong>
-                <span>Phong Vu</span>
+                <strong>Link</strong>
+                <span>sản phẩm thật</span>
               </div>
               <div className="hero-stat">
                 <strong>0</strong>
@@ -419,7 +419,7 @@ export function BuildCopilotClient() {
       <section className="workspace-grid">
         <form className="panel composer" onSubmit={handleSubmit}>
           <div className="panel-heading">
-            <h2>Nhu cầu build PC</h2>
+            <h2>Nhu cầu PC</h2>
             <button type="button" onClick={handleStart} disabled={isLoading}>
               {session ? "Tạo phiên mới" : "Bắt đầu phiên"}
             </button>
@@ -468,7 +468,7 @@ export function BuildCopilotClient() {
 
         <aside className="panel summary">
           <div className="panel-heading">
-            <h2>Tóm tắt intent</h2>
+            <h2>Tóm tắt nhu cầu</h2>
             <span className={isConfirmed ? "status confirmed" : "status"}>
               {isConfirmed ? "Đã xác nhận" : session?.state ?? "Chưa có phiên"}
             </span>
@@ -480,7 +480,7 @@ export function BuildCopilotClient() {
               <dd>{session ? "Đang tư vấn" : "Chưa tạo"}</dd>
             </div>
             <div>
-              <dt>Use case</dt>
+              <dt>Nhu cầu</dt>
               <dd>{intent ? useCaseLabels[intent.use_case] : "Chưa phân tích"}</dd>
             </div>
             <div>
@@ -527,16 +527,16 @@ export function BuildCopilotClient() {
               ))}
             </div>
           ) : (
-            <p className="empty">Phiên tư vấn sẽ lưu intent trước khi sinh cấu hình.</p>
+            <p className="empty">Phiên tư vấn sẽ lưu nhu cầu trước khi sinh cấu hình.</p>
           )}
         </aside>
       </section>
 
       <section className="panel build-panel" aria-live="polite" data-testid="build-panel">
         <div className="panel-heading">
-          <h2>Build đề xuất</h2>
+          <h2>Cấu hình đề xuất</h2>
           <span className={buildArtifact ? statusClass(buildArtifact) : "status"}>
-            {buildArtifact ? buildStatusLabel(buildArtifact) : "Chưa sinh build"}
+            {buildArtifact ? buildStatusLabel(buildArtifact) : "Chưa có cấu hình"}
           </span>
         </div>
 
@@ -553,16 +553,22 @@ export function BuildCopilotClient() {
                 }
               />
               <Metric label="Còn dư" value={formatBudgetHeadroom(buildArtifact)} />
-              <Metric label="Phiên bản" value={`Build v${buildArtifact.build_version}`} />
+              <Metric label="Phiên bản" value={`v${buildArtifact.build_version}`} />
             </div>
 
             <DisplayModeToggle mode={displayMode} onModeChange={setDisplayMode} />
 
+            <CustomerDecisionSummary
+              artifact={buildArtifact}
+              canApprove={canApprove}
+              isCartReady={Boolean(cartHandoff)}
+            />
+
             {appliedAlternativeLabel ? (
               <p className="build-version-note" data-testid="applied-alternative-note">
-                Đã áp dụng biến thể {appliedAlternativeLabel} vào build version{" "}
-                {buildArtifact.build_version}. Bạn có thể duyệt build mới sau khi kiểm tra bảng
-                linh kiện.
+                Đã áp dụng lựa chọn {appliedAlternativeLabel}. Cấu hình hiện là phiên bản{" "}
+                {buildArtifact.build_version}; hãy xem lại giá và điểm cần lưu ý trước khi tạo
+                danh sách mua.
               </p>
             ) : null}
 
@@ -575,7 +581,7 @@ export function BuildCopilotClient() {
               <table className={`parts-table ${displayMode}`}>
                 <thead>
                   <tr>
-                    <th>Slot</th>
+                    <th>Loại</th>
                     {displayMode === "advanced" ? <th>SKU</th> : null}
                     <th>Linh kiện</th>
                     <th>Giá</th>
@@ -648,13 +654,13 @@ export function BuildCopilotClient() {
 
             <div className="approval-strip">
               <div>
-                <h3>Duyệt build & handoff</h3>
+                <h3>Sẵn sàng mua</h3>
                 <p>
                   {cartHandoff
-                    ? "Build đã được duyệt và có handoff giỏ mock từ các link SKU Phong Vu."
+                    ? "Danh sách sản phẩm đã sẵn sàng từ các link Phong Vu."
                     : canApprove
-                      ? "Build đã qua kiểm tra tương thích và nằm trong ngân sách, có thể tạo giỏ mock."
-                      : "Build chưa đủ điều kiện duyệt vì bị chặn, vượt ngân sách hoặc thiếu thông tin."}
+                      ? "Cấu hình đã qua kiểm tra tương thích và nằm trong ngân sách."
+                      : "Cấu hình cần xem lại ngân sách, cảnh báo hoặc thông tin còn thiếu trước khi mua."}
                 </p>
               </div>
               <button
@@ -663,7 +669,7 @@ export function BuildCopilotClient() {
                 disabled={isLoading || !canApprove}
                 onClick={handleApprove}
               >
-                {cartHandoff ? "Đã tạo giỏ mock" : "Duyệt & tạo giỏ mock"}
+                {cartHandoff ? "Đã tạo danh sách" : "Tạo danh sách mua"}
               </button>
             </div>
 
@@ -690,8 +696,8 @@ export function BuildCopilotClient() {
           </>
         ) : (
           <p className="empty">
-            Xác nhận intent rồi sinh cấu hình để xem bảng linh kiện, tổng giá,
-            mức phù hợp và link SKU Phong Vu.
+            Xác nhận nhu cầu rồi sinh cấu hình để xem bảng linh kiện, tổng giá,
+            mức phù hợp và đường link sản phẩm Phong Vu.
           </p>
         )}
       </section>
@@ -713,9 +719,9 @@ function FlowProgress({
 }) {
   const steps = [
     { label: "Phiên", active: hasSession, done: hasSession },
-    { label: "Intent", active: hasSession && !isConfirmed, done: isConfirmed },
-    { label: "Build", active: isConfirmed && !hasBuild, done: hasBuild },
-    { label: "Giỏ mock", active: hasBuild && !isCartReady, done: isCartReady }
+    { label: "Nhu cầu", active: hasSession && !isConfirmed, done: isConfirmed },
+    { label: "Cấu hình", active: isConfirmed && !hasBuild, done: hasBuild },
+    { label: "Danh sách mua", active: hasBuild && !isCartReady, done: isCartReady }
   ];
 
   return (
@@ -750,7 +756,7 @@ function DisplayModeToggle({
         data-testid="view-basic"
         onClick={() => onModeChange("basic")}
       >
-        Xem cơ bản
+        Cơ bản
       </button>
       <button
         type="button"
@@ -758,8 +764,83 @@ function DisplayModeToggle({
         data-testid="view-advanced"
         onClick={() => onModeChange("advanced")}
       >
-        Xem nâng cao
+        Chi tiết kỹ thuật
       </button>
+    </div>
+  );
+}
+
+function CustomerDecisionSummary({
+  artifact,
+  canApprove,
+  isCartReady
+}: {
+  artifact: BuildArtifact;
+  canApprove: boolean;
+  isCartReady: boolean;
+}) {
+  const budgetTone =
+    artifact.budget_status === "within_budget"
+      ? "good"
+      : artifact.budget_status === "over_budget"
+        ? "warning"
+        : "neutral";
+  const budgetValue =
+    artifact.budget_status === "within_budget"
+      ? "Trong ngân sách"
+      : artifact.budget_status === "over_budget"
+        ? `Vượt ${formatVnd(Math.abs(artifact.budget_gap_vnd))}`
+        : "Chưa có ngân sách";
+  const nextAction = isCartReady
+    ? "Danh sách sản phẩm đã sẵn sàng."
+    : canApprove
+      ? "Có thể tạo danh sách mua khi bạn muốn giữ cấu hình này."
+      : "Xem điểm cần lưu ý trước khi mua.";
+  const fitTone =
+    artifact.performance_profile.fit_level === "good"
+      ? "good"
+      : artifact.performance_profile.fit_level === "adequate"
+        ? "warning"
+        : artifact.performance_profile.fit_level === "limited"
+          ? "danger"
+          : "neutral";
+
+  return (
+    <section className="customer-decision-summary" data-testid="customer-decision-summary">
+      <div className="customer-decision-copy">
+        <h3>Có nên chọn cấu hình này?</h3>
+        <p>
+          Cấu hình đã được kiểm tra theo ngân sách, độ phù hợp với nhu cầu và các cảnh báo
+          chính trước khi bạn tạo danh sách mua.
+        </p>
+      </div>
+      <div className="customer-decision-grid">
+        <DecisionItem label="Tổng giá" value={formatVnd(artifact.total_price_vnd)} tone="neutral" />
+        <DecisionItem
+          label="Mức phù hợp"
+          value={performanceFitLabel(artifact.performance_profile.fit_level)}
+          tone={fitTone}
+        />
+        <DecisionItem label="Ngân sách" value={budgetValue} tone={budgetTone} />
+        <DecisionItem label="Bước tiếp theo" value={nextAction} tone={canApprove ? "good" : "warning"} />
+      </div>
+    </section>
+  );
+}
+
+function DecisionItem({
+  label,
+  value,
+  tone
+}: {
+  label: string;
+  value: string;
+  tone: "good" | "warning" | "danger" | "neutral";
+}) {
+  return (
+    <div className={`decision-item ${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -850,8 +931,8 @@ function BuildFeedbackPanel({
       <section className="feedback-panel saved" data-testid="feedback-panel">
         <div className="feedback-heading">
           <div>
-            <h3>Đánh giá build</h3>
-            <p>Đã lưu đánh giá cho build version {feedback.build_version}.</p>
+            <h3>Đánh giá cấu hình</h3>
+            <p>Đã ghi nhận góp ý cho cấu hình phiên bản {feedback.build_version}.</p>
           </div>
           <span
             className={
@@ -859,7 +940,7 @@ function BuildFeedbackPanel({
             }
           >
             {feedback.review_queue_status === "queued"
-              ? "Đã đưa vào review queue"
+              ? "Đang được xem lại"
               : "Đã ghi nhận"}
           </span>
         </div>
@@ -869,13 +950,13 @@ function BuildFeedbackPanel({
             value={feedback.rating === "thumbs_up" ? "Hữu ích" : "Chưa phù hợp"}
           />
           <Metric label="Linh kiện" value={`${feedback.part_feedback.length} mục`} />
-          <Metric label="Build" value={`v${feedback.build_version}`} />
+          <Metric label="Phiên bản" value={`v${feedback.build_version}`} />
           <Metric
             label="Trạng thái"
             value={feedback.review_queue_status === "queued" ? "Đang xem lại" : "Đã ghi nhận"}
           />
         </div>
-        {feedback.review_queue_reason_vi ? <p>{feedback.review_queue_reason_vi}</p> : null}
+        {feedback.review_queue_reason_vi ? <p>{friendlyFeedbackReason(feedback.review_queue_reason_vi)}</p> : null}
       </section>
     );
   }
@@ -884,10 +965,10 @@ function BuildFeedbackPanel({
     <section className="feedback-panel" data-testid="feedback-panel">
       <div className="feedback-heading">
         <div>
-          <h3>Đánh giá build</h3>
-          <p>Ghi nhận cảm nhận tổng thể và từng linh kiện cho vòng review sau demo.</p>
+          <h3>Góp ý về cấu hình</h3>
+          <p>Cho biết cấu hình này có đúng nhu cầu không để đội tư vấn cải thiện đề xuất.</p>
         </div>
-        <span className="status">Build v{artifact.build_version}</span>
+        <span className="status">Phiên bản {artifact.build_version}</span>
       </div>
 
       <div className="feedback-rating-row" aria-label="Đánh giá tổng thể">
@@ -977,7 +1058,7 @@ function BuildFeedbackPanel({
           disabled={isSubmitting || !rating}
           onClick={handleSubmitFeedback}
         >
-          {isSubmitting ? "Đang lưu..." : "Lưu feedback"}
+          {isSubmitting ? "Đang gửi..." : "Gửi góp ý"}
         </button>
       </div>
     </section>
@@ -999,19 +1080,19 @@ function TraceReplayPanel({
     <section className="trace-replay" data-testid="trace-replay-panel">
       <div className="trace-replay-heading">
         <div>
-          <h3>Support trace</h3>
+          <h3>Nhật ký hỗ trợ</h3>
           <p>{trace.redaction_policy_vi}</p>
         </div>
         <div className="trace-replay-actions">
           <span className="status">
-            {trace.generated_build_count} build / {totalEvents} event
+            {trace.generated_build_count} cấu hình / {totalEvents} bước
           </span>
           <button type="button" className="secondary" onClick={onCopyExport}>
             {copyState === "copied"
-              ? "Đã copy trace"
+              ? "Đã copy nhật ký"
               : copyState === "failed"
                 ? "Không copy được"
-                : "Copy support trace"}
+                : "Copy nhật ký hỗ trợ"}
           </button>
         </div>
       </div>
@@ -1021,11 +1102,11 @@ function TraceReplayPanel({
           <article className="trace-build-card" key={build.build_id}>
             <div className="trace-build-card-heading">
               <div>
-                <h4>Build v{build.build_version}</h4>
+                <h4>Phiên bản {build.build_version}</h4>
                 <p>{build.build_id}</p>
               </div>
               <span className={build.replay_status === "complete" ? "status confirmed" : "status"}>
-                {build.replay_status === "complete" ? `${build.events.length} event` : "Không có event"}
+                {build.replay_status === "complete" ? `${build.events.length} bước` : "Không có bước"}
               </span>
             </div>
 
@@ -1037,8 +1118,7 @@ function TraceReplayPanel({
               </ol>
             ) : (
               <p className="trace-empty">
-                Build version này được tạo từ thao tác apply deterministic nên không có bước
-                LangGraph riêng.
+                Phiên bản này được tạo từ thao tác đổi linh kiện nên không có nhật ký xử lý riêng.
               </p>
             )}
           </article>
@@ -1050,12 +1130,12 @@ function TraceReplayPanel({
 
 function TraceReplayEventRow({ event }: { event: TraceReplayEvent }) {
   const labels: Record<TraceReplayEvent["agent"], string> = {
-    catalog: "Catalog",
-    optimizer: "Optimizer",
-    compatibility: "Compatibility",
-    performance: "Performance",
-    explainer: "Explainer",
-    validator: "Validator"
+    catalog: "Sản phẩm",
+    optimizer: "Tối ưu",
+    compatibility: "Tương thích",
+    performance: "Hiệu năng",
+    explainer: "Giải thích",
+    validator: "Kiểm tra cuối"
   };
 
   return (
@@ -1076,12 +1156,12 @@ function TraceReplayEventRow({ event }: { event: TraceReplayEvent }) {
               <dd>{event.model_version}</dd>
             </div>
             <div>
-              <dt>Tool calls</dt>
-              <dd>{event.tool_calls.length ? event.tool_calls.join(", ") : "none"}</dd>
+              <dt>Công cụ</dt>
+              <dd>{event.tool_calls.length ? event.tool_calls.join(", ") : "Không có"}</dd>
             </div>
           </dl>
           <details className="trace-event-payload">
-            <summary>Inputs / outputs</summary>
+            <summary>Dữ liệu vào / ra</summary>
             <div>
               <pre>{formatPayload(event.inputs_redacted)}</pre>
               <pre>{formatPayload(event.outputs_redacted)}</pre>
@@ -1095,20 +1175,20 @@ function TraceReplayEventRow({ event }: { event: TraceReplayEvent }) {
 
 function AgentTracePanel({ steps }: { steps: BuildOrchestrationStep[] }) {
   const labels: Record<BuildOrchestrationStep["agent"], string> = {
-    catalog: "Catalog",
-    optimizer: "Optimizer",
-    compatibility: "Compatibility",
-    performance: "Performance",
-    explainer: "Explainer",
-    validator: "Validator"
+    catalog: "Sản phẩm",
+    optimizer: "Tối ưu",
+    compatibility: "Tương thích",
+    performance: "Hiệu năng",
+    explainer: "Giải thích",
+    validator: "Kiểm tra cuối"
   };
 
   return (
     <section className="agent-trace" data-testid="agent-trace-panel">
       <div className="agent-trace-heading">
         <div>
-          <h3>Agent steps</h3>
-          <p>LangGraph chạy các agent theo thứ tự, còn rule và số liệu vẫn là deterministic.</p>
+          <h3>Các bước xử lý</h3>
+          <p>Hệ thống tách từng bước để chọn linh kiện, kiểm tra tương thích và giải thích kết quả.</p>
         </div>
         <span className="status">{steps.length} bước</span>
       </div>
@@ -1135,8 +1215,8 @@ function OptimizerTracePanel({ trace }: { trace: OptimizerTrace }) {
     <section className="optimizer-trace" data-testid="optimizer-trace-panel">
       <div className="optimizer-trace-heading">
         <div>
-          <h3>Optimizer decisions</h3>
-          <p>Phase 5 agent dùng allocation config, priority override và gate deterministic.</p>
+          <h3>Quyết định tối ưu</h3>
+          <p>Chi tiết cách ngân sách, ưu tiên và từng lựa chọn linh kiện được xét trước khi chốt.</p>
         </div>
         <span className="status">
           {trace.applied_iteration_count}/{trace.max_iterations} vòng áp dụng
@@ -1144,15 +1224,15 @@ function OptimizerTracePanel({ trace }: { trace: OptimizerTrace }) {
       </div>
 
       <div className="optimizer-summary-grid">
-        <Metric label="Use case" value={trace.budget_allocation.use_case} />
+        <Metric label="Nhu cầu" value={trace.budget_allocation.use_case} />
         <Metric
-          label="Priority"
+          label="Ưu tiên"
           value={trace.priority_overrides.length ? trace.priority_overrides.join(", ") : "Không có"}
         />
-        <Metric label="Rejected" value={`${trace.rejected_iteration_count}`} />
+        <Metric label="Không chọn" value={`${trace.rejected_iteration_count}`} />
       </div>
 
-      <div className="optimizer-weights" aria-label="Budget allocation">
+      <div className="optimizer-weights" aria-label="Phân bổ ngân sách">
         {weights.map(([slot, weight]) => (
           <div key={slot}>
             <span>{slotLabel(slot as BuildItem["slot"])}</span>
@@ -1191,7 +1271,7 @@ function OptimizerTracePanel({ trace }: { trace: OptimizerTrace }) {
           ))}
         </ol>
       ) : (
-        <p className="optimizer-empty">Optimizer chưa cần thử biến thể trong lượt này.</p>
+        <p className="optimizer-empty">Chưa cần thử thêm lựa chọn trong lượt này.</p>
       )}
     </section>
   );
@@ -1221,8 +1301,8 @@ function SupportDetailsPanel({
     <section className="support-details" data-testid="support-details-panel">
       <div className="support-details-heading">
         <div>
-          <h3>Chi tiết hỗ trợ</h3>
-          <p>Thông tin dành cho kiểm tra demo hoặc gửi kỹ thuật khi cần.</p>
+          <h3>Chi tiết kỹ thuật</h3>
+          <p>Thông tin dành cho nhân viên hỗ trợ khi cần kiểm tra lại cách cấu hình được tạo.</p>
         </div>
         <button
           type="button"
@@ -1230,7 +1310,7 @@ function SupportDetailsPanel({
           data-testid="toggle-support-details"
           onClick={onToggle}
         >
-          {isOpen ? "Ẩn chi tiết" : "Hiện chi tiết"}
+          {isOpen ? "Ẩn chi tiết" : "Hiện chi tiết kỹ thuật"}
         </button>
       </div>
 
@@ -1238,7 +1318,8 @@ function SupportDetailsPanel({
         <div className="support-details-stack">
           {trace ? (
             <TraceReplayPanel trace={trace} copyState={copyState} onCopyExport={onCopyExport} />
-          ) : orchestrationSteps.length ? (
+          ) : null}
+          {orchestrationSteps.length ? (
             <AgentTracePanel steps={orchestrationSteps} />
           ) : null}
           {optimizerTrace ? <OptimizerTracePanel trace={optimizerTrace} /> : null}
@@ -1289,11 +1370,11 @@ function BuildAlternativesPanel({
         <div>
           <h3>Phương án thay thế</h3>
           <p>
-            Các lựa chọn đổi linh kiện vẫn dùng SKU Phong Vu và đã kiểm tra
+            Các lựa chọn đổi linh kiện vẫn dùng sản phẩm Phong Vu và đã kiểm tra
             tương thích lại.
           </p>
         </div>
-        <span className="status">{response.alternatives.length} biến thể</span>
+        <span className="status">{response.alternatives.length} lựa chọn</span>
       </div>
 
       <div className="alternatives-grid">
@@ -1362,7 +1443,7 @@ function BuildAlternativesPanel({
               disabled={isApplying}
               onClick={() => onApplyAlternative(alternative)}
             >
-              Áp dụng biến thể
+              Áp dụng lựa chọn
             </button>
           </article>
         ))}
@@ -1408,11 +1489,11 @@ function BuildIterationPanel({
     <section className="iteration-panel" data-testid="iteration-panel">
       <div className="iteration-heading">
         <div>
-          <h3>Điều chỉnh build</h3>
+          <h3>Điều chỉnh cấu hình</h3>
           <p>Nhập yêu cầu ngắn, hệ thống sẽ đổi linh kiện và kiểm tra lại.</p>
         </div>
         {lastIteration ? (
-          <span className="status confirmed">Build v{lastIteration.applied_build.build_version}</span>
+          <span className="status confirmed">Phiên bản {lastIteration.applied_build.build_version}</span>
         ) : (
           <span className="status">Sẵn sàng</span>
         )}
@@ -1454,7 +1535,7 @@ function BuildIterationPanel({
       {lastIteration ? (
         <div className="iteration-result" data-testid="iteration-result">
           <Metric label="Lệnh" value={lastIteration.command.priority_label_vi} />
-          <Metric label="Biến thể" value={lastIteration.selected_alternative.label_vi} />
+          <Metric label="Lựa chọn" value={lastIteration.selected_alternative.label_vi} />
           <Metric
             label="Chênh lệch"
             value={formatDeltaVnd(lastIteration.selected_alternative.price_delta_vnd)}
@@ -1472,17 +1553,6 @@ function PerformanceProfilePanel({
   profile: PerformanceProfile;
   isAdvanced: boolean;
 }) {
-  const fitLabel: Record<PerformanceProfile["fit_level"], string> = {
-    good: "Phù hợp tốt",
-    adequate: "Đủ dùng",
-    limited: "Còn hạn chế",
-    unknown: "Chưa đủ dữ liệu"
-  };
-  const confidenceLabel: Record<PerformanceProfile["confidence"], string> = {
-    high: "Dữ liệu cao",
-    medium: "Dữ liệu vừa",
-    low: "Dữ liệu thấp"
-  };
   const statusClassName =
     profile.fit_level === "good"
       ? "status confirmed"
@@ -1500,8 +1570,8 @@ function PerformanceProfilePanel({
           <p>{profile.summary_vi}</p>
         </div>
         <div className="performance-fit-status">
-          <span className={statusClassName}>{fitLabel[profile.fit_level]}</span>
-          <small>{confidenceLabel[profile.confidence]}</small>
+          <span className={statusClassName}>{performanceFitLabel(profile.fit_level)}</span>
+          <small>{performanceConfidenceLabel(profile.confidence)}</small>
         </div>
       </div>
 
@@ -1551,7 +1621,7 @@ function PerformanceProfilePanel({
                 <strong>{workload.name}</strong>
               </div>
               <span className={`workload-fit-level ${workload.fit_level}`}>
-                {fitLabel[workload.fit_level]}
+                {performanceFitLabel(workload.fit_level)}
               </span>
               <p>{workload.recommendation_vi}</p>
               <small>{workload.requirement_summary_vi}</small>
@@ -1618,13 +1688,32 @@ function balanceComponentLabel(component: NonNullable<PerformanceProfile["balanc
   return labels[component];
 }
 
+function performanceFitLabel(fitLevel: PerformanceProfile["fit_level"]) {
+  const labels: Record<PerformanceProfile["fit_level"], string> = {
+    good: "Phù hợp tốt",
+    adequate: "Đủ dùng",
+    limited: "Còn hạn chế",
+    unknown: "Chưa đủ dữ liệu"
+  };
+  return labels[fitLevel];
+}
+
+function performanceConfidenceLabel(confidence: PerformanceProfile["confidence"]) {
+  const labels: Record<PerformanceProfile["confidence"], string> = {
+    high: "Dữ liệu cao",
+    medium: "Dữ liệu vừa",
+    low: "Dữ liệu thấp"
+  };
+  return labels[confidence];
+}
+
 function workloadCategoryLabel(category: PerformanceProfile["workload_profiles"][number]["category"]) {
   const labels: Record<PerformanceProfile["workload_profiles"][number]["category"], string> = {
     video_editing: "Video",
     three_d: "3D",
     photo_editing: "Photo",
     streaming: "Stream",
-    local_llm: "Local LLM"
+    local_llm: "AI cá nhân"
   };
   return labels[category];
 }
@@ -1647,14 +1736,14 @@ function LlmAgentPanel({ analysis }: { analysis: IntentAgentAnalysis }) {
       <div className="llm-agent-heading">
         <div>
           <h3>Tóm tắt nhu cầu</h3>
-          <p>AI hỗ trợ diễn giải; cấu hình vẫn được kiểm tra bằng luật.</p>
+          <p>Phần tóm tắt giúp bạn kiểm tra lại nhu cầu trước khi sinh cấu hình.</p>
         </div>
         <span className={statusClassName}>{statusLabel[analysis.status]}</span>
       </div>
 
       {analysis.summary_vi ? (
         <div className="llm-agent-block">
-          <strong>Tóm tắt từ LLM</strong>
+          <strong>Tóm tắt tự động</strong>
           <p>{analysis.summary_vi}</p>
         </div>
       ) : null}
@@ -1701,21 +1790,24 @@ function CartReadyPanel({ handoff }: { handoff: CartReadyHandoff }) {
   return (
     <section className="cart-ready" data-testid="cart-ready-panel">
       <div className="panel-heading">
-        <h3>Giỏ mock</h3>
-        <span className="status confirmed">Sẵn sàng chuyển giỏ</span>
+        <h3>Danh sách mua</h3>
+        <span className="status confirmed">Sẵn sàng mở sản phẩm</span>
       </div>
       <div className="build-metrics compact">
         <Metric label="Tổng giá" value={formatVnd(handoff.total_price_vnd)} />
-        <Metric label="Số SKU" value={`${handoff.item_count}`} />
-        <Metric label="Duyệt build" value="Đã duyệt" />
-        <Metric label="Giỏ mock" value="Sẵn sàng" />
+        <Metric label="Số sản phẩm" value={`${handoff.item_count}`} />
+        <Metric label="Trạng thái" value="Đã kiểm tra" />
+        <Metric label="Mua hàng" value="Mở link Phong Vu" />
       </div>
-      <p>{handoff.mock_cart_payload.disclaimer_vi}</p>
+      <p>
+        Danh sách này dùng link sản phẩm Phong Vu để bạn kiểm tra giá, tồn kho và thêm vào
+        giỏ hàng trên website chính thức.
+      </p>
       <ol className="cart-links">
         {handoff.mock_cart_payload.items.map((item) => (
           <li key={item.sku}>
             <a href={item.url} target="_blank" rel="noreferrer">
-              SKU {item.sku}
+              Sản phẩm {item.sku}
             </a>
           </li>
         ))}
@@ -1802,6 +1894,13 @@ function feedbackPartKey(item: BuildItem) {
 function friendlyWarning(value: string) {
   if (value.includes("PERF_BELOW_TARGET")) {
     return "Hiệu năng đang thấp hơn mục tiêu màn hình đã chọn; nên nâng GPU hoặc giảm thiết lập game.";
+  }
+  return value;
+}
+
+function friendlyFeedbackReason(value: string) {
+  if (value.toLowerCase().includes("review")) {
+    return "Đội tư vấn sẽ xem lại góp ý này để cải thiện cấu hình.";
   }
   return value;
 }
