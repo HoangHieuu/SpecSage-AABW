@@ -67,14 +67,30 @@ class CatalogValidationReport(BaseModel):
     sku_count: int
     issue_count: int
     blocking_issue_count: int
+    stale_after_days: int = 7
+    freshness_checked_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    snapshot_fresh_until: datetime | None = None
+    snapshot_age_days: int = 0
+    freshness_status: Literal["fresh", "stale"] = "fresh"
+    specs_confidence_counts: dict[SpecsConfidence, int] = Field(default_factory=dict)
     category_counts: dict[ComponentCategory, int] = Field(default_factory=dict)
     recommended_demo_category_counts: dict[ComponentCategory, int] = Field(
+        default_factory=dict
+    )
+    pilot_recommended_category_counts: dict[ComponentCategory, int] = Field(
+        default_factory=dict
+    )
+    production_target_category_counts: dict[ComponentCategory, int] = Field(
         default_factory=dict
     )
     required_demo_categories: list[ComponentCategory] = Field(default_factory=list)
     missing_required_demo_categories: list[ComponentCategory] = Field(default_factory=list)
     thin_demo_categories: list[ComponentCategory] = Field(default_factory=list)
+    thin_pilot_categories: list[ComponentCategory] = Field(default_factory=list)
+    production_gap_categories: list[ComponentCategory] = Field(default_factory=list)
     demo_ready: bool = False
+    pilot_ready: bool = False
+    production_ready: bool = False
     issues: list[CatalogIssue] = Field(default_factory=list)
 
 

@@ -98,19 +98,41 @@ def test_overrides_complete_required_compatibility_specs() -> None:
     assert report.sku_count == 11
     assert report.blocking_issue_count == 0
     assert report.demo_ready is True
+    assert report.pilot_ready is False
+    assert report.production_ready is False
+    assert report.freshness_status == "fresh"
+    assert report.snapshot_age_days >= 0
     assert report.category_counts[ComponentCategory.CPU] == 1
     assert report.category_counts[ComponentCategory.VGA] == 2
     assert report.recommended_demo_category_counts[ComponentCategory.CPU] == 2
+    assert report.pilot_recommended_category_counts[ComponentCategory.CPU] == 3
+    assert report.production_target_category_counts[ComponentCategory.VGA] == 20
     assert report.missing_required_demo_categories == []
     assert report.thin_demo_categories == [
         ComponentCategory.CPU,
         ComponentCategory.MAINBOARD,
         ComponentCategory.CASE,
     ]
+    assert report.thin_pilot_categories == [
+        ComponentCategory.CPU,
+        ComponentCategory.MAINBOARD,
+        ComponentCategory.RAM,
+        ComponentCategory.STORAGE,
+        ComponentCategory.VGA,
+        ComponentCategory.PSU,
+        ComponentCategory.CASE,
+    ]
+    assert ComponentCategory.MONITOR in report.production_gap_categories
     assert any(
         issue.severity == "warn"
         and issue.code == "CATALOG_THIN_DEMO_CATEGORY"
         and issue.field == "category_counts.cpu"
+        for issue in report.issues
+    )
+    assert any(
+        issue.severity == "warn"
+        and issue.code == "CATALOG_PRODUCTION_TARGET_GAP"
+        and issue.field == "category_counts"
         for issue in report.issues
     )
     assert all(item.specs_confidence == "verified" for item in items)
@@ -162,6 +184,24 @@ def test_validation_blocks_snapshots_missing_required_demo_categories() -> None:
     )
 
 
+def test_validation_warns_when_snapshot_is_stale() -> None:
+    report = validate_catalog(
+        _items(),
+        snapshot_version="catalog_test_stale",
+        generated_at=SNAPSHOT_AT,
+        freshness_checked_at=datetime(2026, 7, 10, tzinfo=UTC),
+        stale_after_days=7,
+    )
+
+    assert report.demo_ready is True
+    assert report.pilot_ready is False
+    assert report.production_ready is False
+    assert report.freshness_status == "stale"
+    assert report.snapshot_fresh_until == datetime(2026, 7, 4, tzinfo=UTC)
+    assert report.snapshot_age_days == 13
+    assert any(issue.code == "CATALOG_SNAPSHOT_STALE" for issue in report.issues)
+
+
 def test_catalog_cli_writes_snapshot_with_embedded_validation(tmp_path: Path) -> None:
     output = tmp_path / "catalog_snapshot.json"
 
@@ -187,6 +227,8 @@ def test_catalog_cli_writes_snapshot_with_embedded_validation(tmp_path: Path) ->
     assert snapshot.validation is not None
     assert snapshot.validation.blocking_issue_count == 0
     assert snapshot.validation.demo_ready is True
+    assert snapshot.validation.pilot_ready is False
+    assert snapshot.validation.production_ready is False
     assert snapshot.validation.category_counts[ComponentCategory.CASE] == 1
     assert snapshot.validation.recommended_demo_category_counts[ComponentCategory.CASE] == 2
     assert ComponentCategory.CASE in snapshot.validation.thin_demo_categories
@@ -442,6 +484,71 @@ def test_catalog_cli_promotes_only_included_manifest_skus(tmp_path: Path) -> Non
     assert snapshot.validation is not None
     assert snapshot.validation.category_counts[ComponentCategory.CPU] == 2
     assert ComponentCategory.CPU not in snapshot.validation.thin_demo_categories
+
+
+def test_real_catalog_manifest_reaches_pilot_and_optional_breadth(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "catalog_snapshot.json"
+
+    exit_code = catalog_sync_main(
+        [
+            "--source-manifest",
+            str(ROOT / "catalog" / "catalog_sources.json"),
+            "--overrides",
+            str(OVERRIDES),
+            "--output",
+            str(output),
+            "--snapshot-at",
+            "2026-06-27T00:00:00Z",
+            "--snapshot-version",
+            "catalog_test_us040",
+        ]
+    )
+
+    snapshot = CatalogSnapshot.model_validate_json(output.read_text(encoding="utf-8"))
+    required_categories = [
+        ComponentCategory.CPU,
+        ComponentCategory.MAINBOARD,
+        ComponentCategory.RAM,
+        ComponentCategory.STORAGE,
+        ComponentCategory.VGA,
+        ComponentCategory.PSU,
+        ComponentCategory.CASE,
+    ]
+
+    assert exit_code == 0
+    assert len(snapshot.items) == 27
+    assert snapshot.validation is not None
+    assert snapshot.validation.blocking_issue_count == 0
+    assert snapshot.validation.demo_ready is True
+    assert snapshot.validation.pilot_ready is True
+    assert snapshot.validation.production_ready is False
+    assert snapshot.validation.freshness_status == "fresh"
+    assert snapshot.validation.thin_pilot_categories == []
+    assert all(
+        snapshot.validation.category_counts[category] >= 3
+        for category in required_categories
+    )
+    assert snapshot.validation.category_counts[ComponentCategory.COOLER] == 3
+    assert snapshot.validation.category_counts[ComponentCategory.MONITOR] == 3
+    assert snapshot.validation.specs_confidence_counts["verified"] == 14
+    assert snapshot.validation.specs_confidence_counts["partial"] == 13
+    assert ComponentCategory.COOLER in snapshot.validation.production_gap_categories
+    assert ComponentCategory.MONITOR in snapshot.validation.production_gap_categories
+    assert not any(
+        issue.code == "CATALOG_MISSING_REQUIRED_SPEC"
+        and issue.sku
+        in {
+            "260507124",
+            "251012780",
+            "251113503",
+            "260602321",
+            "260602184",
+            "260508590",
+        }
+        for issue in snapshot.validation.issues
+    )
 
 
 def test_manifest_include_skus_must_exist_in_source(tmp_path: Path) -> None:

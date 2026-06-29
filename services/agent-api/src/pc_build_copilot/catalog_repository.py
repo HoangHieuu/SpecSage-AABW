@@ -10,6 +10,7 @@ from pc_build_copilot.catalog_models import (
     CatalogValidationReport,
     ComponentCategory,
 )
+from pc_build_copilot.catalog_validation import validate_catalog
 
 
 class CatalogRepository:
@@ -54,6 +55,12 @@ class CatalogRepository:
 
     def validation_report(self) -> CatalogValidationReport:
         snapshot = self.snapshot()
+        if snapshot.items:
+            return validate_catalog(
+                snapshot.items,
+                snapshot_version=snapshot.snapshot_version,
+                generated_at=snapshot.generated_at,
+            )
         if snapshot.validation is not None:
             return snapshot.validation
         return CatalogValidationReport(

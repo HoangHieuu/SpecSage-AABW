@@ -40,14 +40,37 @@ def test_catalog_health_exposes_snapshot_validation_state() -> None:
     assert body["sku_count"] == 11
     assert body["blocking_issue_count"] == 0
     assert body["demo_ready"] is True
+    assert body["pilot_ready"] is False
+    assert body["production_ready"] is False
+    assert body["stale_after_days"] == 7
+    assert body["freshness_status"] == "fresh"
+    assert body["snapshot_fresh_until"] == "2026-07-04T00:00:00Z"
     assert body["category_counts"]["cpu"] == 1
     assert body["category_counts"]["vga"] == 2
     assert body["recommended_demo_category_counts"]["cpu"] == 2
+    assert body["pilot_recommended_category_counts"]["cpu"] == 3
+    assert body["production_target_category_counts"]["vga"] == 20
+    assert body["specs_confidence_counts"]["verified"] == 11
     assert body["missing_required_demo_categories"] == []
     assert body["thin_demo_categories"] == ["cpu", "mainboard", "case"]
+    assert body["thin_pilot_categories"] == [
+        "cpu",
+        "mainboard",
+        "ram",
+        "storage",
+        "vga",
+        "psu",
+        "case",
+    ]
+    assert "monitor" in body["production_gap_categories"]
     assert any(
         issue["code"] == "CATALOG_THIN_DEMO_CATEGORY"
         and issue["field"] == "category_counts.mainboard"
+        for issue in body["issues"]
+    )
+    assert any(
+        issue["code"] == "CATALOG_PRODUCTION_TARGET_GAP"
+        and issue["field"] == "category_counts"
         for issue in body["issues"]
     )
 
