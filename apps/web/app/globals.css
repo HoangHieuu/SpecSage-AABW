@@ -52,6 +52,7 @@ body {
 }
 
 button,
+input,
 textarea {
   font: inherit;
 }
@@ -505,6 +506,23 @@ textarea:focus {
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
+input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+input:focus {
+  outline: none;
+  border-color: rgba(201, 21, 34, 0.4);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
 .prompt-box {
   display: grid;
   gap: 12px;
@@ -577,6 +595,257 @@ textarea:focus {
   border-radius: 999px;
   padding: 0 18px;
   white-space: nowrap;
+}
+
+/* ── Upgrade planner ── */
+
+.upgrade-panel {
+  margin-top: 24px;
+}
+
+.panel-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.upgrade-form {
+  display: grid;
+  gap: 14px;
+}
+
+.upgrade-form textarea {
+  min-height: 98px;
+}
+
+.upgrade-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.upgrade-actions-row button {
+  min-width: 164px;
+}
+
+.upgrade-confirmation {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+}
+
+.upgrade-confirmation-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.upgrade-confirmation-heading h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.upgrade-confirmation-heading p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.upgrade-confirmation-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.upgrade-confirmation-grid label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.upgrade-confirmation-grid input {
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.upgrade-parse-warning {
+  display: grid;
+  gap: 8px;
+}
+
+.upgrade-parse-warning span {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.upgrade-budget-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+}
+
+.upgrade-budget-row button {
+  min-width: 210px;
+  white-space: nowrap;
+}
+
+.upgrade-result {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.upgrade-recommendation {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--background-subtle) 100%);
+}
+
+.upgrade-recommendation-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.upgrade-recommendation-heading h3 {
+  margin: 6px 0 0;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.upgrade-recommendation-heading a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.upgrade-recommendation-heading a:hover {
+  color: var(--accent);
+}
+
+.upgrade-recommendation-heading strong {
+  flex-shrink: 0;
+  font-size: 18px;
+  color: var(--accent);
+}
+
+.upgrade-reasons,
+.upgrade-checks,
+.upgrade-decision-grid,
+.upgrade-next-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.upgrade-reasons {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-secondary);
+}
+
+.upgrade-check {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.upgrade-check.pass {
+  border-color: rgba(5, 150, 105, 0.18);
+  background: var(--success-soft);
+}
+
+.upgrade-check.warn {
+  border-color: rgba(217, 119, 6, 0.18);
+  background: var(--warning-soft);
+}
+
+.upgrade-check.block {
+  border-color: rgba(220, 38, 38, 0.18);
+  background: var(--danger-soft);
+}
+
+.upgrade-check strong {
+  color: var(--text);
+}
+
+.upgrade-check span {
+  min-width: 0;
+  color: var(--text-secondary);
+}
+
+.upgrade-decisions h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.upgrade-decision-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.upgrade-decision {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.upgrade-decision strong,
+.upgrade-decision span {
+  display: block;
+}
+
+.upgrade-decision strong {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.upgrade-decision span {
+  margin-top: 4px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.upgrade-decision p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.upgrade-next-steps span {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .error {
@@ -2549,6 +2818,10 @@ tbody tr:last-child td {
   .iteration-command-row,
   .iteration-result,
   .build-metrics.compact,
+  .upgrade-budget-row,
+  .upgrade-confirmation-grid,
+  .upgrade-check,
+  .upgrade-decision-grid,
   .flow-progress {
     grid-template-columns: 1fr;
   }
@@ -2594,6 +2867,7 @@ tbody tr:last-child td {
   .optimizer-trace-heading,
   .iteration-heading,
   .addon-heading,
+  .upgrade-recommendation-heading,
   .trace-replay-heading,
   .trace-build-card-heading,
   .trace-event-title,

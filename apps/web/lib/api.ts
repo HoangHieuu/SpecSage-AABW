@@ -364,6 +364,99 @@ export type BuildIterationResponse = {
   rejected_candidates: OptimizerTrace["iterations"];
 };
 
+export type UpgradePlanRequest = {
+  current_pc: string;
+  target_use_case?: UseCase;
+  upgrade_budget_max_vnd?: number | null;
+  target_resolution?: string | null;
+  target_refresh_hz?: number | null;
+  confirmed_existing_system?: ExistingSystemOverrides | null;
+};
+
+export type ExistingSystemParseRequest = {
+  current_pc: string;
+};
+
+export type ExistingSystemOverrides = {
+  cpu_name?: string | null;
+  mainboard_name?: string | null;
+  ram_gb?: number | null;
+  gpu_name?: string | null;
+  psu_wattage_w?: number | null;
+  psu_pcie_8pin_connectors?: number | null;
+  case_gpu_clearance_mm?: number | null;
+  storage_summary?: string | null;
+};
+
+export type ExistingSystemSpec = {
+  raw_text: string;
+  cpu_name: string | null;
+  cpu_tdp_w: number | null;
+  mainboard_name: string | null;
+  ram_gb: number | null;
+  gpu_name: string | null;
+  gpu_tier_score: number | null;
+  psu_wattage_w: number | null;
+  psu_pcie_8pin_connectors: number | null;
+  case_name: string | null;
+  case_gpu_clearance_mm: number | null;
+  storage_summary: string | null;
+  unknown_fields: string[];
+};
+
+export type ExistingSystemParseResponse = {
+  parsed_at: string;
+  existing_system: ExistingSystemSpec;
+  confirmation_required: boolean;
+  summary_vi: string;
+  warnings_vi: string[];
+  next_steps_vi: string[];
+};
+
+export type ExistingPartDecision = {
+  slot: BuildSlot;
+  decision: "reuse" | "replace" | "optional_upgrade" | "unknown";
+  reason_vi: string;
+};
+
+export type UpgradeCompatibilityCheck = {
+  code: string;
+  status: "pass" | "warn" | "block";
+  explanation_vi: string;
+  facts: Record<string, number | string | null>;
+};
+
+export type UpgradeRecommendation = {
+  slot: "vga";
+  sku: string;
+  name: string;
+  category: string;
+  price_vnd: number;
+  url: string;
+  brand: string | null;
+  specs_confidence: "verified" | "partial" | "inferred";
+  impact: "high" | "medium" | "low";
+  replaced_component: string | null;
+  compatibility_status: "pass" | "warn" | "block";
+  checks: UpgradeCompatibilityCheck[];
+  reasons_vi: string[];
+  warnings_vi: string[];
+};
+
+export type UpgradePlanResponse = {
+  plan_id: string;
+  generated_at: string;
+  catalog_version: string;
+  rules_version: string;
+  request: Required<UpgradePlanRequest>;
+  existing_system: ExistingSystemSpec;
+  recommendations: UpgradeRecommendation[];
+  reuse_decisions: ExistingPartDecision[];
+  total_upgrade_cost_vnd: number;
+  warnings_vi: string[];
+  next_steps_vi: string[];
+};
+
 export type BuildApproval = {
   approval_id: string;
   build_id: string;
@@ -511,6 +604,20 @@ export function iterateBuild(buildId: string, commandVi: string): Promise<BuildI
   return request<BuildIterationResponse>(`/builds/${buildId}/iterate`, {
     method: "POST",
     body: JSON.stringify({ command_vi: commandVi })
+  });
+}
+
+export function createGpuUpgradePlan(payload: UpgradePlanRequest): Promise<UpgradePlanResponse> {
+  return request<UpgradePlanResponse>("/upgrade-plans/gpu", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function parseExistingSystem(payload: ExistingSystemParseRequest): Promise<ExistingSystemParseResponse> {
+  return request<ExistingSystemParseResponse>("/upgrade-plans/existing-system/parse", {
+    method: "POST",
+    body: JSON.stringify(payload)
   });
 }
 

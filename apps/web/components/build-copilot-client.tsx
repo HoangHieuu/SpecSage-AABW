@@ -17,6 +17,8 @@ import {
   BuildRecommendedAddOn,
   BuildSession,
   CartReadyHandoff,
+  ExistingSystemOverrides,
+  ExistingSystemParseResponse,
   IntentAgentAnalysis,
   IntentResponse,
   OptimizerTrace,
@@ -24,14 +26,17 @@ import {
   PerformanceProfile,
   SessionTraceReplay,
   TraceReplayEvent,
+  UpgradePlanResponse,
   UseCase,
   applyBuildAlternative,
   approveBuild,
+  createGpuUpgradePlan,
   createSession,
   generateBuild,
   getBuildAlternatives,
   getSessionTrace,
   iterateBuild,
+  parseExistingSystem,
   submitBuildFeedback,
   submitIntent
 } from "@/lib/api";
@@ -72,6 +77,9 @@ const useCaseLabels: Record<UseCase, string> = {
 
 type DisplayMode = "basic" | "advanced";
 
+const defaultUpgradeCurrentPc =
+  "Máy hiện tại i5-12400F, B660 DDR4, RAM 16GB, RTX 3060, nguồn 650W 2x8-pin, case hỗ trợ GPU 330mm, SSD 1TB";
+
 export function BuildCopilotClient() {
   const intentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [session, setSession] = useState<BuildSession | null>(null);
@@ -88,10 +96,17 @@ export function BuildCopilotClient() {
   const [appliedAlternativeLabel, setAppliedAlternativeLabel] = useState<string | null>(null);
   const [iterationCommand, setIterationCommand] = useState("Tăng SSD nhưng giữ dưới 20 triệu");
   const [lastIteration, setLastIteration] = useState<BuildIterationResponse | null>(null);
+  const [upgradeCurrentPc, setUpgradeCurrentPc] = useState(defaultUpgradeCurrentPc);
+  const [upgradeBudgetText, setUpgradeBudgetText] = useState("10000000");
+  const [upgradeParse, setUpgradeParse] = useState<ExistingSystemParseResponse | null>(null);
+  const [confirmedExistingSystem, setConfirmedExistingSystem] = useState<ExistingSystemOverrides>({});
+  const [upgradePlan, setUpgradePlan] = useState<UpgradePlanResponse | null>(null);
   const [displayMode, setDisplayMode] = useState<DisplayMode>("basic");
   const [showSupportDetails, setShowSupportDetails] = useState(false);
   const [traceCopyState, setTraceCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [isLoading, setIsLoading] = useState(false);
+  const [isParsingUpgrade, setIsParsingUpgrade] = useState(false);
+  const [isPlanningUpgrade, setIsPlanningUpgrade] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -386,6 +401,59 @@ export function BuildCopilotClient() {
     }
   }
 
+  function handleUpgradeCurrentPcChange(value: string) {
+    setUpgradeCurrentPc(value);
+    setUpgradeParse(null);
+    setConfirmedExistingSystem({});
+    setUpgradePlan(null);
+  }
+
+  async function handleParseExistingSystem() {
+    const trimmedCurrentPc = upgradeCurrentPc.trim();
+    if (!trimmedCurrentPc) return;
+    setIsParsingUpgrade(true);
+    setError(null);
+    try {
+      const parsed = await parseExistingSystem({ current_pc: trimmedCurrentPc });
+      setUpgradeParse(parsed);
+      setConfirmedExistingSystem(existingSystemToOverrides(parsed.existing_system));
+      setUpgradePlan(null);
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setIsParsingUpgrade(false);
+    }
+  }
+
+  function handleConfirmedExistingSystemChange<K extends keyof ExistingSystemOverrides>(
+    field: K,
+    value: ExistingSystemOverrides[K]
+  ) {
+    setConfirmedExistingSystem((current) => ({ ...current, [field]: value }));
+    setUpgradePlan(null);
+  }
+
+  async function handlePlanGpuUpgrade(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmedCurrentPc = upgradeCurrentPc.trim();
+    if (!trimmedCurrentPc || !upgradeParse) return;
+    setIsPlanningUpgrade(true);
+    setError(null);
+    try {
+      const plan = await createGpuUpgradePlan({
+        current_pc: trimmedCurrentPc,
+        target_use_case: "gaming",
+        upgrade_budget_max_vnd: parseVndInput(upgradeBudgetText),
+        confirmed_existing_system: confirmedExistingSystem
+      });
+      setUpgradePlan(plan);
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setIsPlanningUpgrade(false);
+    }
+  }
+
   return (
     <>
       <BackgroundAnimation />
@@ -557,6 +625,21 @@ export function BuildCopilotClient() {
           )}
         </aside>
       </section>
+
+      <UpgradePlannerPanel
+        currentPc={upgradeCurrentPc}
+        budgetText={upgradeBudgetText}
+        parseResult={upgradeParse}
+        confirmedSystem={confirmedExistingSystem}
+        plan={upgradePlan}
+        isParsing={isParsingUpgrade}
+        isLoading={isPlanningUpgrade}
+        onCurrentPcChange={handleUpgradeCurrentPcChange}
+        onBudgetChange={setUpgradeBudgetText}
+        onParse={handleParseExistingSystem}
+        onConfirmedSystemChange={handleConfirmedExistingSystemChange}
+        onSubmit={handlePlanGpuUpgrade}
+      />
 
       <section className="panel build-panel" aria-live="polite" data-testid="build-panel">
         <div className="panel-heading">
@@ -1365,6 +1448,268 @@ function SupportDetailsPanel({
   );
 }
 
+function UpgradePlannerPanel({
+  currentPc,
+  budgetText,
+  parseResult,
+  confirmedSystem,
+  plan,
+  isParsing,
+  isLoading,
+  onCurrentPcChange,
+  onBudgetChange,
+  onParse,
+  onConfirmedSystemChange,
+  onSubmit
+}: {
+  currentPc: string;
+  budgetText: string;
+  parseResult: ExistingSystemParseResponse | null;
+  confirmedSystem: ExistingSystemOverrides;
+  plan: UpgradePlanResponse | null;
+  isParsing: boolean;
+  isLoading: boolean;
+  onCurrentPcChange: (value: string) => void;
+  onBudgetChange: (value: string) => void;
+  onParse: () => void;
+  onConfirmedSystemChange: <K extends keyof ExistingSystemOverrides>(
+    field: K,
+    value: ExistingSystemOverrides[K]
+  ) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  const recommendation = plan?.recommendations[0] ?? null;
+  const canPlan = Boolean(parseResult && currentPc.trim());
+
+  return (
+    <section className="panel upgrade-panel" data-testid="upgrade-planner-panel">
+      <div className="panel-heading">
+        <div>
+          <h2>Nâng cấp GPU</h2>
+          <p>Nhập cấu hình hiện tại để chọn GPU thật từ catalog và kiểm tra PSU/case.</p>
+        </div>
+        {plan ? (
+          <span className={recommendation ? upgradeStatusClass(recommendation.compatibility_status) : "status warning"}>
+            {recommendation ? upgradeStatusLabel(recommendation.compatibility_status) : "Chưa có GPU"}
+          </span>
+        ) : (
+          <span className="status">Phase 7</span>
+        )}
+      </div>
+
+      <form className="upgrade-form" onSubmit={onSubmit}>
+        <label htmlFor="upgrade-current-pc">Máy hiện tại</label>
+        <textarea
+          id="upgrade-current-pc"
+          data-testid="upgrade-current-pc"
+          value={currentPc}
+          onChange={(event) => onCurrentPcChange(event.target.value)}
+          rows={3}
+        />
+
+        <div className="upgrade-actions-row">
+          <button type="button" className="secondary" disabled={isParsing || !currentPc.trim()} onClick={onParse}>
+            {isParsing ? "Đang tóm tắt..." : "Tóm tắt cấu hình"}
+          </button>
+          <span className={parseResult ? "status confirmed" : "status warning"}>
+            {parseResult ? "Đã tóm tắt" : "Cần tóm tắt"}
+          </span>
+        </div>
+
+        {parseResult ? (
+          <div className="upgrade-confirmation" data-testid="upgrade-confirmation">
+            <div className="upgrade-confirmation-heading">
+              <div>
+                <h3>Cấu hình đã nhận diện</h3>
+                <p>{parseResult.summary_vi}</p>
+              </div>
+              <span className={parseResult.existing_system.unknown_fields.length ? "status warning" : "status confirmed"}>
+                {parseResult.existing_system.unknown_fields.length
+                  ? `${parseResult.existing_system.unknown_fields.length} unknown`
+                  : "Đủ dữ liệu"}
+              </span>
+            </div>
+
+            <div className="upgrade-confirmation-grid">
+              <label>
+                CPU
+                <input
+                  value={confirmedSystem.cpu_name ?? ""}
+                  onChange={(event) => onConfirmedSystemChange("cpu_name", emptyToNull(event.target.value))}
+                />
+              </label>
+              <label>
+                Mainboard
+                <input
+                  value={confirmedSystem.mainboard_name ?? ""}
+                  onChange={(event) => onConfirmedSystemChange("mainboard_name", emptyToNull(event.target.value))}
+                />
+              </label>
+              <label>
+                RAM GB
+                <input
+                  inputMode="numeric"
+                  value={confirmedSystem.ram_gb ?? ""}
+                  onChange={(event) => onConfirmedSystemChange("ram_gb", parseOptionalNumber(event.target.value))}
+                />
+              </label>
+              <label>
+                GPU hiện tại
+                <input
+                  value={confirmedSystem.gpu_name ?? ""}
+                  onChange={(event) => onConfirmedSystemChange("gpu_name", emptyToNull(event.target.value))}
+                />
+              </label>
+              <label>
+                PSU W
+                <input
+                  inputMode="numeric"
+                  value={confirmedSystem.psu_wattage_w ?? ""}
+                  onChange={(event) => onConfirmedSystemChange("psu_wattage_w", parseOptionalNumber(event.target.value))}
+                />
+              </label>
+              <label>
+                PCIe 8-pin
+                <input
+                  inputMode="numeric"
+                  value={confirmedSystem.psu_pcie_8pin_connectors ?? ""}
+                  onChange={(event) =>
+                    onConfirmedSystemChange("psu_pcie_8pin_connectors", parseOptionalNumber(event.target.value))
+                  }
+                />
+              </label>
+              <label>
+                Case GPU mm
+                <input
+                  inputMode="numeric"
+                  value={confirmedSystem.case_gpu_clearance_mm ?? ""}
+                  onChange={(event) =>
+                    onConfirmedSystemChange("case_gpu_clearance_mm", parseOptionalNumber(event.target.value))
+                  }
+                />
+              </label>
+              <label>
+                Lưu trữ
+                <input
+                  value={confirmedSystem.storage_summary ?? ""}
+                  onChange={(event) => onConfirmedSystemChange("storage_summary", emptyToNull(event.target.value))}
+                />
+              </label>
+            </div>
+
+            {parseResult.warnings_vi.length ? (
+              <div className="upgrade-parse-warning">
+                {parseResult.warnings_vi.map((warning) => (
+                  <span key={warning}>{warning}</span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="upgrade-budget-row">
+          <div>
+            <label htmlFor="upgrade-budget">Ngân sách nâng GPU</label>
+            <input
+              id="upgrade-budget"
+              inputMode="numeric"
+              data-testid="upgrade-budget"
+              value={budgetText}
+              onChange={(event) => onBudgetChange(event.target.value)}
+            />
+          </div>
+          <button type="submit" disabled={isLoading || isParsing || !canPlan}>
+            {isLoading ? "Đang kiểm tra..." : "Lập kế hoạch nâng GPU"}
+          </button>
+        </div>
+      </form>
+
+      {plan ? (
+        <div className="upgrade-result" data-testid="upgrade-plan-result">
+          <div className="build-metrics compact">
+            <Metric label="Catalog" value={plan.catalog_version} />
+            <Metric label="Chi phí GPU" value={formatVnd(plan.total_upgrade_cost_vnd)} />
+            <Metric label="Thiếu dữ liệu" value={`${plan.existing_system.unknown_fields.length} mục`} />
+          </div>
+
+          {recommendation ? (
+            <article className="upgrade-recommendation">
+              <div className="upgrade-recommendation-heading">
+                <div>
+                  <span className="addon-kind">GPU đề xuất</span>
+                  <h3>
+                    <a href={recommendation.url} target="_blank" rel="noreferrer">
+                      {recommendation.name}
+                    </a>
+                  </h3>
+                </div>
+                <strong>{formatVnd(recommendation.price_vnd)}</strong>
+              </div>
+
+              <div className="risk-tags" aria-label="Đánh giá nâng cấp">
+                <span className={upgradeStatusClass(recommendation.compatibility_status)}>
+                  {upgradeStatusLabel(recommendation.compatibility_status)}
+                </span>
+                <span className="risk-tag neutral">{upgradeImpactLabel(recommendation.impact)}</span>
+                <span className="risk-tag neutral">
+                  {specConfidenceLabel(recommendation.specs_confidence)}
+                </span>
+              </div>
+
+              <ul className="upgrade-reasons">
+                {recommendation.reasons_vi.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+
+              <div className="upgrade-checks">
+                {recommendation.checks.map((check) => (
+                  <div className={`upgrade-check ${check.status}`} key={check.code}>
+                    <strong>{upgradeStatusLabel(check.status)}</strong>
+                    <span>{check.explanation_vi}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ) : (
+            <p className="empty">Chưa tìm được GPU phù hợp ngân sách trong catalog hiện tại.</p>
+          )}
+
+          <div className="upgrade-decisions">
+            <h3>Giữ hay thay linh kiện</h3>
+            <div className="upgrade-decision-grid">
+              {plan.reuse_decisions.map((decision) => (
+                <div className="upgrade-decision" key={`${decision.slot}-${decision.decision}`}>
+                  <strong>{slotLabel(decision.slot)}</strong>
+                  <span>{upgradeDecisionLabel(decision.decision)}</span>
+                  <p>{decision.reason_vi}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {plan.warnings_vi.length ? (
+            <div className="customer-warning-panel compact">
+              <h3>Điểm cần xác nhận</h3>
+              <ul>
+                {plan.warnings_vi.slice(0, 4).map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="upgrade-next-steps">
+            {plan.next_steps_vi.map((step) => (
+              <span key={step}>{step}</span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function AddOnRecommendationsPanel({
   addons,
   isAdvanced,
@@ -2001,6 +2346,36 @@ function formatBudgetHeadroom(artifact: BuildArtifact) {
   return formatDeltaVnd(artifact.budget_max_vnd - artifact.total_price_vnd);
 }
 
+function parseVndInput(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return null;
+  return Number(digits);
+}
+
+function parseOptionalNumber(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return null;
+  return Number(digits);
+}
+
+function emptyToNull(value: string) {
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function existingSystemToOverrides(system: ExistingSystemParseResponse["existing_system"]): ExistingSystemOverrides {
+  return {
+    cpu_name: system.cpu_name,
+    mainboard_name: system.mainboard_name,
+    ram_gb: system.ram_gb,
+    gpu_name: system.gpu_name,
+    psu_wattage_w: system.psu_wattage_w,
+    psu_pcie_8pin_connectors: system.psu_pcie_8pin_connectors,
+    case_gpu_clearance_mm: system.case_gpu_clearance_mm,
+    storage_summary: system.storage_summary
+  };
+}
+
 function slotLabel(slot: BuildItem["slot"]) {
   const labels: Record<BuildItem["slot"], string> = {
     cpu: "CPU",
@@ -2021,6 +2396,40 @@ function addonKindLabel(kind: BuildRecommendedAddOn["kind"]) {
     cooler: "Tản nhiệt"
   };
   return labels[kind];
+}
+
+function upgradeStatusLabel(status: "pass" | "warn" | "block") {
+  const labels: Record<"pass" | "warn" | "block", string> = {
+    pass: "Qua kiểm tra",
+    warn: "Cần xác nhận",
+    block: "Bị chặn"
+  };
+  return labels[status];
+}
+
+function upgradeStatusClass(status: "pass" | "warn" | "block") {
+  if (status === "pass") return "status confirmed";
+  if (status === "warn") return "status warning";
+  return "status blocked";
+}
+
+function upgradeImpactLabel(impact: "high" | "medium" | "low") {
+  const labels: Record<"high" | "medium" | "low", string> = {
+    high: "Tác động cao",
+    medium: "Tác động vừa",
+    low: "Tác động nhẹ"
+  };
+  return labels[impact];
+}
+
+function upgradeDecisionLabel(decision: "reuse" | "replace" | "optional_upgrade" | "unknown") {
+  const labels: Record<"reuse" | "replace" | "optional_upgrade" | "unknown", string> = {
+    reuse: "Giữ lại",
+    replace: "Thay",
+    optional_upgrade: "Có thể nâng",
+    unknown: "Cần xác nhận"
+  };
+  return labels[decision];
 }
 
 function specConfidenceLabel(confidence: BuildItem["specs_confidence"]) {
