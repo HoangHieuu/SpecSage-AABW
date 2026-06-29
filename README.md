@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-040` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-043` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -63,13 +63,19 @@ Gaming benchmark evidence now comes from
 claims remain blocked by the local eval gate. Monitor-targeted gaming requests
 now warn with `PERF_MONITOR_OVERSPEC` when matched benchmark FPS is below the
 requested display refresh target. Curated monitor SKUs exist in the catalog,
-but generated builds still do not add monitor parts until a dedicated
-recommendation story selects that behavior. Generated builds also include a deterministic
+and generated builds can now attach optional monitor recommendations when the
+need mentions a monitor or includes a resolution plus refresh target. Generated
+builds also include optional cooler recommendations for quiet/cooler requests,
+after deterministic socket, TDP, and case-clearance checks. These add-ons stay
+outside the PC total and approval gate. Customers can now explicitly include
+selected add-ons in the mock shopping list, which reports PC total, add-on
+total, and combined shopping-list total separately. Generated builds also include a deterministic
 CPU/GPU/RAM/storage balance score and `PERF_IMBALANCE` warning for severe
 mismatch. Creator, streaming, and local LLM requests now show deterministic
 app-fit rows for RAM, VRAM, CPU threads, storage, and CUDA preference. Office
 and student requests now explain iGPU/discrete GPU suitability, quiet/power
-guidance, and multi-monitor validation gaps without recommending monitor SKUs.
+guidance, and multi-monitor validation gaps without inventing output-port
+support.
 Alternatives now include deterministic ranking metadata so the most
 workload-relevant variant appears first. Creator, AI, streaming, and guarded
 gaming builds now run a bounded budget-aware improvement pass before the build
@@ -170,6 +176,9 @@ The initial implementation backlog is intentionally small:
 38. `US-038` - customer-facing demo polish. Implemented.
 39. `US-039` - production catalog breadth and freshness foundation. Implemented.
 40. `US-040` - optional cooler and monitor catalog curation. Implemented.
+41. `US-041` - monitor add-on recommendation foundation. Implemented.
+42. `US-042` - cooler add-on recommendation foundation. Implemented.
+43. `US-043` - optional add-on shopping-list selection. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -263,6 +272,9 @@ scripts/bin/harness-cli story verify US-037
 scripts/bin/harness-cli story verify US-038
 scripts/bin/harness-cli story verify US-039
 scripts/bin/harness-cli story verify US-040
+scripts/bin/harness-cli story verify US-041
+scripts/bin/harness-cli story verify US-042
+scripts/bin/harness-cli story verify US-043
 pnpm eval:run
 ```
 

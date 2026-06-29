@@ -196,7 +196,7 @@ required full-build categories. Cooler rows must include `socket_support`,
 `tdp_rating_w`, and `height_mm`; monitor rows must include `resolution` and
 `refresh_rate_hz`. These rows reduce catalog health gaps and prepare optional
 slot work, but they do not change `REQUIRED_FULL_BUILD_SLOTS` or make the
-generator select cooler or monitor parts by default.
+generator include cooler or monitor in selected PC parts by default.
 
 ## API Boundary
 
@@ -224,6 +224,7 @@ LLM calls, PostgreSQL, or checkout:
 - `POST /sessions/{build_session_id}/generate`
 - `GET /builds/{build_id}`
 - `services/agent-api/src/pc_build_copilot/build_generator.py`
+- `services/agent-api/src/pc_build_copilot/build_addons.py`
 - `services/agent-api/src/pc_build_copilot/build_models.py`
 
 The first generator chooses in-stock local catalog SKUs for required slots,
@@ -290,6 +291,23 @@ its existing upgrade-oriented surface by default. The applied build appends the
 accepted and rejected command decisions to `optimizer_trace` and stores a
 single optimizer trace event for replay.
 
+`US-041` and `US-042` add `BuildArtifact.recommended_addons` for optional
+customer add-ons. The add-on selector reads the confirmed intent, active
+catalog snapshot, and selected PC parts, then can attach:
+
+- a monitor add-on when the need mentions monitor/display or combines a
+  resolution target with a refresh target
+- a CPU cooler add-on when the need asks for quiet operation or mentions a
+  cooler
+
+Add-ons are `BuildRecommendedAddOn` records, not `BuildItem` records. They do
+not affect `total_price_vnd`, compatibility approval, selected SKU approval,
+or the default `mock_cart_payload`. Monitor ranking prefers matching
+resolution, meeting refresh target, and lower price. Cooler ranking first
+filters by CPU socket, CPU TDP, cooler TDP rating, cooler height, and selected
+case clearance; quiet requests prefer additional TDP headroom before price. The
+web UI renders these under `Gợi ý thêm` after the selected parts table.
+
 ## Current Commerce Handoff Slice
 
 `US-005` adds mock approval and cart-ready handoff without introducing checkout,
@@ -302,6 +320,19 @@ auth, payment, Teko provider APIs, or persistent storage:
 Approval is allowed only when the generated build has `can_approve=true` and
 status `generated`. The handoff contains real SKU links from the existing build
 artifact and remains labeled as a mock cart payload.
+
+`US-043` extends the same endpoint with optional add-on selection:
+
+- Request body: `BuildApprovalRequest.selected_addon_skus`
+- Response fields: `selected_addons`, `add_on_total_price_vnd`, and
+  `shopping_list_total_price_vnd`
+
+The request only accepts SKUs already present in
+`BuildArtifact.recommended_addons`; duplicates and arbitrary SKUs return 422.
+The approval object remains PC-only: `BuildApproval.selected_skus` and
+`BuildApproval.total_price_vnd` do not include add-ons. Selected add-ons are
+included in the mock cart link list and item count, with separate totals so the
+customer can distinguish the approved PC from optional extras.
 
 `US-010` persists the same handoff payload in the local SQLite product store for
 restart-safe demos; real checkout, auth, payment, and Teko provider APIs remain
@@ -363,13 +394,12 @@ extends benchmark-backed evidence for a common lower-resolution target while
 preserving the exact-match rule. Unsupported resolutions still return no
 benchmark evidence rather than falling back to nearby rows.
 
-`US-024` adds monitor overspec warning logic without monitor SKU
-recommendations. The intent parser records monitor/display mentions in
+`US-024` adds monitor overspec warning logic. The intent parser records monitor/display mentions in
 `BuildIntent.mentioned_components`. If the user mentions a monitor target and a
 matched benchmark estimate is below the requested refresh rate, the performance
 profile raises `PERF_MONITOR_OVERSPEC`. `US-040` adds curated monitor rows to
-the active catalog, but this deliberately still does not add monitor items to
-builds until a dedicated recommendation story defines ranking and UX behavior.
+the active catalog, and `US-041` uses those rows for optional add-on
+recommendations while keeping monitors outside selected PC parts.
 
 `US-025` adds deterministic balance scoring to the same profile. The scorer
 uses selected SKU facts only: CPU cores/threads, GPU chipset/VRAM, RAM

@@ -48,6 +48,9 @@ Initial PC Build Copilot story packets:
 | `US-038` | Customer-facing demo polish | implemented | normal |
 | `US-039` | Production catalog breadth and freshness foundation | implemented | normal |
 | `US-040` | Optional cooler and monitor catalog curation | implemented | normal |
+| `US-041` | Monitor add-on recommendation foundation | implemented | normal |
+| `US-042` | Cooler add-on recommendation foundation | implemented | normal |
+| `US-043` | Optional add-on shopping-list selection | implemented | normal |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

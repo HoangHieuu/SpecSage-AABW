@@ -110,13 +110,23 @@ The first demo should prove a narrow vertical slice:
 34. Optional cooler and monitor categories have curated active SKUs with
     compatibility-critical fields, but they do not become required slots in the
     default full-build flow.
+35. Monitor add-on recommendations can be attached to a generated build when
+    the need mentions a monitor or includes resolution plus refresh targets,
+    while staying outside the PC total and mock cart.
+36. Cooler add-on recommendations can be attached to quiet or cooler requests
+    after deterministic socket, TDP, and case-clearance checks, while staying
+    outside the PC total and mock cart.
+37. Customers can explicitly include recommended add-ons in the mock shopping
+    list, with PC total, add-on total, and combined shopping-list total shown
+    separately.
 
-Current first-slice implementation reaches step 34 with a deterministic
+Current first-slice implementation reaches step 37 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, mock
 cart handoff, replayable agent traces, local quality gates, feedback capture,
-and curated catalog subset promotion. The active snapshot now has three choices
-for every required full-build category plus three curated cooler choices and
-three curated monitor choices. It also has a freshness-aware `pilot_ready`
+curated catalog subset promotion, and optional monitor/cooler add-on
+recommendations with explicit shopping-list selection. The active snapshot now
+has three choices for every required full-build category plus three curated
+cooler choices and three curated monitor choices. It also has a freshness-aware `pilot_ready`
 health layer, while `production_ready` remains false until full catalog target
 counts are met. It produces one build from the local
 catalog snapshot, validates it through the compatibility rule engine, reports
@@ -133,7 +143,10 @@ budget-safe optimizer swaps for creator and local LLM builds, allows gaming GPU
 auto-swaps only when exact benchmark evidence is preserved, ranks gaming GPU
 alternatives by exact benchmark delta when comparable evidence exists, applies a
 selected alternative as a new active build version, and creates a mock cart-ready
-handoff only after approval gates pass. The optimizer loop now records
+handoff only after approval gates pass. Optional add-ons are returned separately
+from selected PC parts so they do not affect PC totals or approval; when the
+user selects them, they are included in the mock shopping list with separate
+add-on and combined totals. The optimizer loop now records
 config-driven budget allocation, recognized priority overrides, and why each
 candidate was accepted, rejected, or skipped. Bounded natural-language
 iteration commands now parse supported Vietnamese adjustments, reuse the
@@ -207,7 +220,14 @@ local mirror honest by reporting production gaps instead of claiming full
 catalog readiness.
 `US-040` promotes reviewed cooler and monitor SKUs from staged captures with
 required compatibility fields, reducing optional-category catalog gaps while
-keeping cooler and monitor selection out of the default generated build.
+keeping cooler and monitor out of selected PC parts by default.
+`US-041` and `US-042` use those optional rows for customer-facing add-on
+recommendations. Monitor recommendations appear only for explicit monitor needs
+or resolution plus refresh targets. Cooler recommendations appear for quiet or
+cooler requests after socket, TDP, and case-clearance checks. Both remain
+outside the PC total and approval gate. `US-043` lets customers explicitly add
+those recommendations to the mock shopping list, with add-on totals separated
+from the approved PC total.
 
 Out of first-slice scope unless a later story selects it:
 
@@ -226,7 +246,7 @@ Out of first-slice scope unless a later story selects it:
 | 2 | Catalog intelligence and product grounding | Curated active catalog with demo, pilot, freshness, and production-gap health |
 | 3 | Compatibility and safety engine | First build slice |
 | 4 | Performance modeling and workload fit | Qualitative by default; source-backed benchmark seed, monitor warnings, balance scoring, app-fit thresholds, and office adequacy guidance |
-| 5 | Build optimization and iteration | Deterministic alternatives, apply flow, performance-aware ranking, benchmark-gated gaming optimization, bounded two-swap generation, optimizer-loop trace foundation, and bounded natural-language iteration commands |
+| 5 | Build optimization and iteration | Deterministic alternatives, apply flow, performance-aware ranking, benchmark-gated gaming optimization, bounded two-swap generation, optimizer-loop trace foundation, bounded natural-language iteration commands, and optional add-on recommendations |
 | 6 | Explanation and education | First vertical slice |
 | 7 | Upgrade planning | Later |
 | 8 | Commerce actions and checkout handoff | Mock first, real adapter later |

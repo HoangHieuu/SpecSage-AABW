@@ -297,6 +297,20 @@ checks the active snapshot remains validation-clean, `pilot_ready=true`, and
 `production_ready=false` while optional category gaps are reduced but not
 overclaimed.
 
+`US-041` and `US-042` are verified by focused build-generation tests, focused
+catalog/API tests, `pnpm check:web`, and Harness story verification. Unit proof
+covers monitor and cooler add-on selection from the active catalog, including
+monitor resolution/refresh ranking and cooler socket/TDP/case-clearance fit
+notes. Integration proof checks the new `recommended_addons` artifact field and
+web UI type/build path while confirming add-on SKUs stay out of selected build
+items, total price, approval payloads, and the primary mock cart payload.
+
+`US-043` is verified by focused build/catalog/API tests, `pnpm check:web`, and
+Harness story verification. Unit and integration proof cover selected add-ons
+being accepted only from `recommended_addons`, invalid add-on SKUs returning
+422, approval selected SKUs and approval total staying PC-only, and the mock
+shopping list reporting separate add-on and combined totals.
+
 ## Never Claim Without Proof
 
 - Do not claim real Phong Vu cart integration without a real Teko cart adapter.

@@ -182,9 +182,18 @@ the generated build and user target match exactly.
 `US-024` uses that benchmark evidence to warn about monitor overspec requests.
 The system may warn that a requested 144Hz/240Hz display target exceeds the
 source-backed FPS estimate. `US-040` adds curated monitor rows with
-`resolution` and `refresh_rate_hz`, but generated builds still must not add or
-recommend monitor SKUs until a dedicated monitor recommendation story selects
-that behavior.
+`resolution` and `refresh_rate_hz`. `US-041` uses those rows for optional
+monitor add-on recommendations when the need explicitly mentions a monitor or
+includes a resolution plus refresh target. These recommendations stay outside
+selected PC parts, total price, approval, and the primary mock cart payload.
+
+`US-042` uses curated cooler rows for optional CPU cooler recommendations when
+the need asks for quiet operation or mentions a cooler. Cooler add-ons must pass
+socket, TDP, and case-clearance checks against the selected CPU and case before
+they are shown, and they remain outside the build total and primary mock cart.
+`US-043` lets the user explicitly include those recommended add-ons in the mock
+shopping list. The approved PC total and selected PC SKU map remain unchanged;
+the handoff exposes separate add-on and combined shopping-list totals.
 
 `US-030` expands the same matrix with RTX 4060 coverage for Cyberpunk 2077
 1440p Ultra native. `US-031` uses that coverage to allow only
@@ -213,6 +222,8 @@ Current implementation:
 - `POST /builds/{build_id}/approve` returns a mock cart-ready handoff with the
   selected SKU map, approval id, handoff id, total snapshot price, and Phong Vu
   product links.
+- `US-043` allows selected recommended add-on SKUs in that handoff, but keeps
+  approval totals and selected PC SKUs separate from optional extras.
 - Over-budget and blocked builds return 409 instead of creating a cart payload.
 - `US-010` persists sessions, intent revisions, build artifacts, applied build
   versions, and mock cart handoffs in local SQLite so the demo survives an Agent
