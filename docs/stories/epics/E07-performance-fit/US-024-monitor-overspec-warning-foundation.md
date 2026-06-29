@@ -15,6 +15,11 @@ warn if source-backed benchmark evidence is below the requested refresh rate.
 The system must not recommend monitor SKUs until a later story defines monitor
 recommendation ranking and UX behavior.
 
+Supersession note: `US-041` is that later story. Current builds may now attach
+optional monitor add-on recommendations under `recommended_addons`, while
+`US-024` still owns only the warning behavior and does not add monitors to
+selected PC parts.
+
 ## Relevant Product Docs
 
 - `docs/product/overview.md`

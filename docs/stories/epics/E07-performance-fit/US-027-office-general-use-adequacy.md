@@ -15,6 +15,10 @@ facts, including iGPU versus discrete GPU suitability, quiet/power guidance, and
 multi-monitor validation gaps. The system does not recommend monitor SKUs until
 monitor catalog rows and output-port specs are curated.
 
+Supersession note: `US-041` later adds optional monitor add-on recommendations
+when a need mentions monitor/display or includes resolution plus refresh
+targets. `US-027` still owns only office adequacy and output-port-gap warnings.
+
 ## Relevant Product Docs
 
 - `docs/product/overview.md`
