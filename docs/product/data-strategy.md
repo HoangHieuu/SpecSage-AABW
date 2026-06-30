@@ -219,6 +219,14 @@ connector, case-clearance, and storage fields are accepted as structured
 overrides; missing values remain `unknown` and are not converted into
 compatibility facts.
 
+`US-047` replaces deployed demo-session storage with a production-capable
+Postgres path for app state. Sessions, intent revisions, generated build
+artifacts, applied versions, cart-ready handoffs, feedback, and trace replay
+payloads use Postgres whenever `DATABASE_URL`, `POSTGRES_URL`, or
+`POSTGRES_URL_NON_POOLING` is configured. The local catalog mirror still stays
+in versioned JSON fixtures for this slice, and SQLite remains only the local
+fallback when no Postgres URL exists.
+
 ## Commerce Adapter Boundary
 
 Hackathon:
@@ -246,6 +254,9 @@ Pilot and production:
 - Swap the scraper/local mirror behind a `CommerceAdapter` and `CatalogAdapter`
   interface.
 - Preserve build reproducibility through catalog and rules versions.
-- Replace local SQLite with PostgreSQL/Redis when multi-user account history,
-  LangGraph checkpointing, analytics, or production deployment becomes the
-  selected story.
+- Use PostgreSQL for deployed session/build/handoff/feedback state.
+- Add Redis when session TTL or LangGraph checkpointing becomes the selected
+  story.
+- Move catalog rows to PostgreSQL/pgvector and Typesense when broader search,
+  catalog operations, or production catalog freshness becomes the selected
+  story.

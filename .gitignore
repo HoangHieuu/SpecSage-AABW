@@ -35,3 +35,4 @@ __pycache__/
 services/agent-api/fixtures/raw_html/
 services/agent-api/fixtures/*.raw.html
 .vercel
+.env*.local

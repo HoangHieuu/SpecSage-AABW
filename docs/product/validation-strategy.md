@@ -202,6 +202,15 @@ re-instantiating FastAPI apps over the same DB file. Browser proof must show the
 default persistent API still supports the generate -> alternatives -> apply ->
 approve flow.
 
+`US-047` is verified by focused persistence tests, `pnpm check`, and Harness
+story verification. Unit proof checks that production database URLs select
+Postgres and missing URLs fall back to SQLite. Integration proof keeps the
+existing SQLite restart-survival, feedback, and trace replay tests passing.
+Schema proof checks Postgres `jsonb`, `timestamptz`, foreign-key, and index
+coverage for session/build/review queue paths. Platform proof requires a real
+managed Postgres URL configured on Vercel, followed by redeploy and session
+read/write verification.
+
 `US-011` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit proof covers the LangGraph orchestration service, expected agent sequence,
 and deterministic build output preservation. Integration proof checks the

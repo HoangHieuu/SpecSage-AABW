@@ -27,8 +27,9 @@ only from exact-match source-backed benchmark matrix rows, plus deterministic
 catalog-grounded alternatives with slot deltas and compatibility proof. A
 selected alternative can be applied as a new active build version, then approved
 through the existing handoff gate.
-Sessions, intent revisions, build artifacts, applied build versions, and mock
-cart handoffs persist in a local SQLite store for restart-safe demos.
+Sessions, intent revisions, build artifacts, applied build versions, mock cart
+handoffs, feedback, and trace replay payloads persist in SQLite locally and in
+Postgres when a production database URL is configured.
 Build generation now runs through a bounded LangGraph orchestration layer with
 intent, catalog, optimizer, compatibility, performance, explainer, commerce,
 and validator steps recorded on each build artifact. Agent trace replay is now
@@ -186,6 +187,7 @@ The initial implementation backlog is intentionally small:
 44. `US-044` - GPU upgrade planning foundation. Implemented.
 45. `US-045` - existing system confirmation before upgrade planning. Implemented.
 46. `US-046` - complete traced multi-agent build chain. Implemented.
+47. `US-047` - production Postgres state store. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -224,13 +226,17 @@ Optional LLM advisor configuration for the API:
 OPENROUTER_API_KEY=...
 OPENROUTER_MODEL=deepseek/deepseek-v4-flash
 LLM_AGENT_ENABLED=true
+DATABASE_URL=postgresql://...
 PC_BUILD_COPILOT_DB_PATH=.local/pc-build-copilot.sqlite3
 ```
 
 The API reads these from local environment or `.env`. The key stays server-side;
 the browser receives only the model name, provider status, and advisory text.
-`PC_BUILD_COPILOT_DB_PATH` is optional; when omitted, the API uses
-`.local/pc-build-copilot.sqlite3`.
+`DATABASE_URL` is optional for local development, but required for durable
+production deployment. `POSTGRES_URL` and `POSTGRES_URL_NON_POOLING` are also
+accepted. When no Postgres URL exists, the API falls back to SQLite;
+`PC_BUILD_COPILOT_DB_PATH` can override the local SQLite path, otherwise the
+API uses `.local/pc-build-copilot.sqlite3`.
 
 Validate the current slice:
 

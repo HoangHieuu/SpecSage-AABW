@@ -9,7 +9,7 @@ the work is selected or when a product decision needs a durable place to land.
 
 | Epic | Description | Status |
 | --- | --- | --- |
-| E01 Session Intent | Start sessions, confirm Vietnamese `BuildIntent`, and persist session/build state | stories created: `US-001`, `US-010` |
+| E01 Session Intent | Start sessions, confirm Vietnamese `BuildIntent`, and persist session/build state | stories created: `US-001`, `US-010`, `US-047` |
 | E02 Catalog Grounding | Build local Phong Vu catalog snapshot, enriched SKU specs, demo/pilot/production-readiness health, freshness checks, variety warnings, multi-source ingestion, repeatable public payload capture, staged source coverage reporting, sanitized committed fixtures, curated staged SKU promotion, and optional cooler/monitor curation | stories created: `US-002`, `US-016`, `US-017`, `US-018`, `US-019`, `US-020`, `US-021`, `US-022`, `US-039`, `US-040` |
 | E03 Compatibility Engine | Deterministic hardware compatibility report and blocking rules | story created: `US-003` |
 | E04 Agent Build Flow | Generate one compatible explained build from confirmed intent through a bounded orchestration graph, with optional customer-facing monitor and cooler add-on recommendations | stories created: `US-004`, `US-011`, `US-041`, `US-042` |

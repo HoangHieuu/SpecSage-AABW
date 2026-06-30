@@ -535,6 +535,29 @@ SQLite is a local hackathon bridge. PostgreSQL remains the production target for
 LangGraph checkpointing, account-linked saved builds, catalog/search expansion,
 analytics, and multi-user history.
 
+## Current Production State Store Slice
+
+`US-047` adds the first production database path for deployed app state:
+
+- `services/agent-api/src/pc_build_copilot/persistence.py`
+- `services/agent-api/src/pc_build_copilot/postgres_store.py`
+- Production env vars: `DATABASE_URL`, `POSTGRES_URL`, or
+  `POSTGRES_URL_NON_POOLING`
+- Tables: `build_sessions`, `intent_revisions`, `build_artifacts`,
+  `cart_handoffs`, `build_feedback`
+
+When a Postgres URL is configured, the default FastAPI app uses PostgreSQL for
+sessions, intent revisions, generated builds, applied build versions, approval
+handoffs, feedback, and trace replay. Without a Postgres URL, local development
+keeps using the SQLite fallback from `US-010`.
+
+The production schema stores query-critical metadata in typed columns and keeps
+the full domain payload in `jsonb`, so existing HTTP response contracts and
+support trace replay remain unchanged. This is the app-state database step for
+the current Vercel deployment, not a catalog/search migration. Redis TTL,
+LangGraph checkpointing, account history, pgvector, Typesense, and broader
+analytics remain future stories.
+
 ## Current LangGraph Orchestration Slice
 
 `US-011` introduces the first real LangGraph runtime without replacing the

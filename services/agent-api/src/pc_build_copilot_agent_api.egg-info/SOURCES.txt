@@ -19,6 +19,8 @@ src/pc_build_copilot/llm_intent_advisor.py
 src/pc_build_copilot/models.py
 src/pc_build_copilot/openrouter_client.py
 src/pc_build_copilot/performance_profile.py
+src/pc_build_copilot/persistence.py
+src/pc_build_copilot/postgres_store.py
 src/pc_build_copilot/sqlite_store.py
 src/pc_build_copilot/store.py
 src/pc_build_copilot_agent_api.egg-info/PKG-INFO
@@ -33,5 +35,6 @@ tests/test_compatibility_api.py
 tests/test_compatibility_rules.py
 tests/test_intent_parser.py
 tests/test_llm_intent_advisor.py
+tests/test_persistence_selection.py
 tests/test_sessions_api.py
 tests/test_sqlite_persistence.py

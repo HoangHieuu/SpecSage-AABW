@@ -171,6 +171,10 @@ handoff payloads.
 `US-010` adds local SQLite persistence for sessions, intent revisions, build
 artifacts, applied build versions, and mock cart handoffs so the demo can
 survive an Agent API process restart without requiring Postgres credentials.
+`US-047` keeps that SQLite behavior as the local fallback and adds a managed
+Postgres path for deployed app state, covering sessions, intent revisions,
+generated builds, applied versions, cart-ready handoffs, feedback, and trace
+replay payloads when `DATABASE_URL` or an equivalent Postgres URL is configured.
 `US-011` routes build generation through a bounded LangGraph state graph and
 surfaces a schema-valid orchestration trace while preserving deterministic SKU,
 price, compatibility, workload fit, approval, and handoff behavior.

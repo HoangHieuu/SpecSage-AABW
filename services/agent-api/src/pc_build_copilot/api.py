@@ -40,7 +40,7 @@ from pc_build_copilot.models import (
     IntentResponse,
     IntentRevision,
 )
-from pc_build_copilot.sqlite_store import create_sqlite_stores
+from pc_build_copilot.persistence import create_persistent_stores
 from pc_build_copilot.store import SessionStore
 from pc_build_copilot.trace_replay import build_trace_replay, session_trace_replay
 from pc_build_copilot.upgrade_models import (
@@ -62,7 +62,7 @@ def create_app(
     intent_advisor: LlmIntentAdvisor | None = None,
 ) -> FastAPI:
     if store is None and build_store is None:
-        session_store, builds = create_sqlite_stores()
+        session_store, builds = create_persistent_stores()
     else:
         session_store = store or SessionStore()
         builds = build_store or BuildStore()
