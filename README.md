@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-048` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-049` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -33,7 +33,9 @@ Postgres when a production database URL is configured.
 The active catalog can also be mirrored into Postgres for deployed reads:
 `catalog_versions` tracks the active validated snapshot and `catalog_skus`
 stores queryable SKU payloads, while local development can still use the JSON
-snapshot fallback.
+snapshot fallback. Catalog publishes now also record `catalog_publish_runs`
+audit rows with validation counts, SKU counts, status, timestamps, load
+options, and blocking/failure text before scheduled refresh automation exists.
 Build generation now runs through a bounded LangGraph orchestration layer with
 intent, catalog, optimizer, compatibility, performance, explainer, commerce,
 and validator steps recorded on each build artifact. Agent trace replay is now
@@ -193,6 +195,7 @@ The initial implementation backlog is intentionally small:
 46. `US-046` - complete traced multi-agent build chain. Implemented.
 47. `US-047` - production Postgres state store. Implemented.
 48. `US-048` - Postgres catalog mirror foundation. Implemented.
+49. `US-049` - catalog publish audit foundation. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -302,11 +305,13 @@ scripts/bin/harness-cli story verify US-045
 scripts/bin/harness-cli story verify US-046
 scripts/bin/harness-cli story verify US-047
 scripts/bin/harness-cli story verify US-048
+scripts/bin/harness-cli story verify US-049
 pnpm eval:run
 ```
 
 When `DATABASE_URL` is configured and you want deployed catalog reads to use
-Postgres, load the active validated snapshot:
+Postgres, load the active validated snapshot. The command also records a
+`catalog_publish_runs` audit row:
 
 ```bash
 pnpm catalog:load-postgres

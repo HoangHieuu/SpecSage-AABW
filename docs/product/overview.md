@@ -181,6 +181,11 @@ artifact, while `catalog_versions` and `catalog_skus` store the active deployed
 catalog version, queryable SKU payloads, validation JSON, and active-version
 metadata when a Postgres URL is configured. Local development and unconfigured
 deployments still fall back to the JSON snapshot.
+`US-049` adds publish-run audit metadata before any scheduled catalog
+automation. Each Postgres catalog publish records its snapshot version,
+validation counts, SKU count, status, timestamps, load options, and blocking or
+failure text in `catalog_publish_runs`, while successful publishes still
+activate exactly one catalog version.
 `US-011` routes build generation through a bounded LangGraph state graph and
 surfaces a schema-valid orchestration trace while preserving deterministic SKU,
 price, compatibility, workload fit, approval, and handoff behavior.

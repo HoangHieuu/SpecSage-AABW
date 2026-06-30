@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
 
+import pytest
+
 from pc_build_copilot import catalog_repository, postgres_catalog
 from pc_build_copilot.catalog_models import CatalogSnapshot, ComponentCategory
 from pc_build_copilot.catalog_repository import CatalogRepository
@@ -48,11 +50,15 @@ def test_postgres_catalog_schema_matches_versioned_catalog_contract() -> None:
 
     assert "catalog_versions" in schema
     assert "catalog_skus" in schema
+    assert "catalog_publish_runs" in schema
+    assert "status IN ('started', 'loaded', 'blocked', 'failed')" in schema
     assert "payload_json JSONB NOT NULL" in schema
     assert "validation_json JSONB NOT NULL" in schema
     assert "idx_catalog_versions_single_active" in schema
     assert "idx_catalog_skus_snapshot_category_price" in schema
     assert "idx_catalog_skus_specs_gin" in schema
+    assert "idx_catalog_publish_runs_snapshot_started" in schema
+    assert "idx_catalog_publish_runs_status_started" in schema
     assert "TIMESTAMPTZ NOT NULL" in schema
 
 
@@ -68,6 +74,24 @@ def test_loaded_catalog_snapshot_is_revalidated_before_insert(monkeypatch) -> No
 
     def fake_ensure_catalog_schema(database_url: str) -> None:
         assert database_url == "postgresql://example/catalog"
+
+    def fake_record_catalog_publish_started(
+        database_url: str,
+        loaded_snapshot: CatalogSnapshot,
+        validation,
+        *,
+        allow_blocking: bool,
+    ) -> int:
+        assert database_url == "postgresql://example/catalog"
+        assert loaded_snapshot.snapshot_version == snapshot.snapshot_version
+        assert validation.blocking_issue_count == 0
+        assert allow_blocking is False
+        captured.append(("publish_started", loaded_snapshot))
+        return 42
+
+    def fake_finish_catalog_publish_run_in_transaction(conn, run_id: int) -> None:
+        assert run_id == 42
+        captured.append(("publish_loaded", snapshot))
 
     class FakeConnection:
         def __enter__(self):
@@ -87,6 +111,16 @@ def test_loaded_catalog_snapshot_is_revalidated_before_insert(monkeypatch) -> No
             captured.append(("executemany", snapshot))
 
     monkeypatch.setattr(postgres_catalog, "ensure_catalog_schema", fake_ensure_catalog_schema)
+    monkeypatch.setattr(
+        postgres_catalog,
+        "_record_catalog_publish_started",
+        fake_record_catalog_publish_started,
+    )
+    monkeypatch.setattr(
+        postgres_catalog,
+        "_finish_catalog_publish_run_in_transaction",
+        fake_finish_catalog_publish_run_in_transaction,
+    )
     monkeypatch.setattr(
         postgres_catalog,
         "_connect",
@@ -109,7 +143,75 @@ def test_loaded_catalog_snapshot_is_revalidated_before_insert(monkeypatch) -> No
     assert loaded.validation.sku_count == expected.sku_count
     assert loaded.validation.blocking_issue_count == expected.blocking_issue_count
     assert loaded.validation.production_gap_categories == expected.production_gap_categories
+    assert any(kind == "publish_started" for kind, _ in captured)
+    assert any(kind == "publish_loaded" for kind, _ in captured)
     assert any(kind == "executemany" for kind, _ in captured)
+
+
+def test_blocked_catalog_publish_records_audit_run_without_loading(monkeypatch) -> None:
+    captured: list[tuple[str, object]] = []
+    item = _items()[0].model_copy(update={"specs": {}})
+    snapshot = CatalogSnapshot(
+        snapshot_version="catalog_test_blocked",
+        generated_at=SNAPSHOT_AT,
+        source="test_fixture",
+        items=[item],
+        validation=None,
+    )
+
+    def fake_ensure_catalog_schema(database_url: str) -> None:
+        assert database_url == "postgresql://example/catalog"
+
+    def fake_record_catalog_publish_started(
+        database_url: str,
+        loaded_snapshot: CatalogSnapshot,
+        validation,
+        *,
+        allow_blocking: bool,
+    ) -> int:
+        assert database_url == "postgresql://example/catalog"
+        assert loaded_snapshot.snapshot_version == snapshot.snapshot_version
+        assert validation.blocking_issue_count > 0
+        assert allow_blocking is False
+        captured.append(("publish_started", validation))
+        return 99
+
+    def fake_finish_catalog_publish_run(
+        database_url: str,
+        run_id: int,
+        *,
+        status: str,
+        error_text: str | None = None,
+    ) -> None:
+        assert database_url == "postgresql://example/catalog"
+        assert run_id == 99
+        assert status == "blocked"
+        assert error_text is not None
+        captured.append(("publish_blocked", error_text))
+
+    def fail_connect(database_url: str):
+        raise AssertionError("blocked catalog should not load SKU rows")
+
+    monkeypatch.setattr(postgres_catalog, "ensure_catalog_schema", fake_ensure_catalog_schema)
+    monkeypatch.setattr(
+        postgres_catalog,
+        "_record_catalog_publish_started",
+        fake_record_catalog_publish_started,
+    )
+    monkeypatch.setattr(
+        postgres_catalog,
+        "_finish_catalog_publish_run",
+        fake_finish_catalog_publish_run,
+    )
+    monkeypatch.setattr(postgres_catalog, "_connect", fail_connect)
+
+    with pytest.raises(postgres_catalog.CatalogPublishBlockedError):
+        postgres_catalog.load_catalog_snapshot(
+            "postgresql://example/catalog",
+            snapshot,
+        )
+
+    assert [kind for kind, _ in captured] == ["publish_started", "publish_blocked"]
 
 
 def test_postgres_catalog_query_uses_active_version_and_returns_payloads(

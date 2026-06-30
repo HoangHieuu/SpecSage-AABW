@@ -202,7 +202,7 @@ generator include cooler or monitor in selected PC parts by default.
 
 - `services/agent-api/src/pc_build_copilot/postgres_catalog.py`
 - Loader command: `pnpm catalog:load-postgres`
-- Tables: `catalog_versions`, `catalog_skus`
+- Tables: `catalog_versions`, `catalog_skus`, `catalog_publish_runs`
 - API repository factory:
   `services/agent-api/src/pc_build_copilot/catalog_repository.py`
 
@@ -216,6 +216,13 @@ development and empty catalog tables fall back to the JSON snapshot.
 This is the durable catalog database foundation, not the full search stack.
 Typesense, pgvector, scheduled scraping, product detail crawling, admin review,
 and private Teko/Phong Vu APIs remain future stories.
+
+`US-049` extends the same loader with publish-run audit metadata. Each
+`pnpm catalog:load-postgres` attempt records a `catalog_publish_runs` row before
+load, marks blocked validation attempts without writing SKU rows by default,
+marks successful activations as `loaded`, and best-effort marks post-start
+exceptions as `failed`. This is the audit anchor for future cron or queue-based
+refresh jobs, not a scheduled scraper by itself.
 
 ## API Boundary
 

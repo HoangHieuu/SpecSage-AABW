@@ -235,6 +235,12 @@ loads it into `catalog_versions` and `catalog_skus`, marking one version active
 for deployed API reads. This prepares scheduled refresh and search indexing
 without claiming live Phong Vu/Teko API access yet.
 
+`US-049` adds `catalog_publish_runs` as the publish audit trail for that manual
+load path. The loader records started, loaded, blocked, and failed publish
+outcomes with validation counts, SKU count, timestamps, load options, and error
+text. This makes manual production refreshes inspectable in Postgres before
+cron, queues, Typesense, pgvector, or broader live source automation are added.
+
 ## Commerce Adapter Boundary
 
 Hackathon:

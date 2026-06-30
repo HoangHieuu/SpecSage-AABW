@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence, TypeVar
 
@@ -95,7 +96,46 @@ POSTGRES_CATALOG_SCHEMA_STATEMENTS = (
     CREATE INDEX IF NOT EXISTS idx_catalog_skus_specs_gin
         ON catalog_skus USING GIN (specs_json)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS catalog_publish_runs (
+        run_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        snapshot_version TEXT NOT NULL,
+        snapshot_generated_at TIMESTAMPTZ NOT NULL,
+        source TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (
+            status IN ('started', 'loaded', 'blocked', 'failed')
+        ),
+        sku_count INTEGER NOT NULL CHECK (sku_count >= 0),
+        issue_count INTEGER NOT NULL CHECK (issue_count >= 0),
+        blocking_issue_count INTEGER NOT NULL CHECK (blocking_issue_count >= 0),
+        validation_json JSONB NOT NULL,
+        load_options_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+        started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        finished_at TIMESTAMPTZ,
+        activated_at TIMESTAMPTZ,
+        error_text TEXT
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS idx_catalog_publish_runs_snapshot_started
+        ON catalog_publish_runs(snapshot_version, started_at DESC)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS idx_catalog_publish_runs_status_started
+        ON catalog_publish_runs(status, started_at DESC)
+    """,
 )
+
+
+@dataclass(frozen=True)
+class CatalogPublishBlockedError(Exception):
+    validation: CatalogValidationReport
+
+    def __str__(self) -> str:
+        return (
+            "Catalog snapshot has "
+            f"{self.validation.blocking_issue_count} blocking validation issue(s)."
+        )
 
 
 class PostgresCatalogRepository:
@@ -264,6 +304,8 @@ class PostgresCatalogRepository:
 def load_catalog_snapshot(
     database_url: str,
     snapshot: CatalogSnapshot,
+    *,
+    allow_blocking: bool = False,
 ) -> CatalogSnapshot:
     ensure_catalog_schema(database_url)
     validation = validate_catalog(
@@ -272,88 +314,116 @@ def load_catalog_snapshot(
         generated_at=snapshot.generated_at,
     )
     snapshot = snapshot.model_copy(update={"validation": validation})
+    run_id = _record_catalog_publish_started(
+        database_url,
+        snapshot,
+        validation,
+        allow_blocking=allow_blocking,
+    )
 
-    with _connect(database_url) as conn:
-        conn.execute(
-            """
-            INSERT INTO catalog_versions (
-                snapshot_version,
-                generated_at,
-                source,
-                sku_count,
-                validation_json,
-                payload_json,
-                ingested_at,
-                activated_at,
-                is_active
+    if validation.blocking_issue_count and not allow_blocking:
+        message = (
+            "Catalog snapshot has "
+            f"{validation.blocking_issue_count} blocking validation issue(s); "
+            "fix the snapshot or pass --allow-blocking."
+        )
+        _finish_catalog_publish_run(
+            database_url,
+            run_id,
+            status="blocked",
+            error_text=message,
+        )
+        raise CatalogPublishBlockedError(validation)
+
+    try:
+        with _connect(database_url) as conn:
+            conn.execute(
+                """
+                INSERT INTO catalog_versions (
+                    snapshot_version,
+                    generated_at,
+                    source,
+                    sku_count,
+                    validation_json,
+                    payload_json,
+                    ingested_at,
+                    activated_at,
+                    is_active
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, now(), NULL, FALSE)
+                ON CONFLICT(snapshot_version) DO UPDATE SET
+                    generated_at = excluded.generated_at,
+                    source = excluded.source,
+                    sku_count = excluded.sku_count,
+                    validation_json = excluded.validation_json,
+                    payload_json = excluded.payload_json,
+                    ingested_at = now(),
+                    activated_at = NULL,
+                    is_active = FALSE
+                """,
+                (
+                    snapshot.snapshot_version,
+                    snapshot.generated_at,
+                    snapshot.source,
+                    len(snapshot.items),
+                    _model_jsonb(validation),
+                    _model_jsonb(snapshot),
+                ),
             )
-            VALUES (%s, %s, %s, %s, %s, %s, now(), NULL, FALSE)
-            ON CONFLICT(snapshot_version) DO UPDATE SET
-                generated_at = excluded.generated_at,
-                source = excluded.source,
-                sku_count = excluded.sku_count,
-                validation_json = excluded.validation_json,
-                payload_json = excluded.payload_json,
-                ingested_at = now(),
-                activated_at = NULL,
-                is_active = FALSE
-            """,
-            (
-                snapshot.snapshot_version,
-                snapshot.generated_at,
-                snapshot.source,
-                len(snapshot.items),
-                _model_jsonb(validation),
-                _model_jsonb(snapshot),
-            ),
-        )
-        conn.execute(
-            "DELETE FROM catalog_skus WHERE snapshot_version = %s",
-            (snapshot.snapshot_version,),
-        )
-        _executemany(
-            conn,
-            """
-            INSERT INTO catalog_skus (
-                snapshot_version,
-                sku,
-                name,
-                category,
-                brand,
-                price_vnd,
-                list_price_vnd,
-                discount_amount_vnd,
-                stock_quantity,
-                stock_status,
-                url,
-                image_url,
-                specs_confidence,
-                catalog_snapshot_at,
-                source,
-                raw_category,
-                highlights_json,
-                specs_json,
-                payload_json
+            conn.execute(
+                "DELETE FROM catalog_skus WHERE snapshot_version = %s",
+                (snapshot.snapshot_version,),
             )
-            VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s
+            _executemany(
+                conn,
+                """
+                INSERT INTO catalog_skus (
+                    snapshot_version,
+                    sku,
+                    name,
+                    category,
+                    brand,
+                    price_vnd,
+                    list_price_vnd,
+                    discount_amount_vnd,
+                    stock_quantity,
+                    stock_status,
+                    url,
+                    image_url,
+                    specs_confidence,
+                    catalog_snapshot_at,
+                    source,
+                    raw_category,
+                    highlights_json,
+                    specs_json,
+                    payload_json
+                )
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                """,
+                [
+                    _sku_params(snapshot.snapshot_version, item)
+                    for item in snapshot.items
+                ],
             )
-            """,
-            [_sku_params(snapshot.snapshot_version, item) for item in snapshot.items],
-        )
-        conn.execute(
-            "UPDATE catalog_versions SET is_active = FALSE WHERE snapshot_version <> %s",
-            (snapshot.snapshot_version,),
-        )
-        conn.execute(
-            """
-            UPDATE catalog_versions
-            SET is_active = TRUE, activated_at = now()
-            WHERE snapshot_version = %s
-            """,
-            (snapshot.snapshot_version,),
-        )
+            conn.execute(
+                "UPDATE catalog_versions SET is_active = FALSE WHERE snapshot_version <> %s",
+                (snapshot.snapshot_version,),
+            )
+            conn.execute(
+                """
+                UPDATE catalog_versions
+                SET is_active = TRUE, activated_at = now()
+                WHERE snapshot_version = %s
+                """,
+                (snapshot.snapshot_version,),
+            )
+            _finish_catalog_publish_run_in_transaction(conn, run_id)
+    except Exception as exc:
+        _try_mark_catalog_publish_failed(database_url, run_id, exc)
+        raise
     return snapshot
 
 
@@ -388,20 +458,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     snapshot = CatalogSnapshot.model_validate_json(
         args.snapshot.read_text(encoding="utf-8")
     )
-    validation = validate_catalog(
-        snapshot.items,
-        snapshot_version=snapshot.snapshot_version,
-        generated_at=snapshot.generated_at,
-    )
-    if validation.blocking_issue_count and not args.allow_blocking:
-        print(
-            "Catalog snapshot has "
-            f"{validation.blocking_issue_count} blocking validation issue(s); "
-            "fix the snapshot or pass --allow-blocking."
+    try:
+        loaded = load_catalog_snapshot(
+            database_url,
+            snapshot,
+            allow_blocking=args.allow_blocking,
         )
+    except CatalogPublishBlockedError as exc:
+        print(f"{exc} Fix the snapshot or pass --allow-blocking.")
         return 1
 
-    loaded = load_catalog_snapshot(database_url, snapshot)
     print(
         f"Loaded catalog snapshot {loaded.snapshot_version} "
         f"with {len(loaded.items)} SKUs into Postgres."
@@ -420,6 +486,97 @@ def _executemany(
 ) -> None:
     with conn.cursor() as cursor:
         cursor.executemany(sql, params)
+
+
+def _record_catalog_publish_started(
+    database_url: str,
+    snapshot: CatalogSnapshot,
+    validation: CatalogValidationReport,
+    *,
+    allow_blocking: bool,
+) -> int:
+    with _connect(database_url) as conn:
+        row = conn.execute(
+            """
+            INSERT INTO catalog_publish_runs (
+                snapshot_version,
+                snapshot_generated_at,
+                source,
+                status,
+                sku_count,
+                issue_count,
+                blocking_issue_count,
+                validation_json,
+                load_options_json
+            )
+            VALUES (%s, %s, %s, 'started', %s, %s, %s, %s, %s)
+            RETURNING run_id
+            """,
+            (
+                snapshot.snapshot_version,
+                snapshot.generated_at,
+                snapshot.source,
+                len(snapshot.items),
+                validation.issue_count,
+                validation.blocking_issue_count,
+                _model_jsonb(validation),
+                Jsonb({"allow_blocking": allow_blocking}),
+            ),
+        ).fetchone()
+    return int(row["run_id"])
+
+
+def _finish_catalog_publish_run(
+    database_url: str,
+    run_id: int,
+    *,
+    status: str,
+    error_text: str | None = None,
+) -> None:
+    with _connect(database_url) as conn:
+        conn.execute(
+            """
+            UPDATE catalog_publish_runs
+            SET status = %s,
+                finished_at = now(),
+                error_text = %s
+            WHERE run_id = %s
+            """,
+            (status, error_text, run_id),
+        )
+
+
+def _finish_catalog_publish_run_in_transaction(
+    conn: psycopg.Connection[dict[str, Any]],
+    run_id: int,
+) -> None:
+    conn.execute(
+        """
+        UPDATE catalog_publish_runs
+        SET status = 'loaded',
+            finished_at = now(),
+            activated_at = now(),
+            error_text = NULL
+        WHERE run_id = %s
+        """,
+        (run_id,),
+    )
+
+
+def _try_mark_catalog_publish_failed(
+    database_url: str,
+    run_id: int,
+    exc: Exception,
+) -> None:
+    try:
+        _finish_catalog_publish_run(
+            database_url,
+            run_id,
+            status="failed",
+            error_text=str(exc),
+        )
+    except Exception:
+        pass
 
 
 def _sku_params(snapshot_version: str, item: CatalogSku) -> tuple[Any, ...]:

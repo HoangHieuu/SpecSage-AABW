@@ -222,6 +222,14 @@ using only validated SKU payloads. Platform proof requires loading the active
 snapshot into managed Postgres and verifying deployed catalog health and SKU
 query responses.
 
+`US-049` is verified by focused Postgres catalog tests, `pnpm check`, and
+Harness story verification. Unit proof checks the `catalog_publish_runs` schema,
+status constraint, and indexes. Integration proof checks successful loads mark
+a run `loaded`, blocked snapshots mark a run `blocked` without loading SKU
+rows, and existing catalog API/ingestion/build-generation behavior remains
+unchanged. Platform proof requires loading the active snapshot into managed
+Postgres and verifying the latest publish run is `loaded`.
+
 `US-011` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit proof covers the LangGraph orchestration service, expected agent sequence,
 and deterministic build output preservation. Integration proof checks the
