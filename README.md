@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-045` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-046` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -30,10 +30,11 @@ through the existing handoff gate.
 Sessions, intent revisions, build artifacts, applied build versions, and mock
 cart handoffs persist in a local SQLite store for restart-safe demos.
 Build generation now runs through a bounded LangGraph orchestration layer with
-catalog, optimizer, compatibility, performance, explainer, and validator steps
-recorded on each build artifact. Agent trace replay is now exposed through
-build/session trace endpoints and a web `Chi tiết hỗ trợ` disclosure with
-redacted event payloads and support-export text. A local quality eval suite now runs 30
+intent, catalog, optimizer, compatibility, performance, explainer, commerce,
+and validator steps recorded on each build artifact. Agent trace replay is now
+exposed through build/session trace endpoints and a web `Chi tiết hỗ trợ`
+disclosure with redacted event payloads and support-export text. A local quality
+eval suite now runs 30
 canonical scenarios as a release gate for catalog-grounding, budget,
 compatibility, required slots, SKU hallucination, and explanation-rubric
 regressions.
@@ -184,6 +185,7 @@ The initial implementation backlog is intentionally small:
 43. `US-043` - optional add-on shopping-list selection. Implemented.
 44. `US-044` - GPU upgrade planning foundation. Implemented.
 45. `US-045` - existing system confirmation before upgrade planning. Implemented.
+46. `US-046` - complete traced multi-agent build chain. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -282,6 +284,7 @@ scripts/bin/harness-cli story verify US-042
 scripts/bin/harness-cli story verify US-043
 scripts/bin/harness-cli story verify US-044
 scripts/bin/harness-cli story verify US-045
+scripts/bin/harness-cli story verify US-046
 pnpm eval:run
 ```
 

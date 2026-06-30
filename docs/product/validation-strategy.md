@@ -214,7 +214,7 @@ Unit proof covers trace replay conversion and PII-sensitive payload redaction.
 Integration proof checks build/session trace endpoints, build-version grouping,
 support-export text, and SQLite restart survival. Browser proof must show the
 generated build view keeps trace details out of the default customer path while
-`Chi tiết hỗ trợ` renders the support trace with six events and a support-export
+`Chi tiết hỗ trợ` renders the support trace with redacted events and a support-export
 copy action.
 
 `US-013` is verified by `pnpm check`, `pnpm eval:run`, and Harness story
@@ -326,6 +326,13 @@ checks `POST /upgrade-plans/existing-system/parse` returns the typed parsed
 summary, unknown fields, warnings, and confirmation next steps. Browser E2E is
 not required for this foundation story; the confirmation panel is covered by the
 Next.js type/build gate.
+
+`US-046` is verified by focused orchestration and trace replay tests, `pnpm
+check`, `pnpm eval:run`, and Harness story verification. Unit proof checks the
+eight-agent order, intent outputs, commerce outputs, and blocked validator
+behavior. Integration proof checks trace replay returns all eight events and
+redacts raw intent text. Browser E2E is not required for this foundation story;
+web trace labels are covered by the Next.js type/build gate.
 
 ## Never Claim Without Proof
 

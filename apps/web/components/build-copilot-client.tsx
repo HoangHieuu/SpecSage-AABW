@@ -1249,11 +1249,13 @@ function TraceReplayPanel({
 
 function TraceReplayEventRow({ event }: { event: TraceReplayEvent }) {
   const labels: Record<TraceReplayEvent["agent"], string> = {
+    intent: "Nhu cầu",
     catalog: "Sản phẩm",
     optimizer: "Tối ưu",
     compatibility: "Tương thích",
     performance: "Hiệu năng",
     explainer: "Giải thích",
+    commerce: "Mua hàng",
     validator: "Kiểm tra cuối"
   };
 
@@ -1294,11 +1296,13 @@ function TraceReplayEventRow({ event }: { event: TraceReplayEvent }) {
 
 function AgentTracePanel({ steps }: { steps: BuildOrchestrationStep[] }) {
   const labels: Record<BuildOrchestrationStep["agent"], string> = {
+    intent: "Nhu cầu",
     catalog: "Sản phẩm",
     optimizer: "Tối ưu",
     compatibility: "Tương thích",
     performance: "Hiệu năng",
     explainer: "Giải thích",
+    commerce: "Mua hàng",
     validator: "Kiểm tra cuối"
   };
 

@@ -58,18 +58,21 @@ def test_build_trace_endpoint_returns_replay_fields() -> None:
     assert body["build_version"] == 1
     assert body["replay_status"] == "complete"
     assert [event["agent"] for event in body["events"]] == [
+        "intent",
         "catalog",
         "optimizer",
         "compatibility",
         "performance",
         "explainer",
+        "commerce",
         "validator",
     ]
     first = body["events"][0]
     assert first["sequence"] == 1
-    assert first["tool_calls"] == ["catalog_snapshot.read", "catalog_stock.filter"]
-    assert first["model_version"] == "catalog-snapshot:catalog_test_trace"
+    assert first["tool_calls"] == ["intent_parser.parse_intent", "intent_schema.validate"]
+    assert first["model_version"] == "intent-schema-confirmed-v1"
     assert isinstance(first["latency_ms"], int)
+    assert first["inputs_redacted"]["raw_text"] == "[redacted]"
 
 
 def test_session_trace_endpoint_links_build_versions_and_export_text() -> None:
@@ -113,7 +116,7 @@ def test_trace_replay_redacts_sensitive_step_payload() -> None:
 
     replay = build_trace_replay(BuildArtifact.model_validate(artifact))
 
-    assert replay.events[0].agent == OrchestrationAgent.CATALOG
+    assert replay.events[0].agent == OrchestrationAgent.INTENT
     assert replay.events[0].inputs_redacted["raw_text"] == "[redacted]"
 
 

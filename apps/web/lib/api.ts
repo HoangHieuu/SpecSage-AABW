@@ -186,11 +186,13 @@ export type PerformanceProfile = {
 
 export type BuildOrchestrationStep = {
   agent:
+    | "intent"
     | "catalog"
     | "optimizer"
     | "compatibility"
     | "performance"
     | "explainer"
+    | "commerce"
     | "validator";
   status: "completed" | "blocked";
   summary_vi: string;

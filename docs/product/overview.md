@@ -124,10 +124,13 @@ The first demo should prove a narrow vertical slice:
     case checks.
 39. Upgrade buyers confirm the parsed current-PC summary before deterministic
     upgrade checks use those facts.
+40. Generated builds expose the complete current traced agent chain:
+    intent, catalog, optimizer, compatibility, performance, explainer,
+    commerce, and validator.
 
-Current first-slice implementation reaches step 39 with a deterministic
+Current first-slice implementation reaches step 40 with a deterministic
 fixture-backed generator, performance fit profile, alternatives panel, mock
-cart handoff, replayable agent traces, local quality gates, feedback capture,
+cart handoff, replayable eight-step agent traces, local quality gates, feedback capture,
 curated catalog subset promotion, and optional monitor/cooler add-on
 recommendations with explicit shopping-list selection. It also has a first
 GPU-only upgrade planner for existing PCs with a parsed-spec confirmation step.
@@ -244,6 +247,11 @@ clearance checks.
 confirmation step. The upgrade buyer can review and correct parsed CPU,
 mainboard, RAM, GPU, PSU wattage, PCIe 8-pin count, case clearance, and storage
 before those typed fields feed deterministic upgrade checks.
+`US-046` completes the current traced build chain by adding explicit intent and
+commerce nodes around the existing catalog, optimizer, compatibility,
+performance, explainer, and validator nodes. The intent node records confirmed
+schema facts, the commerce node reports mock Phong Vu link-list readiness, and
+real checkout remains disabled.
 
 Out of first-slice scope unless a later story selects it:
 

@@ -95,11 +95,13 @@ def test_sqlite_build_flow_survives_app_reinstantiation(tmp_path: Path) -> None:
     assert stored_session["state"] == "cart_ready"
     assert stored_base["build_version"] == 1
     assert [step["agent"] for step in stored_base["orchestration_trace"]] == [
+        "intent",
         "catalog",
         "optimizer",
         "compatibility",
         "performance",
         "explainer",
+        "commerce",
         "validator",
     ]
     assert any(item["slot"] == "ram" and item["sku"] == "210602265" for item in stored_base["items"])

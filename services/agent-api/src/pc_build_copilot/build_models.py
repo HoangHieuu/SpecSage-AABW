@@ -57,11 +57,13 @@ class BuildFeedbackReviewStatus(str, Enum):
 
 
 class OrchestrationAgent(str, Enum):
+    INTENT = "intent"
     CATALOG = "catalog"
     OPTIMIZER = "optimizer"
     COMPATIBILITY = "compatibility"
     PERFORMANCE = "performance"
     EXPLAINER = "explainer"
+    COMMERCE = "commerce"
     VALIDATOR = "validator"
 
 

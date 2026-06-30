@@ -275,6 +275,12 @@ users can still inspect the agent decisions. `US-036` uses this support
 disclosure in the browser demo; it does not add a new endpoint, storage table,
 checkout adapter, or staff/admin surface.
 
+`US-046` completes the current traced LangGraph sequence as:
+`intent -> catalog -> optimizer -> compatibility -> performance -> explainer -> commerce -> validator`.
+The intent node records already-confirmed schema facts and does not reparse
+with an LLM. The commerce node reports mock cart link-list readiness from the
+build artifact and explicitly keeps real checkout disabled.
+
 `US-037` adds the first natural-language iteration endpoint:
 
 - `POST /builds/{build_id}/iterate`

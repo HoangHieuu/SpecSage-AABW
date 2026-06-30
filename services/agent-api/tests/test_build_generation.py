@@ -471,11 +471,13 @@ def test_generate_endpoint_creates_and_stores_build_artifact() -> None:
     assert body["performance_profile"]["fit_level"] == "good"
     assert body["performance_profile"]["balance"]["score"] >= 70
     assert [step["agent"] for step in body["orchestration_trace"]] == [
+        "intent",
         "catalog",
         "optimizer",
         "compatibility",
         "performance",
         "explainer",
+        "commerce",
         "validator",
     ]
     assert body["orchestration_trace"][-1]["outputs"]["can_approve"] is True

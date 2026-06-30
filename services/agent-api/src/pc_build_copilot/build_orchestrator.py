@@ -46,6 +46,36 @@ def generate_build_with_orchestration(
     return artifact.model_copy(update={"orchestration_trace": state["steps"]})
 
 
+def _intent_agent(state: BuildOrchestrationState) -> dict[str, object]:
+    started_at = datetime.now(UTC)
+    start = perf_counter()
+    intent = state["intent"]
+    return {
+        "steps": [
+            _step(
+                OrchestrationAgent.INTENT,
+                "Intent Agent nhận nhu cầu đã xác nhận và chuẩn hóa thành schema trước khi gọi catalog.",
+                inputs={
+                    "build_session_id": state["build_session_id"],
+                    "raw_text": intent.raw_text,
+                },
+                outputs={
+                    "use_case": intent.use_case.value,
+                    "budget_max_vnd": intent.budget_max,
+                    "target_game_count": len(intent.target_games),
+                    "target_app_count": len(intent.target_apps),
+                    "performance_target_count": len(intent.performance_targets),
+                    "mentioned_component_count": len(intent.mentioned_components),
+                },
+                tool_calls=["intent_parser.parse_intent", "intent_schema.validate"],
+                model_version="intent-schema-confirmed-v1",
+                started_at=started_at,
+                latency_ms=_elapsed_ms(start),
+            )
+        ],
+    }
+
+
 def _catalog_agent(state: BuildOrchestrationState) -> dict[str, object]:
     started_at = datetime.now(UTC)
     start = perf_counter()
@@ -216,6 +246,37 @@ def _explainer_agent(state: BuildOrchestrationState) -> dict[str, object]:
     }
 
 
+def _commerce_agent(state: BuildOrchestrationState) -> dict[str, object]:
+    started_at = datetime.now(UTC)
+    start = perf_counter()
+    artifact = _artifact(state)
+    return {
+        "steps": [
+            _step(
+                OrchestrationAgent.COMMERCE,
+                "Commerce Agent chuẩn bị trạng thái mua hàng mock bằng link SKU Phong Vu, không tự checkout.",
+                inputs={
+                    "build_id": artifact.build_id,
+                    "can_approve": artifact.can_approve,
+                    "selected_sku_count": len(artifact.items),
+                    "recommended_addon_count": len(artifact.recommended_addons),
+                },
+                outputs={
+                    "provider": artifact.mock_cart_payload.provider,
+                    "mock_cart_link_count": len(artifact.mock_cart_payload.items),
+                    "total_price_vnd": artifact.total_price_vnd,
+                    "ready_for_approval": artifact.can_approve,
+                    "real_checkout_enabled": False,
+                },
+                tool_calls=["commerce.mock_cart_link_list.prepare"],
+                model_version="mock-commerce-agent-v1",
+                started_at=started_at,
+                latency_ms=_elapsed_ms(start),
+            )
+        ],
+    }
+
+
 def _validator_agent(state: BuildOrchestrationState) -> dict[str, object]:
     started_at = datetime.now(UTC)
     start = perf_counter()
@@ -289,18 +350,22 @@ def _elapsed_ms(start: float) -> int:
 
 def _build_graph():
     graph = StateGraph(BuildOrchestrationState)
+    graph.add_node("intent_agent", _intent_agent)
     graph.add_node("catalog_agent", _catalog_agent)
     graph.add_node("optimizer_agent", _optimizer_agent)
     graph.add_node("compatibility_agent", _compatibility_agent)
     graph.add_node("performance_agent", _performance_agent)
     graph.add_node("explainer_agent", _explainer_agent)
+    graph.add_node("commerce_agent", _commerce_agent)
     graph.add_node("validator_agent", _validator_agent)
-    graph.add_edge(START, "catalog_agent")
+    graph.add_edge(START, "intent_agent")
+    graph.add_edge("intent_agent", "catalog_agent")
     graph.add_edge("catalog_agent", "optimizer_agent")
     graph.add_edge("optimizer_agent", "compatibility_agent")
     graph.add_edge("compatibility_agent", "performance_agent")
     graph.add_edge("performance_agent", "explainer_agent")
-    graph.add_edge("explainer_agent", "validator_agent")
+    graph.add_edge("explainer_agent", "commerce_agent")
+    graph.add_edge("commerce_agent", "validator_agent")
     graph.add_edge("validator_agent", END)
     return graph.compile()
 
