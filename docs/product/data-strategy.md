@@ -227,6 +227,14 @@ payloads use Postgres whenever `DATABASE_URL`, `POSTGRES_URL`, or
 in versioned JSON fixtures for this slice, and SQLite remains only the local
 fallback when no Postgres URL exists.
 
+`US-048` keeps the same public-payload catalog mirror but adds Postgres as the
+production read store for catalog versions and SKU rows. `pnpm catalog:sync`
+continues to build the validated JSON snapshot from committed public fixtures
+and overrides. `pnpm catalog:load-postgres` then revalidates that snapshot and
+loads it into `catalog_versions` and `catalog_skus`, marking one version active
+for deployed API reads. This prepares scheduled refresh and search indexing
+without claiming live Phong Vu/Teko API access yet.
+
 ## Commerce Adapter Boundary
 
 Hackathon:
@@ -255,6 +263,8 @@ Pilot and production:
   interface.
 - Preserve build reproducibility through catalog and rules versions.
 - Use PostgreSQL for deployed session/build/handoff/feedback state.
+- Use PostgreSQL `catalog_versions` and `catalog_skus` as the deployed catalog
+  mirror once the snapshot is loaded.
 - Add Redis when session TTL or LangGraph checkpointing becomes the selected
   story.
 - Move catalog rows to PostgreSQL/pgvector and Typesense when broader search,

@@ -25,7 +25,10 @@ from pc_build_copilot.catalog_models import (
     CatalogValidationReport,
     ComponentCategory,
 )
-from pc_build_copilot.catalog_repository import CatalogRepository
+from pc_build_copilot.catalog_repository import (
+    CatalogDataStore,
+    create_catalog_repository,
+)
 from pc_build_copilot.compatibility_models import (
     BuildValidationRequest,
     CompatibilityReport,
@@ -57,7 +60,7 @@ from pc_build_copilot.upgrade_planner import (
 
 def create_app(
     store: SessionStore | None = None,
-    catalog_repository: CatalogRepository | None = None,
+    catalog_repository: CatalogDataStore | None = None,
     build_store: BuildStore | None = None,
     intent_advisor: LlmIntentAdvisor | None = None,
 ) -> FastAPI:
@@ -66,7 +69,7 @@ def create_app(
     else:
         session_store = store or SessionStore()
         builds = build_store or BuildStore()
-    catalog_store = catalog_repository or CatalogRepository()
+    catalog_store = catalog_repository or create_catalog_repository()
     advisor = intent_advisor or LlmIntentAdvisor.from_env()
     app = FastAPI(title="PC Build Copilot Agent API", version="0.1.0")
 

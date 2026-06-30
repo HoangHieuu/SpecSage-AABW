@@ -175,6 +175,12 @@ survive an Agent API process restart without requiring Postgres credentials.
 Postgres path for deployed app state, covering sessions, intent revisions,
 generated builds, applied versions, cart-ready handoffs, feedback, and trace
 replay payloads when `DATABASE_URL` or an equivalent Postgres URL is configured.
+`US-048` adds the matching Postgres catalog mirror foundation for production
+catalog reads. The validated JSON snapshot remains the deterministic ingestion
+artifact, while `catalog_versions` and `catalog_skus` store the active deployed
+catalog version, queryable SKU payloads, validation JSON, and active-version
+metadata when a Postgres URL is configured. Local development and unconfigured
+deployments still fall back to the JSON snapshot.
 `US-011` routes build generation through a bounded LangGraph state graph and
 surfaces a schema-valid orchestration trace while preserving deterministic SKU,
 price, compatibility, workload fit, approval, and handoff behavior.

@@ -40,6 +40,7 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0036` | Config-driven optimizer loop before Pareto search |
 | `0037` | Natural-language iteration before Pareto variants |
 | `0038` | Managed Postgres state before AWS RDS |
+| `0039` | Postgres catalog mirror before Typesense |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:

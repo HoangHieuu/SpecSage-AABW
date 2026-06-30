@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-046` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-048` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -30,6 +30,10 @@ through the existing handoff gate.
 Sessions, intent revisions, build artifacts, applied build versions, mock cart
 handoffs, feedback, and trace replay payloads persist in SQLite locally and in
 Postgres when a production database URL is configured.
+The active catalog can also be mirrored into Postgres for deployed reads:
+`catalog_versions` tracks the active validated snapshot and `catalog_skus`
+stores queryable SKU payloads, while local development can still use the JSON
+snapshot fallback.
 Build generation now runs through a bounded LangGraph orchestration layer with
 intent, catalog, optimizer, compatibility, performance, explainer, commerce,
 and validator steps recorded on each build artifact. Agent trace replay is now
@@ -188,6 +192,7 @@ The initial implementation backlog is intentionally small:
 45. `US-045` - existing system confirmation before upgrade planning. Implemented.
 46. `US-046` - complete traced multi-agent build chain. Implemented.
 47. `US-047` - production Postgres state store. Implemented.
+48. `US-048` - Postgres catalog mirror foundation. Implemented.
 
 Use Harness to keep each slice bounded:
 
@@ -227,6 +232,7 @@ OPENROUTER_API_KEY=...
 OPENROUTER_MODEL=deepseek/deepseek-v4-flash
 LLM_AGENT_ENABLED=true
 DATABASE_URL=postgresql://...
+PC_BUILD_COPILOT_CATALOG_STORE=postgres
 PC_BUILD_COPILOT_DB_PATH=.local/pc-build-copilot.sqlite3
 ```
 
@@ -237,6 +243,9 @@ production deployment. `POSTGRES_URL` and `POSTGRES_URL_NON_POOLING` are also
 accepted. When no Postgres URL exists, the API falls back to SQLite;
 `PC_BUILD_COPILOT_DB_PATH` can override the local SQLite path, otherwise the
 API uses `.local/pc-build-copilot.sqlite3`.
+The catalog also uses `DATABASE_URL` when present. Set
+`PC_BUILD_COPILOT_CATALOG_STORE=json` to force the local JSON catalog snapshot
+instead of Postgres.
 
 Validate the current slice:
 
@@ -291,7 +300,16 @@ scripts/bin/harness-cli story verify US-043
 scripts/bin/harness-cli story verify US-044
 scripts/bin/harness-cli story verify US-045
 scripts/bin/harness-cli story verify US-046
+scripts/bin/harness-cli story verify US-047
+scripts/bin/harness-cli story verify US-048
 pnpm eval:run
+```
+
+When `DATABASE_URL` is configured and you want deployed catalog reads to use
+Postgres, load the active validated snapshot:
+
+```bash
+pnpm catalog:load-postgres
 ```
 
 To add future catalog sources from public Phong Vu category pages, capture the

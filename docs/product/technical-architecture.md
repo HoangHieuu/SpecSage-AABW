@@ -198,6 +198,25 @@ required full-build categories. Cooler rows must include `socket_support`,
 slot work, but they do not change `REQUIRED_FULL_BUILD_SLOTS` or make the
 generator include cooler or monitor in selected PC parts by default.
 
+`US-048` adds the first Postgres catalog mirror:
+
+- `services/agent-api/src/pc_build_copilot/postgres_catalog.py`
+- Loader command: `pnpm catalog:load-postgres`
+- Tables: `catalog_versions`, `catalog_skus`
+- API repository factory:
+  `services/agent-api/src/pc_build_copilot/catalog_repository.py`
+
+The validated JSON snapshot remains the ingestion artifact from public Phong Vu
+payloads and curated overrides. The loader revalidates that snapshot before
+writing it into Postgres, marks exactly one catalog version active, and stores
+full SKU payloads plus queryable metadata columns. In production, the API reads
+the active Postgres catalog when a database URL is configured; local
+development and empty catalog tables fall back to the JSON snapshot.
+
+This is the durable catalog database foundation, not the full search stack.
+Typesense, pgvector, scheduled scraping, product detail crawling, admin review,
+and private Teko/Phong Vu APIs remain future stories.
+
 ## API Boundary
 
 First public endpoints should be introduced with OpenAPI contracts:

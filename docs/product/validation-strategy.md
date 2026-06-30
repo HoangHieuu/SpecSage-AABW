@@ -211,6 +211,17 @@ coverage for session/build/review queue paths. Platform proof requires a real
 managed Postgres URL configured on Vercel, followed by redeploy and session
 read/write verification.
 
+`US-048` is verified by focused Postgres catalog tests, `pnpm check`, and
+Harness story verification. Unit proof checks that catalog repository creation
+selects Postgres when a production database URL is configured and can still be
+forced back to the JSON snapshot for local development. Schema proof checks
+`catalog_versions`, `catalog_skus`, `jsonb` payload columns, `timestamptz`
+timestamps, active-version uniqueness, and query indexes. Integration proof
+checks existing catalog API, catalog ingestion, and build-generation paths keep
+using only validated SKU payloads. Platform proof requires loading the active
+snapshot into managed Postgres and verifying deployed catalog health and SKU
+query responses.
+
 `US-011` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit proof covers the LangGraph orchestration service, expected agent sequence,
 and deterministic build output preservation. Integration proof checks the

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Protocol
 
 from pc_build_copilot.catalog_models import (
     CatalogIssue,
@@ -11,6 +13,31 @@ from pc_build_copilot.catalog_models import (
     ComponentCategory,
 )
 from pc_build_copilot.catalog_validation import validate_catalog
+from pc_build_copilot.persistence import resolve_postgres_url
+
+
+CATALOG_STORE_ENV = "PC_BUILD_COPILOT_CATALOG_STORE"
+
+
+class CatalogDataStore(Protocol):
+    def snapshot(self) -> CatalogSnapshot: ...
+
+    def validation_report(self) -> CatalogValidationReport: ...
+
+    def query(
+        self,
+        *,
+        category: ComponentCategory | None = None,
+        brand: str | None = None,
+        min_price_vnd: int | None = None,
+        max_price_vnd: int | None = None,
+        in_stock: bool | None = None,
+        socket: str | None = None,
+        memory_type: str | None = None,
+        min_wattage_w: int | None = None,
+        min_capacity_gb: int | None = None,
+        min_vram_gb: int | None = None,
+    ) -> CatalogQueryResponse: ...
 
 
 class CatalogRepository:
@@ -154,3 +181,21 @@ class CatalogRepository:
 
 def default_catalog_snapshot_path() -> Path:
     return Path(__file__).resolve().parents[2] / "catalog" / "catalog_snapshot.json"
+
+
+def create_catalog_repository(
+    snapshot_path: Path | None = None,
+) -> CatalogDataStore:
+    database_url = resolve_postgres_url()
+    if database_url and _catalog_store_mode() != "json":
+        from pc_build_copilot.postgres_catalog import PostgresCatalogRepository
+
+        return PostgresCatalogRepository(
+            database_url,
+            fallback=CatalogRepository(snapshot_path=snapshot_path),
+        )
+    return CatalogRepository(snapshot_path=snapshot_path)
+
+
+def _catalog_store_mode() -> str:
+    return os.environ.get(CATALOG_STORE_ENV, "postgres").strip().casefold()
