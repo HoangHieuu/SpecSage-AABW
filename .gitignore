@@ -34,3 +34,4 @@ __pycache__/
 # Raw captured web pages can include public third-party keys or tokens.
 services/agent-api/fixtures/raw_html/
 services/agent-api/fixtures/*.raw.html
+.vercel
