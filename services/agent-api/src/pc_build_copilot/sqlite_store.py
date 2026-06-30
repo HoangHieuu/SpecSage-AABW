@@ -30,6 +30,7 @@ from pc_build_copilot.store import SessionStore
 
 DB_PATH_ENV = "PC_BUILD_COPILOT_DB_PATH"
 DEFAULT_DB_PATH = Path(".local") / "pc-build-copilot.sqlite3"
+VERCEL_DB_PATH = Path("/tmp") / "pc-build-copilot.sqlite3"
 
 
 def create_sqlite_stores(
@@ -340,7 +341,11 @@ class SqliteBuildStore(BuildStore):
 
 
 def _resolve_db_path(db_path: str | os.PathLike[str] | None) -> Path:
-    value = db_path or os.environ.get(DB_PATH_ENV) or DEFAULT_DB_PATH
+    value = db_path or os.environ.get(DB_PATH_ENV)
+    if value is None and os.environ.get("VERCEL"):
+        value = VERCEL_DB_PATH
+    if value is None:
+        value = DEFAULT_DB_PATH
     return Path(value).expanduser()
 
 

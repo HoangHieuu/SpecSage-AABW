@@ -6,7 +6,11 @@ from fastapi.testclient import TestClient
 from pc_build_copilot.api import create_app
 from pc_build_copilot.catalog_models import CatalogSnapshot
 from pc_build_copilot.catalog_repository import CatalogRepository
-from pc_build_copilot.sqlite_store import SqliteBuildStore, SqliteSessionStore
+from pc_build_copilot.sqlite_store import (
+    SqliteBuildStore,
+    SqliteSessionStore,
+    _resolve_db_path,
+)
 
 from test_catalog_ingestion import _items
 
@@ -132,3 +136,10 @@ def test_default_app_uses_sqlite_path_from_environment(
     assert db_path.exists()
     assert stored["build_session_id"] == session["build_session_id"]
     assert stored["state"] == "created"
+
+
+def test_default_sqlite_path_uses_tmp_on_vercel(monkeypatch) -> None:
+    monkeypatch.delenv("PC_BUILD_COPILOT_DB_PATH", raising=False)
+    monkeypatch.setenv("VERCEL", "1")
+
+    assert _resolve_db_path(None) == Path("/tmp/pc-build-copilot.sqlite3")

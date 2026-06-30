@@ -1,0 +1,12 @@
+{
+  "experimentalServices": {
+    "web": {
+      "entrypoint": "apps/web",
+      "routePrefix": "/"
+    },
+    "backend": {
+      "entrypoint": "services/agent-api/main.py",
+      "routePrefix": "/api"
+    }
+  }
+}
