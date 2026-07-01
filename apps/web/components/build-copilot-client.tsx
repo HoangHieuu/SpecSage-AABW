@@ -754,15 +754,6 @@ function CommerceHeader({
           <span>PC Build Copilot</span>
         </div>
       </div>
-      <nav className="commerce-nav" aria-label="Điều hướng chính">
-        <a href="#discover">Khám phá</a>
-        <a className="active" href="#build-copilot">
-          Build Copilot
-        </a>
-        <a href="#products">Sản phẩm</a>
-        <a href="#existing-pc">PC có sẵn</a>
-        <a href="#guide">Hướng dẫn</a>
-      </nav>
       <div className="commerce-userbar" aria-label="Trạng thái">
         <span className="location-pill">
           <SmallIcon name="pin" />
@@ -1399,16 +1390,25 @@ function SpecSageLogo() {
       aria-hidden="true"
       focusable="false"
     >
+      <rect x="5" y="5" width="38" height="38" rx="10" fill="#ef4136" />
       <path
-        d="M24 4 41.3 13.8v20.4L24 44 6.7 34.2V13.8L24 4Z"
-        fill="currentColor"
+        d="M31.5 14.5H19.7l-5.2 5.2v5.1l5 5h9l3.1 3.1-3.7 3.7H16.7"
+        fill="none"
+        stroke="#ffffff"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="4"
       />
       <path
-        d="M29.7 12.7H19.6l-6.1 6.1v8.1l5.6 5.6h9.5l2.9-2.9v-4.3l-2.8-2.8h-8.5l-1.8-1.8v-1.9l2-2h9.3l3.4 3.3 4.1-4.1-7.5-7.3Zm-1.3 18.6h-9.5l-3.4-3.4-4.1 4.1 7.2 7.2h10.7l6.1-6.1V25l-5.7-5.7h-8.4l-1.7-1.7v-2h9.1l3.6 3.5 4.1-4.1-7.4-7.3H18.4l-6.1 6.1v8.1l5.6 5.6h8.6l1.9 1.9v1.9Z"
-        fill="#fff"
+        d="M16.5 33.5h11.8l5.2-5.2v-5.1l-5-5h-9l-3.1-3.1 3.7-3.7h11.2"
+        fill="none"
+        stroke="#ffffff"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="4"
       />
-      <circle cx="37.4" cy="11.3" r="2.8" fill="#fff" />
-      <circle cx="10.6" cy="36.7" r="2.8" fill="#fff" />
+      <circle cx="35" cy="13" r="2" fill="#ffffff" />
+      <circle cx="13" cy="35" r="2" fill="#ffffff" />
     </svg>
   );
 }

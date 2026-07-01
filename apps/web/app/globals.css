@@ -2975,7 +2975,7 @@ body {
 .commerce-topbar {
   height: 70px;
   display: grid;
-  grid-template-columns: 250px minmax(420px, 1fr) auto;
+  grid-template-columns: minmax(220px, 1fr) auto;
   align-items: center;
   gap: 18px;
   margin: 0 -20px 18px;
@@ -2995,7 +2995,6 @@ body {
 .commerce-brand .brand-mark {
   width: 42px;
   height: 42px;
-  color: #ef4136;
   filter: none;
 }
 
@@ -3018,35 +3017,13 @@ body {
   font-weight: 600;
 }
 
-.commerce-nav {
-  display: flex;
-  justify-content: flex-start;
-  align-items: stretch;
-  height: 100%;
-  gap: 26px;
-}
-
-.commerce-nav a {
-  display: inline-flex;
-  align-items: center;
-  border-bottom: 3px solid transparent;
-  color: #374151;
-  font-size: 13px;
-  font-weight: 650;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.commerce-nav a.active {
-  color: #e30613;
-  border-bottom-color: #e30613;
-}
-
 .commerce-userbar {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .location-pill,
@@ -3972,17 +3949,15 @@ body {
   fill: none;
 }
 
-@media (max-width: 1260px) {
+@media (max-width: 1360px) {
   .commerce-topbar {
-    grid-template-columns: 230px 1fr;
+    grid-template-columns: minmax(200px, 1fr) auto;
     height: auto;
     padding-top: 12px;
     padding-bottom: 12px;
   }
 
   .commerce-userbar {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
     flex-wrap: wrap;
   }
 
@@ -4015,13 +3990,6 @@ body {
     margin: 0 -10px 12px;
     padding-left: 14px;
     padding-right: 14px;
-  }
-
-  .commerce-nav {
-    height: auto;
-    overflow-x: auto;
-    gap: 18px;
-    padding-bottom: 2px;
   }
 
   .commerce-grid,
