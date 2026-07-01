@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, FormEvent, RefObject, useEffect, useMemo, useRef, useState } from "react";
 
 import { BackgroundAnimation } from "@/components/background-animation";
 import {
@@ -64,6 +64,36 @@ const presets: Array<{ value: UseCase; label: string; sample: string }> = [
   }
 ];
 
+type PresetOption = (typeof presets)[number];
+type ResolutionOption = "Full HD (1080p)" | "QHD (1440p)" | "4K (2160p)";
+
+const useCaseCards: Array<PresetOption & { description: string; icon: "gamepad" | "creator" | "office" | "ai" }> = [
+  {
+    ...presets[0],
+    description: "Chơi game AAA, eSports",
+    icon: "gamepad"
+  },
+  {
+    ...presets[1],
+    description: "Render, dựng phim, 3D",
+    icon: "creator"
+  },
+  {
+    ...presets[2],
+    description: "Hiệu suất, ổn định",
+    icon: "office"
+  },
+  {
+    ...presets[3],
+    description: "LLM, training, inference",
+    icon: "ai"
+  }
+];
+
+const resolutionOptions: ResolutionOption[] = ["Full HD (1080p)", "QHD (1440p)", "4K (2160p)"];
+const priorityOptions = ["Hiệu năng / FPS", "Đồ họa đẹp", "Yên tĩnh", "Nâng cấp dễ dàng", "Tiết kiệm điện", "Nhỏ gọn"];
+const featureOptions = ["Wi-Fi / Bluetooth", "RGB", "Không LED", "Kèm màn hình"];
+
 const useCaseLabels: Record<UseCase, string> = {
   gaming: "Gaming",
   creator: "Creator/đồ họa",
@@ -85,6 +115,10 @@ export function BuildCopilotClient() {
   const [session, setSession] = useState<BuildSession | null>(null);
   const [message, setMessage] = useState(presets[0].sample);
   const [preset, setPreset] = useState<UseCase>("gaming");
+  const [budgetTarget, setBudgetTarget] = useState(30);
+  const [resolution, setResolution] = useState<ResolutionOption>("QHD (1440p)");
+  const [selectedPriorities, setSelectedPriorities] = useState(["Hiệu năng / FPS", "Nâng cấp dễ dàng"]);
+  const [selectedFeatures, setSelectedFeatures] = useState(["Wi-Fi / Bluetooth", "RGB"]);
   const [intentResponse, setIntentResponse] = useState<IntentResponse | null>(null);
   const [agentAnalysis, setAgentAnalysis] = useState<IntentAgentAnalysis | null>(null);
   const [buildArtifact, setBuildArtifact] = useState<BuildArtifact | null>(null);
@@ -188,6 +222,25 @@ export function BuildCopilotClient() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await handlePrimaryAction();
+  }
+
+  function handlePresetSelect(item: PresetOption) {
+    setPreset(item.value);
+    setMessage(item.sample);
+    setBudgetTarget(extractBudgetMillions(item.sample) ?? budgetTarget);
+  }
+
+  function handleBudgetTargetChange(nextBudget: number) {
+    setBudgetTarget(nextBudget);
+    setMessage((current) => applyBudgetText(current, nextBudget));
+  }
+
+  function togglePriority(priority: string) {
+    setSelectedPriorities((current) => toggleListItem(current, priority));
+  }
+
+  function toggleFeature(feature: string) {
+    setSelectedFeatures((current) => toggleListItem(current, feature));
   }
 
   async function submitIntentRevision(confirm: boolean) {
@@ -482,371 +535,809 @@ export function BuildCopilotClient() {
         ? "Cần xem cảnh báo"
         : "Bị chặn"
     : "Chờ kiểm tra";
+  const cartItemCount = buildArtifact ? buildArtifact.items.length + selectedAddOnSkus.length : 0;
+  const shoppingTotal = (buildArtifact?.total_price_vnd ?? 0) + selectedAddOnTotal;
 
   return (
     <>
       <BackgroundAnimation />
-      <main className={`app-shell${isLoading ? " is-loading" : ""}`}>
-        <header className="site-header">
-          <div className="brand-lockup">
-            <SpecSageLogo />
-            <div className="brand-copy">
-              <strong>SpecSage</strong>
-              <span>PC Build Copilot cho Phong Vũ</span>
-            </div>
-          </div>
-          <div className="header-meta" aria-label="Trạng thái hệ thống">
-            <span className="header-pill">Catalog Phong Vũ</span>
-            <span className={`header-pill ${agentStatusTone}`}>{agentStatusLabel}</span>
-            <span className="header-pill accent">{sessionLabel}</span>
-          </div>
-        </header>
-
-        <FlowProgress
-          hasSession={Boolean(session)}
-          isConfirmed={isConfirmed}
-          hasBuild={Boolean(buildArtifact)}
-          isCartReady={Boolean(cartHandoff)}
+      <main className={`commerce-app${isLoading ? " is-loading" : ""}`}>
+        <CommerceHeader
+          agentStatusLabel={agentStatusLabel}
+          agentStatusTone={agentStatusTone}
+          sessionLabel={sessionLabel}
         />
 
-        <section className="command-panel" aria-label="Bảng điều khiển phiên build">
-          <div className="command-copy">
-            <span className="command-kicker">Build Copilot</span>
-            <h1>Thiết kế cấu hình PC</h1>
-            <p>{primaryActionHint}</p>
-          </div>
-          <div className="command-metrics">
-            <div>
-              <span>Bước hiện tại</span>
-              <strong>{workflowStatus}</strong>
-            </div>
-            <div>
-              <span>Ngân sách</span>
-              <strong>{budget}</strong>
-            </div>
-            <div>
-              <span>Linh kiện</span>
-              <strong>{selectedSkuLabel}</strong>
-            </div>
-            <div>
-              <span>Kiểm tra</span>
-              <strong>{compatibilityLabel}</strong>
-            </div>
-          </div>
-        </section>
+        <section className="commerce-grid" aria-label="SpecSage build console">
+          <IntentControlPanel
+            preset={preset}
+            budgetTarget={budgetTarget}
+            resolution={resolution}
+            selectedPriorities={selectedPriorities}
+            selectedFeatures={selectedFeatures}
+            message={message}
+            isLoading={isLoading}
+            primaryActionLabel={primaryActionLabel}
+            primaryActionHint={primaryActionHint}
+            error={error}
+            textareaRef={intentTextareaRef}
+            onSubmit={handleSubmit}
+            onPresetSelect={handlePresetSelect}
+            onBudgetTargetChange={handleBudgetTargetChange}
+            onResolutionChange={setResolution}
+            onTogglePriority={togglePriority}
+            onToggleFeature={toggleFeature}
+            onMessageChange={setMessage}
+          />
 
-      <section className="workspace-grid">
-        <form className="panel composer" onSubmit={handleSubmit}>
-          <div className="panel-heading">
-            <h2>Nhu cầu PC</h2>
-            <button type="button" onClick={handleStart} disabled={isLoading}>
-              {session ? "Tạo phiên mới" : "Bắt đầu phiên"}
-            </button>
-          </div>
-
-          <div className="preset-row" aria-label="Preset">
-            {presets.map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                className={preset === item.value ? "selected" : ""}
-                onClick={() => {
-                  setPreset(item.value);
-                  setMessage(item.sample);
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          <label htmlFor="intent">Mô tả nhu cầu</label>
-          <div className="prompt-box">
-            <textarea
-              id="intent"
-              ref={intentTextareaRef}
-              data-testid="intent-input"
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              rows={3}
-            />
-            <div className="prompt-footer">
-              <span>{primaryActionHint}</span>
-              <button
-                type="submit"
-                data-testid="primary-flow-action"
-                disabled={isLoading || !message.trim()}
-              >
-                {isLoading ? "Đang xử lý..." : primaryActionLabel}
-              </button>
-            </div>
-          </div>
-
-          {error ? <p className="error">{error}</p> : null}
-        </form>
-
-        <aside className="panel summary">
-          <div className="panel-heading">
-            <h2>Tóm tắt nhu cầu</h2>
-            <span className={isConfirmed ? "status confirmed" : "status"}>
-              {isConfirmed ? "Đã xác nhận" : session?.state ?? "Chưa có phiên"}
-            </span>
-          </div>
-
-          <dl className="facts">
-            <div>
-              <dt>Trạng thái</dt>
-              <dd>{session ? "Đang tư vấn" : "Chưa tạo"}</dd>
-            </div>
-            <div>
-              <dt>Nhu cầu</dt>
-              <dd>{intent ? useCaseLabels[intent.use_case] : "Chưa phân tích"}</dd>
-            </div>
-            <div>
-              <dt>Ngân sách</dt>
-              <dd>{budget}</dd>
-            </div>
-            <div>
-              <dt>Game</dt>
-              <dd>{intent?.target_games.length ? intent.target_games.join(", ") : "Chưa có"}</dd>
-            </div>
-            <div>
-              <dt>Ứng dụng</dt>
-              <dd>{intent?.target_apps.length ? intent.target_apps.join(", ") : "Chưa có"}</dd>
-            </div>
-            <div>
-              <dt>Mục tiêu</dt>
-              <dd>
-                {intent?.performance_targets.length
-                  ? intent.performance_targets.join(", ")
-                  : "Chưa có"}
-              </dd>
-            </div>
-          </dl>
-
-          {intentResponse?.revision.clarification.question ? (
-            <div className="clarification">
-              <strong>Cần hỏi thêm</strong>
-              <p>{intentResponse.revision.clarification.question}</p>
-            </div>
-          ) : null}
-
-          {agentAnalysis ? <LlmAgentPanel analysis={agentAnalysis} /> : null}
-
-          {intent ? (
-            <div className="chips">
-              {intent.brand_preferences.map((brand) => (
-                <span key={brand}>{brand}</span>
-              ))}
-              {intent.mentioned_components.map((component) => (
-                <span key={component}>{component}</span>
-              ))}
-              {intent.safe_defaults.map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-          ) : (
-            <p className="empty">Phiên tư vấn sẽ lưu nhu cầu trước khi sinh cấu hình.</p>
-          )}
-        </aside>
-      </section>
-
-      <UpgradePlannerPanel
-        currentPc={upgradeCurrentPc}
-        budgetText={upgradeBudgetText}
-        parseResult={upgradeParse}
-        confirmedSystem={confirmedExistingSystem}
-        plan={upgradePlan}
-        isParsing={isParsingUpgrade}
-        isLoading={isPlanningUpgrade}
-        onCurrentPcChange={handleUpgradeCurrentPcChange}
-        onBudgetChange={setUpgradeBudgetText}
-        onParse={handleParseExistingSystem}
-        onConfirmedSystemChange={handleConfirmedExistingSystemChange}
-        onSubmit={handlePlanGpuUpgrade}
-      />
-
-      <section className="panel build-panel" aria-live="polite" data-testid="build-panel">
-        <div className="panel-heading">
-          <h2>Cấu hình đề xuất</h2>
-          <span className={buildArtifact ? statusClass(buildArtifact) : "status"}>
-            {buildArtifact ? buildStatusLabel(buildArtifact) : "Chưa có cấu hình"}
-          </span>
-        </div>
-
-        {buildArtifact ? (
-          <>
-            <div className="build-metrics">
-              <Metric label="Tổng giá" value={formatVnd(buildArtifact.total_price_vnd)} />
-              <Metric
-                label="Ngân sách"
-                value={
-                  buildArtifact.budget_max_vnd
-                    ? formatVnd(buildArtifact.budget_max_vnd)
-                    : "Chưa có"
-                }
-              />
-              <Metric label="Còn dư" value={formatBudgetHeadroom(buildArtifact)} />
-              <Metric label="Phiên bản" value={`v${buildArtifact.build_version}`} />
+          <section className="build-workbench" aria-live="polite" data-testid="build-panel">
+            <div className="workbench-heading">
+              <div>
+                <h1>2. Build đề xuất cho bạn</h1>
+                <div className="workbench-tags">
+                  <span>{intent ? `Đã tối ưu cho ${useCaseLabels[intent.use_case]}` : workflowStatus}</span>
+                  <span>{resolution}</span>
+                </div>
+              </div>
+              <div className="workbench-actions">
+                <button type="button" className="ghost-action" disabled={!buildArtifact}>
+                  Chia sẻ build
+                </button>
+                <button type="button" className="ghost-action" disabled={!buildArtifact}>
+                  Lưu build
+                </button>
+                <button type="button" className="ghost-action" onClick={handleStart} disabled={isLoading}>
+                  Xóa build
+                </button>
+              </div>
             </div>
 
-            <DisplayModeToggle mode={displayMode} onModeChange={setDisplayMode} />
-
-            <CustomerDecisionSummary
+            <CommerceMetricStrip
               artifact={buildArtifact}
-              canApprove={canApprove}
-              isCartReady={Boolean(cartHandoff)}
+              selectedSkuLabel={selectedSkuLabel}
+              compatibilityLabel={compatibilityLabel}
             />
+
+            <CommerceProcessSteps
+              hasIntent={Boolean(intentResponse)}
+              isConfirmed={isConfirmed}
+              hasBuild={Boolean(buildArtifact)}
+              hasCart={Boolean(cartHandoff)}
+            />
+
+            <BuildItemsTable artifact={buildArtifact} />
 
             {appliedAlternativeLabel ? (
               <p className="build-version-note" data-testid="applied-alternative-note">
                 Đã áp dụng lựa chọn {appliedAlternativeLabel}. Cấu hình hiện là phiên bản{" "}
-                {buildArtifact.build_version}; hãy xem lại giá và điểm cần lưu ý trước khi tạo
+                {buildArtifact?.build_version}; hãy xem lại giá và điểm cần lưu ý trước khi tạo
                 danh sách mua.
               </p>
             ) : null}
 
-            <PerformanceProfilePanel
-              profile={buildArtifact.performance_profile}
-              isAdvanced={displayMode === "advanced"}
+            <ReplacementSuggestions
+              response={buildAlternatives}
+              isApplying={isLoading}
+              onApplyAlternative={handleApplyAlternative}
             />
 
-            <div className="table-wrap">
-              <table className={`parts-table ${displayMode}`}>
-                <thead>
-                  <tr>
-                    <th>Loại</th>
-                    {displayMode === "advanced" ? <th>SKU</th> : null}
-                    <th>Linh kiện</th>
-                    <th>Giá</th>
-                    {displayMode === "advanced" ? <th>Lý do chọn</th> : null}
-                  </tr>
-                </thead>
-                <tbody>
-                  {buildArtifact.items.map((item) => (
-                    <tr key={`${item.slot}-${item.sku}`}>
-                      <td>{slotLabel(item.slot)}</td>
-                      {displayMode === "advanced" ? <td>{item.sku}</td> : null}
-                      <td>
-                        <a href={item.url} target="_blank" rel="noreferrer">
-                          {item.name}
-                        </a>
-                        <span className="confidence">{specConfidenceLabel(item.specs_confidence)}</span>
-                      </td>
-                      <td>{formatVnd(item.price_vnd)}</td>
-                      {displayMode === "advanced" ? <td>{item.explanation_vi}</td> : null}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {agentAnalysis ? <LlmAgentPanel analysis={agentAnalysis} /> : null}
 
-            <AddOnRecommendationsPanel
-              addons={buildArtifact.recommended_addons}
-              isAdvanced={displayMode === "advanced"}
-              selectedSkus={selectedAddOnSkus}
-              disabled={Boolean(cartHandoff)}
-              onToggle={handleToggleAddOn}
-            />
+            {buildArtifact ? (
+              <div className="below-workbench">
+                <DisplayModeToggle mode={displayMode} onModeChange={setDisplayMode} />
 
-            {buildAlternatives ? (
-              <BuildAlternativesPanel
-                response={buildAlternatives}
-                isAdvanced={displayMode === "advanced"}
-                isApplying={isLoading}
-                onApplyAlternative={handleApplyAlternative}
-              />
-            ) : null}
+                <CustomerDecisionSummary
+                  artifact={buildArtifact}
+                  canApprove={canApprove}
+                  isCartReady={Boolean(cartHandoff)}
+                />
 
-            <BuildIterationPanel
-              command={iterationCommand}
-              isLoading={isLoading}
-              lastIteration={lastIteration}
-              onCommandChange={setIterationCommand}
-              onSubmitCommand={handleIterateBuild}
-            />
+                <PerformanceProfilePanel
+                  profile={buildArtifact.performance_profile}
+                  isAdvanced={displayMode === "advanced"}
+                />
 
-            {displayMode === "advanced" ? (
-              <div className="build-notes">
-                <div>
-                  <h3>Giải thích</h3>
-                  <ul>
-                    {buildArtifact.explanations_vi.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h3>Cảnh báo</h3>
-                  <ul>
-                    {buildArtifact.warnings_vi.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                    {buildArtifact.compatibility_report.results
-                      .filter((result) => result.severity !== "pass")
-                      .map((result) => (
-                        <li key={result.rule_id}>{result.explanation_vi}</li>
-                      ))}
-                  </ul>
-                </div>
+                <AddOnRecommendationsPanel
+                  addons={buildArtifact.recommended_addons}
+                  isAdvanced={displayMode === "advanced"}
+                  selectedSkus={selectedAddOnSkus}
+                  disabled={Boolean(cartHandoff)}
+                  onToggle={handleToggleAddOn}
+                />
+
+                <BuildIterationPanel
+                  command={iterationCommand}
+                  isLoading={isLoading}
+                  lastIteration={lastIteration}
+                  onCommandChange={setIterationCommand}
+                  onSubmitCommand={handleIterateBuild}
+                />
+
+                {displayMode === "advanced" ? (
+                  <>
+                    <div className="build-notes">
+                      <div>
+                        <h3>Giải thích</h3>
+                        <ul>
+                          {buildArtifact.explanations_vi.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h3>Cảnh báo</h3>
+                        <ul>
+                          {buildArtifact.warnings_vi.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                          {buildArtifact.compatibility_report.results
+                            .filter((result) => result.severity !== "pass")
+                            .map((result) => (
+                              <li key={result.rule_id}>{result.explanation_vi}</li>
+                            ))}
+                        </ul>
+                      </div>
+                    </div>
+                    <SupportDetailsPanel
+                      isOpen={showSupportDetails}
+                      trace={sessionTrace}
+                      copyState={traceCopyState}
+                      orchestrationSteps={buildArtifact.orchestration_trace}
+                      optimizerTrace={buildArtifact.optimizer_trace}
+                      onCopyExport={handleCopyTraceExport}
+                      onToggle={() => setShowSupportDetails((current) => !current)}
+                    />
+                  </>
+                ) : (
+                  <CustomerWarningsPanel artifact={buildArtifact} />
+                )}
+
+                <BuildFeedbackPanel
+                  artifact={buildArtifact}
+                  feedback={buildFeedback}
+                  isSubmitting={isSubmittingFeedback}
+                  onSubmit={handleSubmitFeedback}
+                />
               </div>
-            ) : (
-              <CustomerWarningsPanel artifact={buildArtifact} />
-            )}
-
-            <div className="approval-strip">
-              <div>
-                <h3>Sẵn sàng mua</h3>
-                <p>
-                  {cartHandoff
-                    ? "Danh sách sản phẩm đã sẵn sàng từ các link Phong Vu."
-                    : canApprove
-                      ? selectedAddOnTotal > 0
-                        ? `Cấu hình đã qua kiểm tra. Gợi ý thêm đã chọn: ${formatVnd(selectedAddOnTotal)}.`
-                        : "Cấu hình đã qua kiểm tra tương thích và nằm trong ngân sách."
-                      : "Cấu hình cần xem lại ngân sách, cảnh báo hoặc thông tin còn thiếu trước khi mua."}
-                </p>
-              </div>
-              <button
-                type="button"
-                data-testid="approve-build"
-                disabled={isLoading || !canApprove}
-                onClick={handleApprove}
-              >
-                {cartHandoff ? "Đã tạo danh sách" : "Tạo danh sách mua"}
-              </button>
-            </div>
-
-            <BuildFeedbackPanel
-              artifact={buildArtifact}
-              feedback={buildFeedback}
-              isSubmitting={isSubmittingFeedback}
-              onSubmit={handleSubmitFeedback}
-            />
-
-            {cartHandoff ? <CartReadyPanel handoff={cartHandoff} /> : null}
-
-            {displayMode === "advanced" ? (
-              <SupportDetailsPanel
-                isOpen={showSupportDetails}
-                trace={sessionTrace}
-                copyState={traceCopyState}
-                orchestrationSteps={buildArtifact.orchestration_trace}
-                optimizerTrace={buildArtifact.optimizer_trace}
-                onCopyExport={handleCopyTraceExport}
-                onToggle={() => setShowSupportDetails((current) => !current)}
-              />
             ) : null}
-          </>
-        ) : (
-          <p className="empty">
-            Xác nhận nhu cầu rồi sinh cấu hình để xem bảng linh kiện, tổng giá,
-            mức phù hợp và đường link sản phẩm Phong Vu.
-          </p>
-        )}
-      </section>
+          </section>
+
+          <CartSummaryRail
+            artifact={buildArtifact}
+            cartHandoff={cartHandoff}
+            cartItemCount={cartItemCount}
+            selectedAddOnTotal={selectedAddOnTotal}
+            shoppingTotal={shoppingTotal}
+            canApprove={canApprove}
+            isLoading={isLoading}
+            onApprove={handleApprove}
+          />
+        </section>
+
+        <section className="commerce-secondary">
+          <UpgradePlannerPanel
+            currentPc={upgradeCurrentPc}
+            budgetText={upgradeBudgetText}
+            parseResult={upgradeParse}
+            confirmedSystem={confirmedExistingSystem}
+            plan={upgradePlan}
+            isParsing={isParsingUpgrade}
+            isLoading={isPlanningUpgrade}
+            onCurrentPcChange={handleUpgradeCurrentPcChange}
+            onBudgetChange={setUpgradeBudgetText}
+            onParse={handleParseExistingSystem}
+            onConfirmedSystemChange={handleConfirmedExistingSystemChange}
+            onSubmit={handlePlanGpuUpgrade}
+          />
+        </section>
       </main>
     </>
+  );
+}
+
+function CommerceHeader({
+  agentStatusLabel,
+  agentStatusTone,
+  sessionLabel
+}: {
+  agentStatusLabel: string;
+  agentStatusTone: string;
+  sessionLabel: string;
+}) {
+  return (
+    <header className="commerce-topbar">
+      <div className="commerce-brand">
+        <SpecSageLogo />
+        <div>
+          <strong>SpecSage</strong>
+          <span>PC Build Copilot</span>
+        </div>
+      </div>
+      <nav className="commerce-nav" aria-label="Điều hướng chính">
+        <a href="#discover">Khám phá</a>
+        <a className="active" href="#build-copilot">
+          Build Copilot
+        </a>
+        <a href="#products">Sản phẩm</a>
+        <a href="#existing-pc">PC có sẵn</a>
+        <a href="#guide">Hướng dẫn</a>
+      </nav>
+      <div className="commerce-userbar" aria-label="Trạng thái">
+        <span className="location-pill">
+          <SmallIcon name="pin" />
+          Phong Vũ Online
+        </span>
+        <span className={`runtime-pill ${agentStatusTone}`}>{agentStatusLabel}</span>
+        <span className="runtime-pill alert">{sessionLabel}</span>
+        <button type="button" className="icon-button" aria-label="Trợ giúp">
+          <SmallIcon name="help" />
+        </button>
+        <button type="button" className="icon-button has-dot" aria-label="Thông báo">
+          <SmallIcon name="bell" />
+        </button>
+        <button type="button" className="avatar-button" aria-label="Tài khoản">
+          N
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function IntentControlPanel({
+  preset,
+  budgetTarget,
+  resolution,
+  selectedPriorities,
+  selectedFeatures,
+  message,
+  isLoading,
+  primaryActionLabel,
+  primaryActionHint,
+  error,
+  textareaRef,
+  onSubmit,
+  onPresetSelect,
+  onBudgetTargetChange,
+  onResolutionChange,
+  onTogglePriority,
+  onToggleFeature,
+  onMessageChange
+}: {
+  preset: UseCase;
+  budgetTarget: number;
+  resolution: ResolutionOption;
+  selectedPriorities: string[];
+  selectedFeatures: string[];
+  message: string;
+  isLoading: boolean;
+  primaryActionLabel: string;
+  primaryActionHint: string;
+  error: string | null;
+  textareaRef: RefObject<HTMLTextAreaElement | null>;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onPresetSelect: (item: PresetOption) => void;
+  onBudgetTargetChange: (budget: number) => void;
+  onResolutionChange: (resolution: ResolutionOption) => void;
+  onTogglePriority: (priority: string) => void;
+  onToggleFeature: (feature: string) => void;
+  onMessageChange: (message: string) => void;
+}) {
+  return (
+    <form className="commerce-card intent-console" id="build-copilot" onSubmit={onSubmit}>
+      <div className="commerce-card-heading">
+        <h2>1. Nhu cầu & Ngân sách</h2>
+        <SmallIcon name="info" />
+      </div>
+
+      <section className="intent-block">
+        <h3>Mục đích chính</h3>
+        <div className="use-case-grid" aria-label="Mục đích chính">
+          {useCaseCards.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              className={preset === item.value ? "use-case-card selected" : "use-case-card"}
+              onClick={() => onPresetSelect(item)}
+            >
+              <UseCaseIcon name={item.icon} />
+              <strong>{item.label}</strong>
+              <span>{item.description}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="intent-block">
+        <div className="field-row">
+          <h3>Ngân sách dự kiến</h3>
+          <span>{formatVnd(budgetTarget * 1_000_000)}</span>
+        </div>
+        <div className="budget-scale">
+          <span>20.000.000 đ</span>
+          <span>45.000.000 đ</span>
+        </div>
+        <input
+          className="budget-range"
+          type="range"
+          min={20}
+          max={45}
+          step={1}
+          value={budgetTarget}
+          aria-label="Ngân sách dự kiến"
+          onChange={(event) => onBudgetTargetChange(Number(event.target.value))}
+        />
+        <output className="budget-output">{formatVnd(budgetTarget * 1_000_000)}</output>
+      </section>
+
+      <section className="intent-block">
+        <h3>Độ phân giải mục tiêu</h3>
+        <div className="segmented-control" aria-label="Độ phân giải mục tiêu">
+          {resolutionOptions.map((option) => (
+            <button
+              key={option}
+              type="button"
+              className={resolution === option ? "selected" : ""}
+              onClick={() => onResolutionChange(option)}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="intent-block">
+        <h3>Ưu tiên của bạn</h3>
+        <div className="chip-grid" aria-label="Ưu tiên của bạn">
+          {priorityOptions.map((priority) => (
+            <button
+              key={priority}
+              type="button"
+              className={selectedPriorities.includes(priority) ? "selected" : ""}
+              onClick={() => onTogglePriority(priority)}
+            >
+              {selectedPriorities.includes(priority) ? <SmallIcon name="check" /> : null}
+              {priority}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="intent-block">
+        <h3>Tính năng cần có</h3>
+        <div className="checkbox-grid" aria-label="Tính năng cần có">
+          {featureOptions.map((feature) => (
+            <label key={feature}>
+              <input
+                type="checkbox"
+                checked={selectedFeatures.includes(feature)}
+                onChange={() => onToggleFeature(feature)}
+              />
+              {feature}
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <section className="intent-block">
+        <label htmlFor="intent">Ghi chú thêm</label>
+        <textarea
+          id="intent"
+          ref={textareaRef}
+          data-testid="intent-input"
+          value={message}
+          onChange={(event) => onMessageChange(event.target.value)}
+          rows={4}
+        />
+        <span className="textarea-counter">{message.length}/300</span>
+      </section>
+
+      {error ? <p className="error">{error}</p> : null}
+
+      <button
+        type="submit"
+        className="primary-commerce-action"
+        data-testid="primary-flow-action"
+        disabled={isLoading || !message.trim()}
+      >
+        <SmallIcon name="spark" />
+        {isLoading ? "Đang xử lý..." : primaryActionLabel}
+      </button>
+      <p className="intent-footnote">{primaryActionHint}</p>
+    </form>
+  );
+}
+
+function CommerceMetricStrip({
+  artifact,
+  selectedSkuLabel,
+  compatibilityLabel
+}: {
+  artifact: BuildArtifact | null;
+  selectedSkuLabel: string;
+  compatibilityLabel: string;
+}) {
+  const fitLabel = artifact ? compactPerformanceFitLabel(artifact.performance_profile.fit_level) : "Chưa có";
+  const fitNote = artifact ? compactPerformanceFitNote(artifact.performance_profile) : "Chưa có dữ liệu build";
+  const warrantyLabel = artifact ? "36 tháng" : "Chờ build";
+  const upgradeLabel = artifact ? upgradeReadinessLabel(artifact) : "Chưa sinh build";
+  const upgradeNote = artifact ? compactBudgetHeadroomNote(artifact) : selectedSkuLabel;
+  return (
+    <div className="commerce-metrics">
+      <MetricTile
+        label={`Tổng chi phí (${artifact ? artifact.items.length : 0} SP)`}
+        value={artifact ? formatVnd(artifact.total_price_vnd) : "0 đ"}
+        note={artifact?.budget_status === "within_budget" ? "Trong ngân sách" : "Chờ ngân sách"}
+        tone="price"
+      />
+      <MetricTile
+        label="Hiệu năng ước tính"
+        value={fitLabel}
+        note={fitNote}
+        tone="success"
+        gauge={artifact ? 92 : 0}
+      />
+      <MetricTile label="Tương thích" value={compatibilityLabel} note="Không xung đột linh kiện" tone="success" />
+      <MetricTile label="Sẵn sàng nâng cấp" value={upgradeLabel} note={upgradeNote} tone="success" gauge={artifact ? 75 : 0} />
+      <MetricTile label="Bảo hành dự kiến" value={warrantyLabel} note="Tại Phong Vũ" tone="neutral" />
+    </div>
+  );
+}
+
+function MetricTile({
+  label,
+  value,
+  note,
+  tone,
+  gauge
+}: {
+  label: string;
+  value: string;
+  note: string;
+  tone: "price" | "success" | "neutral";
+  gauge?: number;
+}) {
+  const hasGauge = typeof gauge === "number" && gauge > 0;
+  return (
+    <div className={`metric-tile ${tone}${hasGauge ? " has-gauge" : ""}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{note}</small>
+      {hasGauge ? (
+        <div className="mini-gauge" style={{ "--gauge": `${gauge}%` } as CSSProperties}>
+          {gauge}%
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function CommerceProcessSteps({
+  hasIntent,
+  isConfirmed,
+  hasBuild,
+  hasCart
+}: {
+  hasIntent: boolean;
+  isConfirmed: boolean;
+  hasBuild: boolean;
+  hasCart: boolean;
+}) {
+  const steps = [
+    { label: "Phân tích nhu cầu", done: hasIntent },
+    { label: "Chọn linh kiện", done: hasBuild },
+    { label: "Kiểm tra tương thích", done: hasBuild },
+    { label: "Tối ưu hiệu năng", done: hasBuild },
+    { label: "Tính toán ngân sách", done: isConfirmed || hasCart }
+  ];
+  return (
+    <div className="commerce-process" aria-label="Quy trình AI Copilot">
+      <strong>Quy trình AI Copilot</strong>
+      <ol>
+        {steps.map((step) => (
+          <li key={step.label} className={step.done ? "done" : ""}>
+            <span>{step.done ? <SmallIcon name="check" /> : null}</span>
+            <div>
+              <b>{step.label}</b>
+              <small>{step.done ? "Hoàn tất" : "Đang chờ"}</small>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function BuildItemsTable({ artifact }: { artifact: BuildArtifact | null }) {
+  const rows = artifact?.items ?? placeholderBuildRows;
+  return (
+    <section className="parts-board" aria-label="Danh sách linh kiện">
+      <div className="parts-board-heading">
+        <h2>Danh sách linh kiện</h2>
+        <div>
+          <button type="button" className="ghost-action" disabled={!artifact}>
+            Sửa build
+          </button>
+          <button type="button" className="ghost-action" disabled={!artifact}>
+            Xuất file
+          </button>
+        </div>
+      </div>
+      <div className="commerce-table-wrap">
+        <table className="commerce-parts-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Linh kiện</th>
+              <th>Sản phẩm</th>
+              <th>SKU</th>
+              <th>Giá</th>
+              <th>SL</th>
+              <th>Thành tiền</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((item, index) => {
+              const realItem = artifact ? (item as BuildItem) : null;
+              return (
+                <tr key={`${item.slot}-${item.sku || index}`} className={!artifact ? "placeholder-row" : ""}>
+                  <td>{index + 1}</td>
+                  <td>
+                    <div className="part-slot">
+                      <PartThumb slot={item.slot} />
+                      {slotLabel(item.slot)}
+                    </div>
+                  </td>
+                  <td>
+                    {realItem ? (
+                      <a href={realItem.url} target="_blank" rel="noreferrer">
+                        {realItem.name}
+                      </a>
+                    ) : (
+                      item.name
+                    )}
+                  </td>
+                  <td>{item.sku || "Chưa chọn"}</td>
+                  <td>{item.price_vnd ? formatVnd(item.price_vnd) : "-"}</td>
+                  <td>
+                    <span className="qty-box">{artifact ? 1 : 0}</span>
+                  </td>
+                  <td>{item.price_vnd ? formatVnd(item.price_vnd) : "-"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+const placeholderBuildRows: Array<Pick<BuildItem, "slot" | "sku" | "name" | "price_vnd">> = [
+  { slot: "cpu", sku: "", name: "CPU sẽ được chọn sau khi phân tích", price_vnd: 0 },
+  { slot: "mainboard", sku: "", name: "Mainboard tương thích socket/RAM", price_vnd: 0 },
+  { slot: "ram", sku: "", name: "RAM theo workload và ngân sách", price_vnd: 0 },
+  { slot: "vga", sku: "", name: "VGA ưu tiên theo mục tiêu hiệu năng", price_vnd: 0 },
+  { slot: "storage", sku: "", name: "SSD/HDD theo nhu cầu lưu trữ", price_vnd: 0 },
+  { slot: "psu", sku: "", name: "Nguồn theo công suất và đầu cấp", price_vnd: 0 },
+  { slot: "case", sku: "", name: "Case theo clearance linh kiện", price_vnd: 0 },
+  { slot: "cooler", sku: "", name: "Tản nhiệt nếu cần theo TDP/case", price_vnd: 0 }
+];
+
+function ReplacementSuggestions({
+  response,
+  isApplying,
+  onApplyAlternative
+}: {
+  response: BuildAlternativesResponse | null;
+  isApplying: boolean;
+  onApplyAlternative: (alternative: BuildAlternative) => void;
+}) {
+  const alternatives = response?.alternatives.slice(0, 3) ?? [];
+  return (
+    <section className="replacement-strip" data-testid="alternatives-panel">
+      <h2>Gợi ý thay thế</h2>
+      <div className="replacement-grid">
+        {alternatives.length ? (
+          alternatives.map((alternative) => (
+            <button
+              key={alternative.variant_id}
+              type="button"
+              disabled={isApplying || !alternative.can_approve}
+              onClick={() => onApplyAlternative(alternative)}
+            >
+              <span>{alternative.label_vi}</span>
+              <strong>{formatDeltaVnd(alternative.price_delta_vnd)}</strong>
+              <small>Hiệu năng: {performanceFitLabel(alternative.performance_profile.fit_level)}</small>
+            </button>
+          ))
+        ) : (
+          <>
+            <div className="replacement-empty">Chưa có lựa chọn thay thế</div>
+            <div className="replacement-empty">Sinh build để xem thêm</div>
+            <div className="replacement-empty more">Xem thêm</div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function CartSummaryRail({
+  artifact,
+  cartHandoff,
+  cartItemCount,
+  selectedAddOnTotal,
+  shoppingTotal,
+  canApprove,
+  isLoading,
+  onApprove
+}: {
+  artifact: BuildArtifact | null;
+  cartHandoff: CartReadyHandoff | null;
+  cartItemCount: number;
+  selectedAddOnTotal: number;
+  shoppingTotal: number;
+  canApprove: boolean;
+  isLoading: boolean;
+  onApprove: () => void;
+}) {
+  return (
+    <aside className="cart-column" aria-label="Giỏ build">
+      <section className="commerce-card cart-card">
+        <div className="cart-heading">
+          <h2>Giỏ build ({cartItemCount})</h2>
+          <SmallIcon name="chevron" />
+        </div>
+        <dl className="cart-totals">
+          <div>
+            <dt>Tạm tính</dt>
+            <dd>{artifact ? formatVnd(artifact.total_price_vnd) : "0 đ"}</dd>
+          </div>
+          <div>
+            <dt>Gợi ý thêm</dt>
+            <dd>{selectedAddOnTotal ? formatVnd(selectedAddOnTotal) : "0 đ"}</dd>
+          </div>
+          <div className="grand-total">
+            <dt>Tổng cộng</dt>
+            <dd>{artifact ? formatVnd(shoppingTotal) : "0 đ"}</dd>
+          </div>
+        </dl>
+        <button
+          type="button"
+          className="add-cart-button"
+          data-testid="approve-build"
+          disabled={isLoading || !canApprove}
+          onClick={onApprove}
+        >
+          <SmallIcon name="cart" />
+          {cartHandoff ? "Đã tạo danh sách" : "Thêm tất cả vào giỏ hàng"}
+        </button>
+        <button type="button" className="secondary-cart-button" disabled={!cartHandoff}>
+          Xem giỏ hàng
+        </button>
+        <ul className="service-list">
+          <li>
+            <SmallIcon name="build" />
+            <div>
+              <strong>Miễn phí lắp ráp</strong>
+              <span>Kiểm tra & cài đặt</span>
+            </div>
+          </li>
+          <li>
+            <SmallIcon name="shield" />
+            <div>
+              <strong>Bảo hành chính hãng</strong>
+              <span>36 tháng tại Phong Vũ</span>
+            </div>
+          </li>
+          <li>
+            <SmallIcon name="support" />
+            <div>
+              <strong>Hỗ trợ kỹ thuật 24/7</strong>
+              <span>1900 2164</span>
+            </div>
+          </li>
+          <li>
+            <SmallIcon name="card" />
+            <div>
+              <strong>Trả góp 0%</strong>
+              <span>Qua thẻ tín dụng</span>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section className="commerce-card build-info-card">
+        <h2>Thông tin build</h2>
+        <dl>
+          <div>
+            <dt>ID build</dt>
+            <dd>{artifact ? shortId(artifact.build_id) : "-"}</dd>
+          </div>
+          <div>
+            <dt>Tạo lúc</dt>
+            <dd>{artifact ? formatShortDate(artifact.generated_at) : "-"}</dd>
+          </div>
+          <div>
+            <dt>Cập nhật</dt>
+            <dd>{artifact ? formatShortDate(artifact.generated_at) : "-"}</dd>
+          </div>
+          <div>
+            <dt>Trạng thái</dt>
+            <dd>{artifact ? buildStatusLabel(artifact) : "Chờ build"}</dd>
+          </div>
+          <div>
+            <dt>Copilot</dt>
+            <dd>SpecSage AI v1.0</dd>
+          </div>
+        </dl>
+      </section>
+
+      {cartHandoff ? <CartReadyPanel handoff={cartHandoff} /> : null}
+    </aside>
+  );
+}
+
+function UseCaseIcon({ name }: { name: "gamepad" | "creator" | "office" | "ai" }) {
+  return (
+    <span className="use-case-icon" aria-hidden="true">
+      <SmallIcon name={name} />
+    </span>
+  );
+}
+
+function PartThumb({ slot }: { slot: BuildItem["slot"] }) {
+  return (
+    <span className={`part-thumb ${slot}`} aria-hidden="true">
+      {slotLabel(slot).slice(0, 1)}
+    </span>
+  );
+}
+
+function SmallIcon({
+  name
+}: {
+  name:
+    | "ai"
+    | "bell"
+    | "build"
+    | "card"
+    | "cart"
+    | "check"
+    | "chevron"
+    | "creator"
+    | "gamepad"
+    | "help"
+    | "info"
+    | "office"
+    | "pin"
+    | "shield"
+    | "spark"
+    | "support";
+}) {
+  const paths: Record<typeof name, string> = {
+    ai: "M8 9a4 4 0 0 1 8 0v2a4 4 0 0 1-8 0V9Zm1 8h6m-3-2v4m-7-9H3m18 0h-2M7 4 5.5 2.5M17 4l1.5-1.5M7 18l-1.5 1.5M17 18l1.5 1.5",
+    bell: "M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2Zm-8 4h4",
+    build: "m14 7 3-3 3 3-3 3-3-3ZM4 18h16M6 18v-7h12v7",
+    card: "M3 7h18v10H3V7Zm0 3h18M7 14h4",
+    cart: "M3 4h2l2 11h10l2-7H7m2 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z",
+    check: "m5 12 4 4L19 6",
+    chevron: "m8 10 4 4 4-4",
+    creator: "M5 17 17 5l2 2L7 19H5v-2Zm10-10 2 2M4 21h16",
+    gamepad: "M7 9h10a4 4 0 0 1 4 4v2a3 3 0 0 1-5 2l-2-2h-4l-2 2a3 3 0 0 1-5-2v-2a4 4 0 0 1 4-4Zm1 4h4M10 11v4m6-2h.01M18 15h.01",
+    help: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-5v.01M9.8 9a2.2 2.2 0 1 1 3.6 1.7c-.9.6-1.4 1-1.4 2.3",
+    info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-10v6m0-9v.01",
+    office: "M4 21V5h10v16M14 9h6v12M7 9h3m-3 4h3m-3 4h3m7-4h2m-2 4h2",
+    pin: "M12 21s7-5.1 7-11a7 7 0 1 0-14 0c0 5.9 7 11 7 11Zm0-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
+    shield: "M12 3 5 6v6c0 4 2.7 7.4 7 9 4.3-1.6 7-5 7-9V6l-7-3Z",
+    spark: "M12 2 9.8 8.8 3 11l6.8 2.2L12 20l2.2-6.8L21 11l-6.8-2.2L12 2Z",
+    support: "M4 12a8 8 0 0 1 16 0v4a3 3 0 0 1-3 3h-2v-6h5M4 13h5v6H7a3 3 0 0 1-3-3v-4Zm8 8h2"
+  };
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d={paths[name]} />
+    </svg>
   );
 }
 
@@ -2395,6 +2886,67 @@ function formatDeltaVnd(value: number) {
 function formatBudgetHeadroom(artifact: BuildArtifact) {
   if (!artifact.budget_max_vnd) return "Chưa có";
   return formatDeltaVnd(artifact.budget_max_vnd - artifact.total_price_vnd);
+}
+
+function compactPerformanceFitLabel(level: PerformanceProfile["fit_level"]) {
+  return {
+    good: "Rất cao",
+    adequate: "Đủ dùng",
+    limited: "Hạn chế",
+    unknown: "Chưa rõ"
+  }[level];
+}
+
+function compactPerformanceFitNote(profile: PerformanceProfile) {
+  return {
+    good: "Phù hợp với nhu cầu đã nhập.",
+    adequate: "Ổn cho mục tiêu chính.",
+    limited: "Nên nâng GPU hoặc giảm setting.",
+    unknown: profile.summary_vi
+  }[profile.fit_level];
+}
+
+function upgradeReadinessLabel(artifact: BuildArtifact) {
+  if (!artifact.budget_max_vnd) return "Chưa rõ";
+  return artifact.total_price_vnd <= artifact.budget_max_vnd ? "Tốt" : "Cần xem lại";
+}
+
+function compactBudgetHeadroomNote(artifact: BuildArtifact) {
+  if (!artifact.budget_max_vnd) return "Theo ngân sách hiện tại";
+  const delta = artifact.budget_max_vnd - artifact.total_price_vnd;
+  return delta >= 0 ? `Còn ${formatVnd(delta)}` : `Vượt ${formatVnd(Math.abs(delta))}`;
+}
+
+function formatShortDate(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
+}
+
+function shortId(value: string) {
+  return value.length > 12 ? `${value.slice(0, 8)}...${value.slice(-4)}` : value;
+}
+
+function extractBudgetMillions(value: string) {
+  const match = value.match(/(\d+)\s*triệu/i);
+  return match ? Number(match[1]) : null;
+}
+
+function applyBudgetText(value: string, budgetMillions: number) {
+  const nextBudget = `${budgetMillions} triệu`;
+  if (/\d+\s*triệu/i.test(value)) {
+    return value.replace(/\d+\s*triệu/i, nextBudget);
+  }
+  const trimmed = value.trim();
+  return trimmed ? `${trimmed}, ngân sách ${nextBudget}` : `Ngân sách ${nextBudget}`;
+}
+
+function toggleListItem(list: string[], item: string) {
+  return list.includes(item) ? list.filter((current) => current !== item) : [...list, item];
 }
 
 function parseVndInput(value: string) {
