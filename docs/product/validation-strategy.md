@@ -230,6 +230,15 @@ rows, and existing catalog API/ingestion/build-generation behavior remains
 unchanged. Platform proof requires loading the active snapshot into managed
 Postgres and verifying the latest publish run is `loaded`.
 
+`US-050` is verified by focused catalog refresh and Postgres catalog tests,
+`pnpm check`, and Harness story verification. Integration proof checks
+`/catalog/refresh` fails closed without `CRON_SECRET`, rejects a wrong bearer
+token, reports missing Postgres configuration, loads a valid deployed snapshot
+through the audited loader, and returns a blocked response when validation
+blocks the publish. Platform proof requires `CRON_SECRET` plus a managed
+Postgres URL in production, then invoking the deployed route and verifying a
+loaded `catalog_publish_runs` row.
+
 `US-011` is verified by `pnpm check` plus Browser E2E against local dev servers.
 Unit proof covers the LangGraph orchestration service, expected agent sequence,
 and deterministic build output preservation. Integration proof checks the

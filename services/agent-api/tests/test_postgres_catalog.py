@@ -81,11 +81,13 @@ def test_loaded_catalog_snapshot_is_revalidated_before_insert(monkeypatch) -> No
         validation,
         *,
         allow_blocking: bool,
+        load_options=None,
     ) -> int:
         assert database_url == "postgresql://example/catalog"
         assert loaded_snapshot.snapshot_version == snapshot.snapshot_version
         assert validation.blocking_issue_count == 0
         assert allow_blocking is False
+        assert load_options is None
         captured.append(("publish_started", loaded_snapshot))
         return 42
 
@@ -168,11 +170,13 @@ def test_blocked_catalog_publish_records_audit_run_without_loading(monkeypatch) 
         validation,
         *,
         allow_blocking: bool,
+        load_options=None,
     ) -> int:
         assert database_url == "postgresql://example/catalog"
         assert loaded_snapshot.snapshot_version == snapshot.snapshot_version
         assert validation.blocking_issue_count > 0
         assert allow_blocking is False
+        assert load_options is None
         captured.append(("publish_started", validation))
         return 99
 

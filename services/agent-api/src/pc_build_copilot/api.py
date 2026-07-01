@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from pc_build_copilot.build_alternatives import (
@@ -22,12 +22,19 @@ from pc_build_copilot.build_models import (
 from pc_build_copilot.build_store import BuildStore
 from pc_build_copilot.catalog_models import (
     CatalogQueryResponse,
+    CatalogRefreshResponse,
     CatalogValidationReport,
     ComponentCategory,
 )
 from pc_build_copilot.catalog_repository import (
     CatalogDataStore,
     create_catalog_repository,
+)
+from pc_build_copilot.catalog_refresh import (
+    CatalogRefreshConfigurationError,
+    CatalogRefreshUnauthorizedError,
+    refresh_postgres_catalog_from_snapshot,
+    validate_catalog_refresh_authorization,
 )
 from pc_build_copilot.compatibility_models import (
     BuildValidationRequest,
@@ -44,6 +51,7 @@ from pc_build_copilot.models import (
     IntentRevision,
 )
 from pc_build_copilot.persistence import create_persistent_stores
+from pc_build_copilot.postgres_catalog import CatalogPublishBlockedError
 from pc_build_copilot.store import SessionStore
 from pc_build_copilot.trace_replay import build_trace_replay, session_trace_replay
 from pc_build_copilot.upgrade_models import (
@@ -119,6 +127,28 @@ def create_app(
             min_capacity_gb=min_capacity_gb,
             min_vram_gb=min_vram_gb,
         )
+
+    @app.get("/catalog/refresh", response_model=CatalogRefreshResponse)
+    def refresh_catalog(
+        authorization: str | None = Header(default=None),
+    ) -> CatalogRefreshResponse:
+        try:
+            validate_catalog_refresh_authorization(authorization)
+            return refresh_postgres_catalog_from_snapshot()
+        except CatalogRefreshUnauthorizedError as exc:
+            raise HTTPException(status_code=401, detail="Unauthorized") from exc
+        except CatalogRefreshConfigurationError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        except CatalogPublishBlockedError as exc:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "status": "blocked",
+                    "snapshot_version": exc.validation.snapshot_version,
+                    "issue_count": exc.validation.issue_count,
+                    "blocking_issue_count": exc.validation.blocking_issue_count,
+                },
+            ) from exc
 
     @app.post("/builds/{build_id}/validate", response_model=CompatibilityReport)
     def validate_build(build_id: str, payload: BuildValidationRequest) -> CompatibilityReport:

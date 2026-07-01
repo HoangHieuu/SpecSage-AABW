@@ -241,6 +241,15 @@ outcomes with validation counts, SKU count, timestamps, load options, and error
 text. This makes manual production refreshes inspectable in Postgres before
 cron, queues, Typesense, pgvector, or broader live source automation are added.
 
+`US-050` adds the first cron-backed refresh step without introducing live
+scraping. Vercel Cron invokes `GET /api/catalog/refresh` daily with
+`Authorization: Bearer <CRON_SECRET>`. The backend reads the deployed validated
+`catalog_snapshot.json` and reloads it through the existing Postgres
+publish/audit loader with `allow_blocking=false`. This keeps the active
+production catalog aligned with the deployment artifact and records scheduled
+publish runs, while live public-page capture, product detail crawling,
+Typesense, and pgvector remain later stories.
+
 ## Commerce Adapter Boundary
 
 Hackathon:

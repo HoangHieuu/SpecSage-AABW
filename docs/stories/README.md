@@ -53,6 +53,11 @@ Initial PC Build Copilot story packets:
 | `US-043` | Optional add-on shopping-list selection | implemented | normal |
 | `US-044` | GPU upgrade planning foundation | implemented | normal |
 | `US-045` | Existing system confirmation before upgrade planning | implemented | normal |
+| `US-046` | Complete traced multi-agent build chain | implemented | normal |
+| `US-047` | Production Postgres state store | implemented | high-risk |
+| `US-048` | Postgres catalog mirror foundation | implemented | high-risk |
+| `US-049` | Catalog publish audit foundation | implemented | high-risk |
+| `US-050` | Scheduled catalog publish refresh foundation | implemented | high-risk |
 
 Use `scripts/bin/harness-cli query matrix` for durable status before work.
 

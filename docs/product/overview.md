@@ -186,6 +186,10 @@ automation. Each Postgres catalog publish records its snapshot version,
 validation counts, SKU count, status, timestamps, load options, and blocking or
 failure text in `catalog_publish_runs`, while successful publishes still
 activate exactly one catalog version.
+`US-050` adds the first scheduled publish refresh: Vercel Cron calls a
+`CRON_SECRET`-protected backend route once per day, and that route reloads the
+deployed validated catalog snapshot through the same Postgres publish/audit
+loader. It is intentionally not live public-page scraping yet.
 `US-011` routes build generation through a bounded LangGraph state graph and
 surfaces a schema-valid orchestration trace while preserving deterministic SKU,
 price, compatibility, workload fit, approval, and handoff behavior.

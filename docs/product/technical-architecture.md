@@ -224,6 +224,20 @@ marks successful activations as `loaded`, and best-effort marks post-start
 exceptions as `failed`. This is the audit anchor for future cron or queue-based
 refresh jobs, not a scheduled scraper by itself.
 
+`US-050` adds a protected scheduled publish refresh on top of that audit anchor:
+
+- Vercel Cron path: `GET /api/catalog/refresh`
+- Schedule: `0 18 * * *` UTC, daily at 01:00 Vietnam time
+- Required header: `Authorization: Bearer <CRON_SECRET>`
+- Response model: `CatalogRefreshResponse`
+- Service module: `services/agent-api/src/pc_build_copilot/catalog_refresh.py`
+
+The endpoint resolves the configured Postgres URL, reads the deployed validated
+`catalog_snapshot.json`, and calls the same `load_catalog_snapshot` loader with
+`allow_blocking=false` and `trigger=vercel_cron` in
+`catalog_publish_runs.load_options_json`. It does not scrape live Phong Vu
+pages, call private Teko APIs, or update Typesense/pgvector indexes.
+
 ## API Boundary
 
 First public endpoints should be introduced with OpenAPI contracts:
@@ -242,6 +256,11 @@ First public endpoints should be introduced with OpenAPI contracts:
 
 Do not expose checkout, staff auth, webhooks, or admin mutation APIs until their
 stories create the required authorization and validation packets.
+
+Protected platform endpoints:
+
+- `GET /catalog/refresh` requires `Authorization: Bearer <CRON_SECRET>` and is
+  intended for Vercel Cron, not customer traffic.
 
 ## Current Build Generation Slice
 

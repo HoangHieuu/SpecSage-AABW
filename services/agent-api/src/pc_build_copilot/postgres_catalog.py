@@ -306,6 +306,7 @@ def load_catalog_snapshot(
     snapshot: CatalogSnapshot,
     *,
     allow_blocking: bool = False,
+    load_options: dict[str, Any] | None = None,
 ) -> CatalogSnapshot:
     ensure_catalog_schema(database_url)
     validation = validate_catalog(
@@ -319,6 +320,7 @@ def load_catalog_snapshot(
         snapshot,
         validation,
         allow_blocking=allow_blocking,
+        load_options=load_options,
     )
 
     if validation.blocking_issue_count and not allow_blocking:
@@ -494,7 +496,11 @@ def _record_catalog_publish_started(
     validation: CatalogValidationReport,
     *,
     allow_blocking: bool,
+    load_options: dict[str, Any] | None = None,
 ) -> int:
+    options = {"allow_blocking": allow_blocking}
+    if load_options:
+        options.update(load_options)
     with _connect(database_url) as conn:
         row = conn.execute(
             """
@@ -520,7 +526,7 @@ def _record_catalog_publish_started(
                 validation.issue_count,
                 validation.blocking_issue_count,
                 _model_jsonb(validation),
-                Jsonb({"allow_blocking": allow_blocking}),
+                Jsonb(options),
             ),
         ).fetchone()
     return int(row["run_id"])

@@ -107,3 +107,14 @@ class CatalogQueryResponse(BaseModel):
     catalog_snapshot_at: datetime
     sku_count: int
     items: list[CatalogSku]
+
+
+class CatalogRefreshResponse(BaseModel):
+    status: Literal["loaded"]
+    trigger: str
+    snapshot_version: str
+    snapshot_generated_at: datetime
+    source: str
+    sku_count: int
+    issue_count: int
+    blocking_issue_count: int

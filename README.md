@@ -16,7 +16,7 @@ is now split across `docs/product/`, `docs/stories/`, `docs/TEST_MATRIX.md`, and
 
 ## Current State
 
-`US-001` through `US-049` are implemented: the repo has a minimal FastAPI agent
+`US-001` through `US-050` are implemented: the repo has a minimal FastAPI agent
 API and Next.js customer web shell for session creation, Vietnamese intent
 parsing, clarification, confirmation, deterministic local catalog snapshot
 ingestion, read-only catalog API access, deterministic compatibility validation,
@@ -36,6 +36,9 @@ stores queryable SKU payloads, while local development can still use the JSON
 snapshot fallback. Catalog publishes now also record `catalog_publish_runs`
 audit rows with validation counts, SKU counts, status, timestamps, load
 options, and blocking/failure text before scheduled refresh automation exists.
+The deployed catalog can now be refreshed by a secret-gated daily Vercel Cron
+endpoint that reloads the deployment's validated snapshot through the same
+Postgres publish/audit path; live public-page scraping remains a later story.
 Build generation now runs through a bounded LangGraph orchestration layer with
 intent, catalog, optimizer, compatibility, performance, explainer, commerce,
 and validator steps recorded on each build artifact. Agent trace replay is now
@@ -196,6 +199,7 @@ The initial implementation backlog is intentionally small:
 47. `US-047` - production Postgres state store. Implemented.
 48. `US-048` - Postgres catalog mirror foundation. Implemented.
 49. `US-049` - catalog publish audit foundation. Implemented.
+50. `US-050` - scheduled catalog publish refresh foundation. Implemented.
 
 Use Harness to keep each slice bounded:
 

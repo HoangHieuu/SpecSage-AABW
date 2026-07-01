@@ -42,6 +42,7 @@ Use `docs/templates/decision.md` when adding a new decision.
 | `0038` | Managed Postgres state before AWS RDS |
 | `0039` | Postgres catalog mirror before Typesense |
 | `0040` | Catalog publish audit before cron |
+| `0041` | Secret-gated catalog cron before live scraping |
 
 After adding or updating a markdown decision file, also add or refresh the
 durable decision row:

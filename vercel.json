@@ -8,5 +8,11 @@
       "entrypoint": "services/agent-api/main.py",
       "routePrefix": "/api"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/catalog/refresh",
+      "schedule": "0 18 * * *"
+    }
+  ]
 }
