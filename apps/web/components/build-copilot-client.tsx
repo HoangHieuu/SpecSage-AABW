@@ -2863,19 +2863,28 @@ function LlmAgentPanel({ analysis }: { analysis: IntentAgentAnalysis }) {
 
 function CartReadyPanel({ handoff }: { handoff: CartReadyHandoff }) {
   const shoppingTotal = handoff.shopping_list_total_price_vnd || handoff.total_price_vnd;
+  const cartSummary = [
+    ["PC build", formatVnd(handoff.total_price_vnd)],
+    ["Gợi ý thêm", formatVnd(handoff.add_on_total_price_vnd)],
+    ["Tổng danh sách", formatVnd(shoppingTotal)],
+    ["Sản phẩm", `${handoff.item_count}`]
+  ] as const;
+
   return (
     <section className="cart-ready" data-testid="cart-ready-panel">
       <div className="panel-heading">
         <h3>Danh sách mua</h3>
         <span className="status confirmed">Sẵn sàng mở sản phẩm</span>
       </div>
-      <div className="build-metrics compact">
-        <Metric label="PC" value={formatVnd(handoff.total_price_vnd)} />
-        <Metric label="Gợi ý thêm" value={formatVnd(handoff.add_on_total_price_vnd)} />
-        <Metric label="Tổng danh sách" value={formatVnd(shoppingTotal)} />
-        <Metric label="Số sản phẩm" value={`${handoff.item_count}`} />
-      </div>
-      <p>
+      <dl className="cart-ready-summary" aria-label="Tóm tắt danh sách mua">
+        {cartSummary.map(([label, value]) => (
+          <div key={label} className={label === "Tổng danh sách" ? "total" : undefined}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="cart-ready-copy">
         Danh sách này dùng link sản phẩm Phong Vu để bạn kiểm tra giá, tồn kho và thêm vào
         giỏ hàng trên website chính thức.
       </p>
@@ -2891,9 +2900,10 @@ function CartReadyPanel({ handoff }: { handoff: CartReadyHandoff }) {
           </ul>
         </div>
       ) : null}
-      <ol className="cart-links">
-        {handoff.mock_cart_payload.items.map((item) => (
+      <ol className="cart-links" aria-label="Link sản phẩm Phong Vũ">
+        {handoff.mock_cart_payload.items.map((item, index) => (
           <li key={item.sku}>
+            <span className="cart-link-index">{index + 1}</span>
             <a href={item.url} target="_blank" rel="noreferrer">
               {item.name || `Sản phẩm ${item.sku}`}
             </a>
