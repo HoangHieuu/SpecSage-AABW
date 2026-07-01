@@ -536,10 +536,12 @@ export type BuildFeedback = {
   review_queue_reason_vi: string | null;
 };
 
+const DEFAULT_API_BASE_URL = process.env.NODE_ENV === "production" ? "/api" : "http://127.0.0.1:8000";
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_AGENT_API_URL?.replace(/\/$/, "") ||
   process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ||
-  "http://127.0.0.1:8000";
+  DEFAULT_API_BASE_URL;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
