@@ -15,8 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PC Build Copilot",
-  description: "Vietnamese-first PC build intent foundation for Phong Vu."
+  title: "SpecSage",
+  description: "Vietnamese-first PC build copilot for Phong Vu."
 };
 
 export default function RootLayout({

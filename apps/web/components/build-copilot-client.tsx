@@ -454,24 +454,51 @@ export function BuildCopilotClient() {
     }
   }
 
+  const workflowStatus = cartHandoff
+    ? "Sẵn sàng mua"
+    : buildArtifact
+      ? "Đã có build"
+      : isConfirmed
+        ? "Đã xác nhận"
+        : intentResponse
+          ? "Đang chốt nhu cầu"
+          : session
+            ? "Đang nhập nhu cầu"
+            : "Chưa bắt đầu";
+  const sessionLabel = session ? `Phiên ${session.build_session_id.slice(0, 8)}` : "Chưa có phiên";
+  const agentStatusLabel = agentAnalysis
+    ? agentAnalysis.status === "available"
+      ? "LLM đang hoạt động"
+      : agentAnalysis.status === "degraded"
+        ? "LLM gián đoạn"
+        : "LLM chưa bật"
+    : "LLM chờ phân tích";
+  const agentStatusTone = agentAnalysis?.status === "available" ? "positive" : agentAnalysis ? "warning" : "";
+  const selectedSkuLabel = buildArtifact ? `${buildArtifact.items.length} SKU` : "Chưa sinh build";
+  const compatibilityLabel = buildArtifact
+    ? buildArtifact.compatibility_report.status === "approved"
+      ? "Tương thích"
+      : buildArtifact.compatibility_report.status === "warning"
+        ? "Cần xem cảnh báo"
+        : "Bị chặn"
+    : "Chờ kiểm tra";
+
   return (
     <>
       <BackgroundAnimation />
       <main className={`app-shell${isLoading ? " is-loading" : ""}`}>
         <header className="site-header">
           <div className="brand-lockup">
-            <span className="brand-mark" aria-hidden="true">
-              PV
-            </span>
-            <div>
-              <strong>PC Build Copilot</strong>
-              <span>Phong Vu · Tư vấn cấu hình</span>
+            <SpecSageLogo />
+            <div className="brand-copy">
+              <strong>SpecSage</strong>
+              <span>PC Build Copilot cho Phong Vũ</span>
             </div>
           </div>
-          <div className="header-meta">
-            <span className="header-pill">Sản phẩm Phong Vu</span>
-            <span className="header-pill">Tương thích rõ ràng</span>
-            <span className="header-pill accent">Tư vấn theo nhu cầu</span>
+          <div className="header-meta" aria-label="Trạng thái hệ thống">
+            <span className="header-pill">Catalog Phong Vũ</span>
+            <span className={`header-pill ${agentStatusTone}`}>{agentStatusLabel}</span>
+            <span className="header-pill accent">{sessionLabel}</span>
           </div>
         </header>
 
@@ -482,30 +509,28 @@ export function BuildCopilotClient() {
           isCartReady={Boolean(cartHandoff)}
         />
 
-        <section className="hero-panel">
-          <div className="hero-copy">
-            <span className="hero-eyebrow">Tư vấn cấu hình thông minh</span>
-            <h1>
-              Xây PC đúng nhu cầu,
-              <em> đúng ngân sách</em>
-            </h1>
-            <p>
-              Tư vấn cấu hình từ nhu cầu thật, dùng dữ liệu sản phẩm Phong Vu và kiểm tra
-              tương thích bằng luật trước khi đề xuất cấu hình.
-            </p>
-            <div className="hero-stats">
-              <div className="hero-stat">
-                <strong>7+</strong>
-                <span>nhóm linh kiện</span>
-              </div>
-              <div className="hero-stat">
-                <strong>Link</strong>
-                <span>sản phẩm thật</span>
-              </div>
-              <div className="hero-stat">
-                <strong>0</strong>
-                <span>đoán tương thích</span>
-              </div>
+        <section className="command-panel" aria-label="Bảng điều khiển phiên build">
+          <div className="command-copy">
+            <span className="command-kicker">Build Copilot</span>
+            <h1>Thiết kế cấu hình PC</h1>
+            <p>{primaryActionHint}</p>
+          </div>
+          <div className="command-metrics">
+            <div>
+              <span>Bước hiện tại</span>
+              <strong>{workflowStatus}</strong>
+            </div>
+            <div>
+              <span>Ngân sách</span>
+              <strong>{budget}</strong>
+            </div>
+            <div>
+              <span>Linh kiện</span>
+              <strong>{selectedSkuLabel}</strong>
+            </div>
+            <div>
+              <span>Kiểm tra</span>
+              <strong>{compatibilityLabel}</strong>
             </div>
           </div>
         </section>
@@ -822,6 +847,28 @@ export function BuildCopilotClient() {
       </section>
       </main>
     </>
+  );
+}
+
+function SpecSageLogo() {
+  return (
+    <svg
+      className="brand-mark"
+      viewBox="0 0 48 48"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M24 4 41.3 13.8v20.4L24 44 6.7 34.2V13.8L24 4Z"
+        fill="currentColor"
+      />
+      <path
+        d="M29.7 12.7H19.6l-6.1 6.1v8.1l5.6 5.6h9.5l2.9-2.9v-4.3l-2.8-2.8h-8.5l-1.8-1.8v-1.9l2-2h9.3l3.4 3.3 4.1-4.1-7.5-7.3Zm-1.3 18.6h-9.5l-3.4-3.4-4.1 4.1 7.2 7.2h10.7l6.1-6.1V25l-5.7-5.7h-8.4l-1.7-1.7v-2h9.1l3.6 3.5 4.1-4.1-7.4-7.3H18.4l-6.1 6.1v8.1l5.6 5.6h8.6l1.9 1.9v1.9Z"
+        fill="#fff"
+      />
+      <circle cx="37.4" cy="11.3" r="2.8" fill="#fff" />
+      <circle cx="10.6" cy="36.7" r="2.8" fill="#fff" />
+    </svg>
   );
 }
 

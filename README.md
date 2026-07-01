@@ -237,6 +237,8 @@ Optional LLM advisor configuration for the API:
 ```bash
 OPENROUTER_API_KEY=...
 OPENROUTER_MODEL=deepseek/deepseek-v4-flash
+OPENROUTER_SITE_URL=https://specsage-aabw.vercel.app
+OPENROUTER_APP_NAME=SpecSage
 LLM_AGENT_ENABLED=true
 DATABASE_URL=postgresql://...
 PC_BUILD_COPILOT_CATALOG_STORE=postgres
@@ -245,6 +247,10 @@ PC_BUILD_COPILOT_DB_PATH=.local/pc-build-copilot.sqlite3
 
 The API reads these from local environment or `.env`. The key stays server-side;
 the browser receives only the model name, provider status, and advisory text.
+For Vercel production, add `OPENROUTER_API_KEY` in Project Settings →
+Environment Variables for the Production target, or run
+`npx vercel env add OPENROUTER_API_KEY production`, then redeploy. Do not use a
+`NEXT_PUBLIC_` prefix for this key.
 `DATABASE_URL` is optional for local development, but required for durable
 production deployment. `POSTGRES_URL` and `POSTGRES_URL_NON_POOLING` are also
 accepted. When no Postgres URL exists, the API falls back to SQLite;

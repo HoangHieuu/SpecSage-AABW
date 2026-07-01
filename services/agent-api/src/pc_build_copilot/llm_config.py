@@ -17,7 +17,7 @@ class OpenRouterSettings:
     model: str = DEFAULT_OPENROUTER_MODEL
     base_url: str = DEFAULT_OPENROUTER_BASE_URL
     site_url: str = "http://localhost:3000"
-    app_name: str = "PC Build Copilot"
+    app_name: str = "SpecSage"
     timeout_seconds: float = 12.0
     max_tokens: int = DEFAULT_OPENROUTER_MAX_TOKENS
     enabled: bool = False
@@ -68,7 +68,7 @@ def openrouter_settings(
         model=merged.get("OPENROUTER_MODEL") or DEFAULT_OPENROUTER_MODEL,
         base_url=(merged.get("OPENROUTER_BASE_URL") or DEFAULT_OPENROUTER_BASE_URL).rstrip("/"),
         site_url=merged.get("OPENROUTER_SITE_URL") or "http://localhost:3000",
-        app_name=merged.get("OPENROUTER_APP_NAME") or "PC Build Copilot",
+        app_name=merged.get("OPENROUTER_APP_NAME") or "SpecSage",
         timeout_seconds=_float_value(merged.get("OPENROUTER_TIMEOUT_SECONDS"), 12.0),
         max_tokens=_int_value(merged.get("OPENROUTER_MAX_TOKENS"), DEFAULT_OPENROUTER_MAX_TOKENS),
         enabled=enabled,
