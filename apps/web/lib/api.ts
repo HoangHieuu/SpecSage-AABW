@@ -125,7 +125,11 @@ export type BuildItem = {
   category: string;
   price_vnd: number;
   url: string;
+  image_url: string | null;
   brand: string | null;
+  warranty_text: string | null;
+  stock_status: "in_stock" | "low_stock" | "out_of_stock" | "preorder" | "unknown";
+  stock_quantity: number;
   specs_confidence: "verified" | "partial" | "inferred";
   explanation_vi: string;
 };
@@ -137,7 +141,11 @@ export type BuildRecommendedAddOn = {
   category: string;
   price_vnd: number;
   url: string;
+  image_url: string | null;
   brand: string | null;
+  warranty_text: string | null;
+  stock_status: "in_stock" | "low_stock" | "out_of_stock" | "preorder" | "unknown";
+  stock_quantity: number;
   specs_confidence: "verified" | "partial" | "inferred";
   reason_vi: string;
   fit_notes_vi: string[];

@@ -724,7 +724,11 @@ def _build_items(
                 category=catalog_item.category,
                 price_vnd=catalog_item.price_vnd,
                 url=catalog_item.url,
+                image_url=catalog_item.image_url,
                 brand=catalog_item.brand,
+                warranty_text=catalog_item.warranty_text,
+                stock_status=catalog_item.stock_status,
+                stock_quantity=catalog_item.stock_quantity,
                 specs_confidence=catalog_item.specs_confidence,
                 explanation_vi=explanation,
             )

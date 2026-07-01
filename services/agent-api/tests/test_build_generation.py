@@ -9,7 +9,7 @@ from pc_build_copilot.build_alternatives import (
     generate_build_alternatives,
 )
 from pc_build_copilot.build_generator import generate_build_artifact
-from pc_build_copilot.catalog_models import CatalogSnapshot
+from pc_build_copilot.catalog_models import CatalogSnapshot, StockStatus
 from pc_build_copilot.catalog_repository import CatalogRepository
 from pc_build_copilot.compatibility_models import BuildSlot
 from pc_build_copilot.models import BuildIntent, UseCase
@@ -78,6 +78,11 @@ def test_generator_creates_compatible_grounded_build_under_budget() -> None:
     assert artifact.rules_version == artifact.compatibility_report.rules_version
     assert {item.sku for item in artifact.items}.issubset({item.sku for item in _items()})
     assert all(item.url.startswith("https://phongvu.vn/") for item in artifact.items)
+    vga = next(item for item in artifact.items if item.sku == "260508255")
+    assert vga.brand == "ASUS"
+    assert vga.warranty_text == "36 tháng"
+    assert vga.stock_status == StockStatus.IN_STOCK
+    assert vga.stock_quantity == 12
     assert "fps" not in " ".join(artifact.explanations_vi).casefold()
     assert "fps" not in artifact.performance_profile.summary_vi.casefold()
 
@@ -333,6 +338,11 @@ def test_generator_recommends_optional_monitor_from_real_catalog_without_cart_to
     assert monitor.category == "monitor"
     assert monitor.optional is True
     assert monitor.price_vnd == 4_990_000
+    assert monitor.image_url is not None
+    assert monitor.image_url.startswith("https://")
+    assert monitor.brand == "Msi"
+    assert monitor.stock_status == StockStatus.IN_STOCK
+    assert monitor.stock_quantity > 0
     assert "2560x1440" in monitor.reason_vi
     assert monitor.sku not in {item.sku for item in artifact.items}
     assert monitor.sku not in {item["sku"] for item in artifact.mock_cart_payload.items}
@@ -379,6 +389,11 @@ def test_generator_recommends_optional_cooler_from_real_catalog_with_fit_notes()
     assert cooler.sku == "251012780"
     assert cooler.category == "cooler"
     assert cooler.optional is True
+    assert cooler.image_url is not None
+    assert cooler.image_url.startswith("https://")
+    assert cooler.brand == "ID-Cooling"
+    assert cooler.stock_status == StockStatus.IN_STOCK
+    assert cooler.stock_quantity > 0
     assert "vận hành êm" in cooler.reason_vi
     assert any("LGA1700" in note for note in cooler.fit_notes_vi)
     assert any("TDP" in note for note in cooler.fit_notes_vi)

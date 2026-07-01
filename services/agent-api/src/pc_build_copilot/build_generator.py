@@ -111,7 +111,11 @@ def _build_artifact_from_selected(
             category=item.category,
             price_vnd=item.price_vnd,
             url=item.url,
+            image_url=item.image_url,
             brand=item.brand,
+            warranty_text=item.warranty_text,
+            stock_status=item.stock_status,
+            stock_quantity=item.stock_quantity,
             specs_confidence=item.specs_confidence,
             explanation_vi=_item_explanation(slot, item, intent),
         )

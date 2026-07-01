@@ -1048,6 +1048,14 @@ function CommerceProcessSteps({
   );
 }
 
+type BuildTableRow = Pick<BuildItem, "slot" | "sku" | "name" | "price_vnd"> &
+  Partial<
+    Pick<
+      BuildItem,
+      "brand" | "image_url" | "stock_quantity" | "stock_status" | "url" | "warranty_text"
+    >
+  >;
+
 function BuildItemsTable({ artifact }: { artifact: BuildArtifact | null }) {
   const rows = artifact?.items ?? placeholderBuildRows;
   return (
@@ -1084,15 +1092,27 @@ function BuildItemsTable({ artifact }: { artifact: BuildArtifact | null }) {
                   <td>{index + 1}</td>
                   <td>
                     <div className="part-slot">
-                      <PartThumb slot={item.slot} />
+                      <PartThumb
+                        slot={item.slot}
+                        imageUrl={realItem?.image_url}
+                      />
                       {slotLabel(item.slot)}
                     </div>
                   </td>
                   <td>
                     {realItem ? (
-                      <a href={realItem.url} target="_blank" rel="noreferrer">
-                        {realItem.name}
-                      </a>
+                      <div className="product-cell">
+                        <a href={realItem.url} target="_blank" rel="noreferrer">
+                          {realItem.name}
+                        </a>
+                        <div className="product-meta-line">
+                          {realItem.brand ? <span>{realItem.brand}</span> : null}
+                          {realItem.warranty_text ? <span>BH {realItem.warranty_text}</span> : null}
+                          <span className={stockStatusClass(realItem.stock_status)}>
+                            {stockStatusLabel(realItem.stock_status, realItem.stock_quantity)}
+                          </span>
+                        </div>
+                      </div>
                     ) : (
                       item.name
                     )}
@@ -1113,7 +1133,7 @@ function BuildItemsTable({ artifact }: { artifact: BuildArtifact | null }) {
   );
 }
 
-const placeholderBuildRows: Array<Pick<BuildItem, "slot" | "sku" | "name" | "price_vnd">> = [
+const placeholderBuildRows: BuildTableRow[] = [
   { slot: "cpu", sku: "", name: "CPU sẽ được chọn sau khi phân tích", price_vnd: 0 },
   { slot: "mainboard", sku: "", name: "Mainboard tương thích socket/RAM", price_vnd: 0 },
   { slot: "ram", sku: "", name: "RAM theo workload và ngân sách", price_vnd: 0 },
@@ -1287,10 +1307,40 @@ function UseCaseIcon({ name }: { name: "gamepad" | "creator" | "office" | "ai" }
   );
 }
 
-function PartThumb({ slot }: { slot: BuildItem["slot"] }) {
+function PartThumb({
+  slot,
+  imageUrl
+}: {
+  slot: BuildItem["slot"];
+  imageUrl?: string | null;
+}) {
+  return <ProductThumb token={slot} imageUrl={imageUrl} label={slotLabel(slot)} />;
+}
+
+function ProductThumb({
+  token,
+  imageUrl,
+  label
+}: {
+  token: string;
+  imageUrl?: string | null;
+  label: string;
+}) {
   return (
-    <span className={`part-thumb ${slot}`} aria-hidden="true">
-      {slotLabel(slot).slice(0, 1)}
+    <span className={`part-thumb ${token} ${imageUrl ? "has-image" : ""}`} aria-hidden="true">
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={(event) => {
+            event.currentTarget.dataset.failed = "true";
+            event.currentTarget.parentElement?.classList.add("image-failed");
+          }}
+        />
+      ) : null}
+      <span className="part-thumb-fallback">{label.slice(0, 1)}</span>
     </span>
   );
 }
@@ -2282,13 +2332,27 @@ function AddOnRecommendationsPanel({
         {addons.map((addon) => (
           <article className="addon-card" key={`${addon.kind}-${addon.sku}`}>
             <div className="addon-card-heading">
-              <div>
-                <span className="addon-kind">{addonKindLabel(addon.kind)}</span>
-                <h4>
-                  <a href={addon.url} target="_blank" rel="noreferrer">
-                    {addon.name}
-                  </a>
-                </h4>
+              <div className="addon-title-row">
+                <ProductThumb
+                  token={`addon-${addon.kind}`}
+                  imageUrl={addon.image_url}
+                  label={addonKindLabel(addon.kind)}
+                />
+                <div>
+                  <span className="addon-kind">{addonKindLabel(addon.kind)}</span>
+                  <h4>
+                    <a href={addon.url} target="_blank" rel="noreferrer">
+                      {addon.name}
+                    </a>
+                  </h4>
+                  <div className="product-meta-line">
+                    {addon.brand ? <span>{addon.brand}</span> : null}
+                    {addon.warranty_text ? <span>BH {addon.warranty_text}</span> : null}
+                    <span className={stockStatusClass(addon.stock_status)}>
+                      {stockStatusLabel(addon.stock_status, addon.stock_quantity)}
+                    </span>
+                  </div>
+                </div>
               </div>
               <strong>{formatVnd(addon.price_vnd)}</strong>
             </div>
@@ -2999,6 +3063,22 @@ function addonKindLabel(kind: BuildRecommendedAddOn["kind"]) {
     cooler: "Tản nhiệt"
   };
   return labels[kind];
+}
+
+function stockStatusLabel(status: BuildItem["stock_status"], quantity?: number) {
+  if (status === "in_stock") return quantity && quantity > 0 ? `Còn hàng (${quantity})` : "Còn hàng";
+  if (status === "low_stock") return quantity && quantity > 0 ? `Sắp hết (${quantity})` : "Sắp hết";
+  if (status === "out_of_stock") return "Tạm hết";
+  if (status === "preorder") return "Đặt trước";
+  return "Chưa rõ tồn";
+}
+
+function stockStatusClass(status: BuildItem["stock_status"]) {
+  if (status === "in_stock") return "stock-pill in-stock";
+  if (status === "low_stock") return "stock-pill low-stock";
+  if (status === "out_of_stock") return "stock-pill out-of-stock";
+  if (status === "preorder") return "stock-pill preorder";
+  return "stock-pill unknown";
 }
 
 function upgradeStatusLabel(status: "pass" | "warn" | "block") {

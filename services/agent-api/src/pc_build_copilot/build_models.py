@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from pc_build_copilot.catalog_models import ComponentCategory, SpecsConfidence
+from pc_build_copilot.catalog_models import ComponentCategory, SpecsConfidence, StockStatus
 from pc_build_copilot.compatibility_models import (
     BuildSlot,
     CompatibilityReport,
@@ -152,7 +152,11 @@ class BuildItem(BaseModel):
     category: ComponentCategory
     price_vnd: int
     url: str
+    image_url: str | None = None
     brand: str | None = None
+    warranty_text: str | None = None
+    stock_status: StockStatus = StockStatus.UNKNOWN
+    stock_quantity: int = Field(default=0, ge=0)
     specs_confidence: SpecsConfidence
     explanation_vi: str
 
@@ -164,7 +168,11 @@ class BuildRecommendedAddOn(BaseModel):
     category: ComponentCategory
     price_vnd: int
     url: str
+    image_url: str | None = None
     brand: str | None = None
+    warranty_text: str | None = None
+    stock_status: StockStatus = StockStatus.UNKNOWN
+    stock_quantity: int = Field(default=0, ge=0)
     specs_confidence: SpecsConfidence
     reason_vi: str
     fit_notes_vi: list[str] = Field(default_factory=list)

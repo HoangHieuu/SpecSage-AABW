@@ -1974,6 +1974,13 @@ input:focus {
   gap: 14px;
 }
 
+.addon-title-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+
 .addon-card-heading h4 {
   margin: 6px 0 0;
   font-size: 15px;
@@ -3654,6 +3661,57 @@ body {
   color: #e30613;
 }
 
+.product-cell {
+  min-width: 0;
+}
+
+.product-meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.stock-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: 10px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.stock-pill.in-stock {
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.stock-pill.low-stock,
+.stock-pill.preorder {
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.stock-pill.out-of-stock {
+  border: 1px solid rgba(227, 6, 19, 0.2);
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.stock-pill.unknown {
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+}
+
 .part-slot {
   display: flex;
   align-items: center;
@@ -3662,30 +3720,46 @@ body {
 }
 
 .part-thumb {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  overflow: hidden;
   border-radius: 6px;
-  background: #111827;
-  color: #ffffff;
+  border: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+  color: #111827;
   font-size: 11px;
   font-weight: 850;
 }
 
-.part-thumb.vga {
-  background: #0f766e;
+.part-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 3px;
+  background: #ffffff;
 }
 
-.part-thumb.ram,
-.part-thumb.storage {
-  background: #334155;
+.part-thumb-fallback {
+  position: relative;
+  z-index: 1;
 }
 
-.part-thumb.psu,
-.part-thumb.case,
-.part-thumb.cooler {
-  background: #4b5563;
+.part-thumb.has-image .part-thumb-fallback {
+  opacity: 0;
+}
+
+.part-thumb.image-failed img {
+  display: none;
+}
+
+.part-thumb.image-failed .part-thumb-fallback {
+  opacity: 1;
 }
 
 .qty-box {
